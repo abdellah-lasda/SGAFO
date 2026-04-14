@@ -106,10 +106,11 @@ Mettre en place une plateforme web intégrée permettant de **planifier, exécut
 | 8 | QCM par session | Création par animateur, diffusion contrôlée fin de session, statistiques |
 | 9 | Feedback post-session | Formulaire facultatif, questions libres, statistiques par catégorie |
 | 10 | Gestion documentaire | Upload PDFs convocations, supports pédagogiques, versioning |
-| 11 | Logistique étendue | Hébergement, déplacements, sites par session, alertes conflits |
+| 11 | Logistique étendue | Hébergement multi-sites (affectation individuelle), déplacements, alertes conflits |
 | 12 | Reporting et analytics | KPI, tableaux de bord différenciés par rôle, exports |
 | 13 | Notifications | Email + in-app sur tous les événements critiques |
 | 14 | Audit et traçabilité | Journal immuable de toutes les actions sensibles |
+| 15 | Espace Parcours Formateur | Vues dédiées pour le parcours Animateur et Participant avec statistiques |
 
 ### 3.2 Hors Périmètre (Version 1)
 
@@ -249,7 +250,7 @@ Le système SGAFO utilise un contrôle d'accès basé sur les rôles à **deux n
 **Responsabilités :**
 - Crée, modifie et désactive les **comptes utilisateurs**
 - Assigne les **rôles système** aux utilisateurs
-- Définit les **régions** et les assigne aux Responsables DR
+- Gère le référentiel métier : **régions, instituts (établissements), CDCs, secteurs, domaines, sites de formation et d'hébergement**
 - Consulte le **journal d'audit complet** (toutes les actions, tous les utilisateurs)
 - **Déverrouille** les présences après clôture de session (seul acteur autorisé — RG08)
 - Configure les **paramètres globaux** du système
@@ -396,7 +397,7 @@ Un plan est l'application concrète et détaillée d'une entité, créée via un
 |---|---|---|
 | **Étape 1** | Choix de l'entité de référence | CDC ou RF |
 | **Étape 2** | Thèmes — ajout/modification (nom, durée, objectifs) | CDC ou RF |
-| **Étape 3** | Animateurs — affectation d'un formateur animateur **par thème** → `plan_theme_animateurs` | CDC ou RF |
+| **Étape 3** | Animateurs — affectation d'un ou **plusieurs formateurs animateurs (co-animation)** par thème → `plan_theme_animateurs` | CDC ou RF |
 | **Étape 4** | Participants — sélection directe des formateurs participants avec filtres région/établissement/domaine → `plan_participants` | CDC ou RF |
 | **Étape 5** | Logistique — hébergement, déplacements, site de formation | CDC ou RF |
 | **Étape 6** | Récapitulatif et soumission (CDC) ou confirmation directe (RF) | CDC ou RF |
@@ -494,7 +495,7 @@ Résultats visibles selon les droits de chaque rôle
 
 | Sous-module | Données gérées |
 |---|---|
-| **Hébergement** | Lieu, capacité totale, places utilisées, statut (disponible/complet/indisponible) |
+| **Hébergement** | Multi-sites avec affectation nominative individuelle (un utilisateur → un hébergement spécifique) |
 | **Déplacements** | Origine, destination, horaire, mode de transport |
 | **Sites de formation** | Nom, adresse complète, ville, région, contact, téléphone, statut de disponibilité |
 
@@ -644,7 +645,7 @@ La base de données SGAFO comprend **20 tables** organisées en **6 domaines fon
 
 ```
 DOMAINE 1 : Utilisateurs & Accès
-  └── utilisateurs, roles, utilisateurs_roles, regions
+  └── utilisateurs, roles, utilisateurs_roles, regions, instituts, region_user, institut_user
 
 DOMAINE 2 : Entités & Plans de formation
   └── entites_formation, plans_formation, plan_themes,
@@ -675,7 +676,7 @@ DOMAINE 6 : Notifications & Audit
 | email | VARCHAR(150) | UNIQUE NOT NULL | Email de connexion |
 | password_hash | VARCHAR(255) | NOT NULL | Mot de passe hashé (bcrypt) |
 | statut | ENUM | NOT NULL | `actif` / `inactif` / `suspendu` |
-| region_id | BIGINT | FK → regions | Région (obligatoire pour DR) |
+| is_externe | BOOLEAN | DEFAULT false | Si true, formateur externe n'ayant pas d'institut |
 | created_at / updated_at | TIMESTAMP | NOT NULL | Horodatage automatique |
 
 #### Table `roles`
@@ -701,6 +702,29 @@ DOMAINE 6 : Notifications & Audit
 | id | BIGSERIAL | PK | — |
 | nom | VARCHAR(100) | NOT NULL | Nom de la région |
 | code | VARCHAR(20) | UNIQUE NOT NULL | Code région OFPPT |
+
+#### Table `instituts`
+| Champ | Type | Contrainte | Description |
+|---|---|---|---|
+| id | BIGSERIAL | PK | — |
+| nom | VARCHAR(200) | NOT NULL | Nom de l'établissement |
+| code | VARCHAR(50) | UNIQUE | Code structure EFP |
+| region_id | BIGINT | FK → regions | Région de rattachement |
+
+#### Table `region_user` (Pivot d'affectation)
+| Champ | Type | Contrainte | Description |
+|---|---|---|---|
+| user_id | BIGINT | PK, FK → utilisateurs | Responsable DR, CDC |
+| region_id | BIGINT | PK, FK → regions | Région supervisée |
+
+#### Table `institut_user` (Pivot d'affectation)
+| Champ | Type | Contrainte | Description |
+|---|---|---|---|
+| user_id | BIGINT | PK, FK → utilisateurs | Formateur Interne |
+| institut_id | BIGINT | PK, FK → instituts | Institut(s) où il exerce |
+
+> **Formateur Externe vs Interne :** 
+> Les utilisateurs ayant le rôle `FORMATEUR` et l'option `is_externe = true` ont un accès métier restreint au système. Contrairement aux internes, ils ne sont rattachés à aucun Institut OFPPT. Leur espace est limité à la simple consultation et animation de leurs propres sessions, sans accès aux autres modules globaux ou aux annuaires internes.
 
 ### 10.3 Domaine 2 — Entités & Plans de Formation
 

@@ -1,7 +1,11 @@
 export interface User {
     id: number;
-    name: string;
+    nom: string;
+    prenom: string;
     email: string;
+    is_externe: boolean;
+    roles: string[];
+    primary_role?: string;
     email_verified_at?: string;
 }
 
