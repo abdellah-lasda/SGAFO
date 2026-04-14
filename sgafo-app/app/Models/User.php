@@ -7,7 +7,6 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
 use App\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -61,5 +60,23 @@ class User extends Authenticatable
     public function instituts()
     {
         return $this->belongsToMany(Institut::class);
+    }
+
+    public function secteurs()
+    {
+        return $this->belongsToMany(Secteur::class, 'secteur_user');
+    }
+
+    public function cdcs()
+    {
+        return $this->belongsToMany(Cdc::class, 'cdc_user');
+    }
+
+    /**
+     * Helper to check if user is admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('ADMIN');
     }
 }

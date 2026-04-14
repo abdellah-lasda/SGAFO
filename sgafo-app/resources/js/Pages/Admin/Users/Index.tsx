@@ -4,7 +4,7 @@ import { useState } from 'react';
 import UserModal from './UserModal';
 import { User } from '@/types';
 
-export default function Index({ users, roles, regions, instituts }: any) {
+export default function Index({ users, roles, regions, instituts, secteurs, cdcs }: any) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
 
@@ -46,7 +46,8 @@ export default function Index({ users, roles, regions, instituts }: any) {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Identité</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roles</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Appartenance</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entité / Région</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Spécialité / Institut</th>
                                 <th className="relative px-6 py-3">
                                     <span className="sr-only">Actions</span>
                                 </th>
@@ -58,7 +59,7 @@ export default function Index({ users, roles, regions, instituts }: any) {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
                                             <div className="flex-shrink-0 h-10 w-10 rounded-full bg-ofppt-100 flex items-center justify-center text-ofppt-700 font-bold">
-                                                {user.prenom.charAt(0)}{user.nom.charAt(0)}
+                                                {user.prenom?.charAt(0)}{user.nom?.charAt(0)}
                                             </div>
                                             <div className="ml-4">
                                                 <div className="text-sm font-medium text-gray-900">{user.prenom} {user.nom}</div>
@@ -80,11 +81,22 @@ export default function Index({ users, roles, regions, instituts }: any) {
                                             ))}
                                         </div>
                                     </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
+                                        {user.roles.some((r: any) => r.code === 'DR') && user.regions.map((r: any) => r.nom).join(', ')}
+                                        {user.roles.some((r: any) => r.code === 'CDC') && user.cdcs.map((c: any) => c.nom).join(', ')}
+                                        {user.roles.some((r: any) => r.code === 'FORMATEUR') && 'Formateur'}
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {user.is_externe ? (
-                                            <span className="text-orange-500 italic">Formateur Externe</span>
-                                        ) : (
-                                            <span className="text-gray-700 font-medium">Interne OFPPT</span>
+                                        {user.roles.some((r: any) => r.code === 'FORMATEUR') && (
+                                            <div>
+                                                <span className="block text-purple-700 font-semibold">{user.secteurs.map((s: any) => s.nom).join(', ')}</span>
+                                                <span className="text-xs text-gray-500">
+                                                    {user.is_externe ? 'Externe' : user.instituts.map((i: any) => i.nom).join(', ')}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {user.roles.some((r: any) => ['DR', 'CDC'].includes(r.code)) && (
+                                            <span className="text-xs italic text-gray-400">Périmètre National/Régional</span>
                                         )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -96,7 +108,7 @@ export default function Index({ users, roles, regions, instituts }: any) {
                             ))}
                             {users.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                                         Aucun utilisateur trouvé.
                                     </td>
                                 </tr>
@@ -113,6 +125,8 @@ export default function Index({ users, roles, regions, instituts }: any) {
                 roles={roles}
                 regions={regions}
                 instituts={instituts}
+                secteurs={secteurs}
+                cdcs={cdcs}
             />
         </AuthenticatedLayout>
     );
