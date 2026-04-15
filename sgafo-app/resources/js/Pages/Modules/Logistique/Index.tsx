@@ -1,22 +1,26 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Hotel, Institut } from '@/types/logistique';
+import { Hotel, Institut, SiteFormation } from '@/types/logistique';
 import { Region } from '@/types/entite';
 import HotelModal from './HotelModal';
+import SiteModal from './SiteModal';
 import InstitutModal from './InstitutModal';
 
 interface Props {
     auth: any;
     hotels: Hotel[];
+    sites: SiteFormation[];
     instituts: Institut[];
     regions: Region[];
 }
 
-export default function Index({ auth, hotels, instituts, regions }: Props) {
+export default function Index({ auth, hotels, sites, instituts, regions }: Props) {
     const [activeTab, setActiveTab] = useState<'sites' | 'hotels'>('sites');
     const [isHotelModalOpen, setIsHotelModalOpen] = useState(false);
     const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
+    const [isSiteModalOpen, setIsSiteModalOpen] = useState(false);
+    const [selectedSite, setSelectedSite] = useState<SiteFormation | null>(null);
     const [isInstitutModalOpen, setIsInstitutModalOpen] = useState(false);
     const [selectedInstitut, setSelectedInstitut] = useState<Institut | null>(null);
 
@@ -30,19 +34,25 @@ export default function Index({ auth, hotels, instituts, regions }: Props) {
         setIsHotelModalOpen(true);
     };
 
-    const handleEditInstitut = (institut: Institut) => {
-        setSelectedInstitut(institut);
-        setIsInstitutModalOpen(true);
+    const handleEditSite = (site: SiteFormation) => {
+        setSelectedSite(site);
+        setIsSiteModalOpen(true);
     };
 
     const handleAddSite = () => {
-        setSelectedInstitut(null);
-        setIsInstitutModalOpen(true);
+        setSelectedSite(null);
+        setIsSiteModalOpen(true);
     };
 
     const toggleHotelStatus = (hotel: Hotel) => {
         if (confirm(`Voulez-vous vraiment ${hotel.statut === 'actif' ? 'archiver' : 'réactiver'} cet hôtel ?`)) {
             router.patch(route('modules.logistique.hotels.archive', hotel.id));
+        }
+    };
+
+    const toggleSiteStatus = (site: SiteFormation) => {
+        if (confirm(`Voulez-vous vraiment ${site.statut === 'actif' ? 'archiver' : 'réactiver'} ce site ?`)) {
+            router.patch(route('modules.logistique.sites.archive', site.id));
         }
     };
 
@@ -104,58 +114,79 @@ export default function Index({ auth, hotels, instituts, regions }: Props) {
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
                         <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
                             <div className="w-1.5 h-5 bg-blue-600 rounded-full"></div>
-                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Référentiel des Établissements OFPPT</h3>
+                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Sites de formation (Infrastructures)</h3>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-slate-100">
                                 <thead className="bg-slate-50/30">
                                     <tr>
-                                        <th className="px-8 py-4 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Code</th>
-                                        <th className="px-8 py-4 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Nom de l'EFP</th>
-                                        <th className="px-8 py-4 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Région</th>
-                                        <th className="px-8 py-4 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Localisation</th>
+                                        <th className="px-8 py-4 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Nom du Site</th>
+                                        <th className="px-8 py-4 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Région / Ville</th>
+                                        <th className="px-8 py-4 text-center text-[9px] font-black text-slate-400 uppercase tracking-widest">Capacité</th>
+                                        <th className="px-8 py-4 text-center text-[9px] font-black text-slate-400 uppercase tracking-widest">Statut</th>
                                         <th className="px-8 py-4 text-right"></th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                    { instituts.length === 0 ? (
+                                    { sites.length === 0 ? (
                                         <tr>
-                                            <td colSpan={6} className="px-8 py-20 text-center">
+                                            <td colSpan={5} className="px-8 py-20 text-center">
                                                 <div className="inline-flex flex-col items-center">
                                                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-4 border border-slate-100">
                                                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                                                     </div>
-                                                    <p className="text-sm font-bold text-slate-400">Aucun établissement enregistré pour le moment.</p>
-                                                    <button onClick={handleAddHotel} className="mt-4 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">Ajouter le premier établissement</button>
+                                                    <p className="text-sm font-bold text-slate-400">Aucun site de formation enregistré.</p>
+                                                    <button onClick={handleAddSite} className="mt-4 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">Ajouter le premier site</button>
                                                 </div>
                                             </td>
                                         </tr>
-                                    ):( instituts.map((inst) => (
-                                        <tr key={inst.id} className="hover:bg-slate-50/50 transition-colors group">
-                                            <td className="px-8 py-5 text-xs font-black text-slate-400">{inst.code || '---'}</td>
-                                            <td className="px-8 py-5 text-sm font-bold text-slate-900">{inst.nom}</td>
+                                    ):( sites.map((site) => (
+                                        <tr key={site.id} className="hover:bg-slate-50/50 transition-colors group">
                                             <td className="px-8 py-5">
-                                                <span className="text-[10px] font-black text-slate-500 uppercase bg-slate-100 px-2 py-1 rounded">
-                                                    {inst.region?.nom}
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-bold text-slate-900 lowercase first-letter:uppercase">{site.nom}</span>
+                                                    <span className="text-[10px] text-slate-400 font-medium italic">{site.adresse || '---'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase tabular-nums">{site.region?.nom}</span>
+                                                    <span className="text-xs font-bold text-slate-900">{site.ville}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5 text-center">
+                                                <span className="inline-flex items-center px-2.5 py-1 bg-slate-100 text-slate-700 text-[11px] font-black rounded-lg border border-slate-200 tabular-nums">
+                                                    {site.capacite} PERS.
                                                 </span>
                                             </td>
-                                            <td className="px-8 py-5">
-                                                {inst.ville ? (
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-slate-700">{inst.ville}</span>
-                                                        <span className="text-[10px] text-slate-400 font-medium italic">{inst.adresse}</span>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-[10px] text-slate-300 italic">Adresse non renseignée</span>
-                                                )}
+                                            <td className="px-8 py-5 text-center">
+                                                <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                                                    site.statut === 'actif' 
+                                                    ? 'bg-blue-100 text-blue-700 border-blue-200' 
+                                                    : 'bg-slate-100 text-slate-500 border-slate-200'
+                                                }`}>
+                                                    {site.statut}
+                                                </span>
                                             </td>
                                             <td className="px-8 py-5 text-right">
-                                                <button 
-                                                    onClick={() => handleEditInstitut(inst)}
-                                                    className="p-2 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                                </button>
+                                                <div className="flex justify-end gap-1">
+                                                    <button 
+                                                        onClick={() => handleEditSite(site)}
+                                                        className="p-2 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => toggleSiteStatus(site)}
+                                                        className={`p-2 rounded-lg transition-all ${
+                                                            site.statut === 'actif' 
+                                                            ? 'text-slate-300 hover:text-amber-600 hover:bg-amber-50' 
+                                                            : 'text-slate-300 hover:text-emerald-600 hover:bg-emerald-50'
+                                                        }`}
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
@@ -266,6 +297,14 @@ export default function Index({ auth, hotels, instituts, regions }: Props) {
                 onClose={() => setIsHotelModalOpen(false)} 
                 hotel={selectedHotel} 
                 regions={regions}
+            />
+
+            <SiteModal
+                isOpen={isSiteModalOpen}
+                onClose={() => setIsSiteModalOpen(false)}
+                site={selectedSite}
+                regions={regions}
+                instituts={instituts}
             />
 
             <InstitutModal

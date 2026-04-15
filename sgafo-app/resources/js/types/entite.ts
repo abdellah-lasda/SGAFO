@@ -1,3 +1,9 @@
+export interface Region {
+    id: number;
+    nom: string;
+    code: string;
+}
+
 export interface Theme {
     id?: number;
     titre: string;

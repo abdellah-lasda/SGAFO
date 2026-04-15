@@ -41,6 +41,12 @@ Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function
         Route::post('/hotels', [LogistiqueController::class, 'storeHotel'])->name('hotels.store');
         Route::put('/hotels/{hotel}', [LogistiqueController::class, 'updateHotel'])->name('hotels.update');
         Route::patch('/hotels/{hotel}/archive', [LogistiqueController::class, 'archiveHotel'])->name('hotels.archive');
+        
+        // Sites de formation
+        Route::post('/sites', [LogistiqueController::class, 'storeSite'])->name('sites.store');
+        Route::put('/sites/{site}', [LogistiqueController::class, 'updateSite'])->name('sites.update');
+        Route::patch('/sites/{site}/archive', [LogistiqueController::class, 'archiveSite'])->name('sites.archive');
+
         Route::put('/instituts/{institut}', [LogistiqueController::class, 'updateInstitut'])->name('instituts.update');
     });
 });
