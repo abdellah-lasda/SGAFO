@@ -12,7 +12,7 @@ export default function Guest({ children }: PropsWithChildren) {
                             <span className="text-ofppt-700 font-extrabold text-5xl">G</span>
                         </div>
                     </div>
-                    <h1 className="text-4xl font-bold mb-6 tracking-tight">SGAFO v2.0</h1>
+                    <h1 className="text-4xl font-bold mb-6 tracking-tight">SGAFO</h1>
                     <p className="text-ofppt-100 text-lg leading-relaxed">
                         Système de Gestion des Formations des Formateurs de l'OFPPT.
                         Plateforme centralisée pour la planification, l'exécution et l'évaluation continue.

@@ -6,6 +6,7 @@ export default function Welcome({
     laravelVersion,
     phpVersion,
 }: PageProps<{ laravelVersion: string; phpVersion: string }>) {
+    
     const handleImageError = () => {
         document
             .getElementById('screenshot-container')

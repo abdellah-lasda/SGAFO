@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             SecteurSeeder::class,
             RoleSeeder::class,
             AdminSeeder::class,
+            CatalogueSeeder::class,
         ]);
     }
 }

@@ -25,9 +25,14 @@ Route::middleware('auth')->group(function () {
 });
 
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\EntiteFormationController;
 
 Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('users', AdminUserController::class)->except(['create', 'show', 'edit']);
+});
+
+Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function () {
+    Route::resource('entites', EntiteFormationController::class);
 });
 
 require __DIR__.'/auth.php';

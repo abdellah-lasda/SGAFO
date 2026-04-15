@@ -3,3 +3,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+    @media print {
+        aside, header, nav, button, .no-print {
+            display: none !important;
+        }
+        main {
+            padding: 0 !important;
+            margin: 0 !important;
+            background: white !important;
+        }
+    }
+}

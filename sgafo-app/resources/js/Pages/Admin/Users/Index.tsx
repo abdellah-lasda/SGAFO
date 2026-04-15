@@ -20,7 +20,7 @@ export default function Index({ users, roles, regions, instituts, secteurs, cdcs
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Gestion des Utilisateurs</h2>}
+            header={<span>Utilisateurs</span>}
         >
             <Head title="Utilisateurs" />
 

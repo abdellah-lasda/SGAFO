@@ -367,26 +367,25 @@ RF uploade PDFs dans SGAFO
 
 ## 6. EXIGENCES FONCTIONNELLES DÉTAILLÉES
 
-### 6.1 Gestion des Entités de Formation
+### 6.1 Gestion du Catalogue (Entités de Formation)
 
-Une **entité de formation** représente l'idée ou le concept d'une formation. Elle sert de référentiel réutilisable pour créer plusieurs plans à des moments différents.
+Le module **Catalogue** a été repensé pour offrir une vue "Fiche Technique" ultra-lisible, séparant les données conceptuelles du contenu pédagogique.
 
-| Champ | Type | Obligatoire | Description |
-|---|---|---|---|
-| Titre | VARCHAR(200) | ✅ | Intitulé de l'idée de formation |
-| Domaine | Liste déroulante | ✅ | Domaine pédagogique ou technique |
-| Description | Texte long | — | Présentation générale du concept |
-| Objectifs | Texte long | ✅ | Ce que les formateurs vont acquérir |
-| Thèmes | Liste dynamique | ✅ | Thèmes abordés (nom + durée indicative + objectifs) |
-| Statut | ENUM | ✅ | `actif` / `archivé` |
-| Créé par | FK → utilisateurs | ✅ | CDC ou RF créateur |
-| Date de création | TIMESTAMP | ✅ | Automatique |
+#### A. Ergonomie de Consultation (Fiche Détails)
+L'affichage est structuré en **deux fenêtres distinctes** :
+- **Fenetre Information Globale** : Identité de la formation (ID, Titre, Secteur, Volume, Mode) et Objectifs globaux.
+- **Fenetre Curriculum** : Présentation du programme sous forme de **Tableau strict** (N°, Intitule, Durée, Contenu).
 
-**Règles :**
-- Une entité peut générer plusieurs plans à des périodes différentes
-- Une entité archivée ne peut plus générer de nouveaux plans (RG14)
-- Les thèmes d'une entité sont indicatifs — ils peuvent être modifiés dans le plan
+#### B. Ergonomie de Saisie (Ajout/Modification)
+La création suit la même logique de séparation pour une saisie rapide et sans erreur :
+- **Bloc 1** : Formulaire des métadonnées (Secteur, Type, Mode).
+- **Bloc 2** : **Tableau de saisie dynamique** des thèmes. Chaque ligne est un module éditable en temps réel.
+- **Fonctionnalité clé** : Calcul automatique et dynamique de la durée totale de la formation à mesure que les modules sont saisis.
 
+#### C. Règles de gestion (Entités) :
+- **Mode de formation** : Définit les contraintes logistiques (Présentiel, Distance, Hybride).
+- **Archivage permanent** : Une entité ne peut être supprimée physiquement si elle est liée à un plan. Elle passe au statut `archivé`, ce qui la rend invisible pour les nouveaux plans tout en conservant l'historique (RG14).
+- **Consistance** : Chaque entité est rattachée à un `Secteur` et un `Type` (Technique, Pédagogique, etc.).
 ### 6.2 Gestion des Plans de Formation
 
 Un plan est l'application concrète et détaillée d'une entité, créée via un **stepper guidé en 6 étapes**.
@@ -575,11 +574,18 @@ Résultats visibles selon les droits de chaque rôle
 - Conventions de code documentées (PSR-12 pour Laravel, ESLint pour React)
 - Tests unitaires, d'intégration et fonctionnels
 
-### 8.5 Compatibilité
+### 8.5 Design System & Identité Visuelle (SGAFO SaaS Modern)
 
-- Interface responsive : PC, tablettes, mobiles
-- Compatibilité navigateurs modernes : Chrome, Firefox, Edge, Safari
-- Parcours terrain simplifiés sur mobile (présences, QCM, notifications)
+Le système adopte les codes visuels des solutions SaaS haut de gamme ("Aesthetic Premium") pour maximiser l'adoption utilisateur.
+
+| Élément | Spécification Design v2.0 |
+|---|---|
+| **Palette de couleurs** | **Slate 900** (Structure/Sidebar), **Blanc Pur** (Contenu), **Bleu Royal #2563eb** (Actions) |
+| **Bordures (Radius)** | Style géométrique sobre : `rounded-xl` (Boutons/Inputs), `rounded-2xl` (Cartes/Modales) |
+| **Typographie** | **Inter / Sans-serif** : Poids lourd (Black) pour les titres, Bold pour la navigation |
+| **Navigation** | **Sidebar fixe** (Verticale gauche) et **Top Bar minimaliste** avec fil d'ariane |
+| **Mise en page** | Structure en **Blocs/Fenetres** distincts délimités par des bordures légères |
+| **Imagerie** | Utilisation exclusive d'icônes filaires (Outline) pour une allure industrielle |
 
 ---
 
