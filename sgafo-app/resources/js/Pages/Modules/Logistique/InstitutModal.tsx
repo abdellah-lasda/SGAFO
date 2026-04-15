@@ -38,13 +38,13 @@ export default function InstitutModal({ isOpen, onClose, institut }: Props) {
 
     return (
         <Modal show={isOpen} onClose={onClose} maxWidth="lg">
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl overflow-hidden shadow-2xl">
-                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <form onSubmit={handleSubmit} className="bg-slate-50 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+                <div className="px-6 py-4 border-b border-slate-100 bg-white sticky top-0 z-20">
                     <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Localisation du Site</h3>
                     <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{institut?.nom}</p>
                 </div>
 
-                <div className="p-6 space-y-4">
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
                     <div>
                         <InputLabel value="Adresse" className="text-[9px] font-black text-slate-400 uppercase mb-2" />
                         <TextInput
@@ -67,7 +67,7 @@ export default function InstitutModal({ isOpen, onClose, institut }: Props) {
                     </div>
                 </div>
 
-                <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+                <div className="px-6 py-4 border-t border-slate-100 bg-white flex justify-end gap-2 sticky bottom-0 z-20">
                     <button type="button" onClick={onClose} className="text-[10px] font-black uppercase text-slate-400">Annuler</button>
                     <button 
                         type="submit" 

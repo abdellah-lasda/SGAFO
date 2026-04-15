@@ -56,10 +56,10 @@ export default function HotelModal({ isOpen, onClose, hotel, regions }: Props) {
 
     return (
         <Modal show={isOpen} onClose={onClose} maxWidth="2xl">
-            <form onSubmit={handleSubmit} className="bg-slate-50 rounded-2xl overflow-hidden flex flex-col">
+            <form onSubmit={handleSubmit} className="bg-slate-50 rounded-2xl overflow-hidden flex flex-col h-[85vh]">
                 
                 {/* Header */}
-                <div className="px-8 py-5 border-b border-slate-200 bg-white flex justify-between items-center">
+                <div className="px-8 py-5 border-b border-slate-200 bg-white flex justify-between items-center sticky top-0 z-20">
                     <div>
                         <h2 className="text-xl font-black text-slate-900 tracking-tight">
                             {isEdit ? 'Modifier l\'Hôtel' : 'Ajouter un Hébergement'}
@@ -74,7 +74,7 @@ export default function HotelModal({ isOpen, onClose, hotel, regions }: Props) {
                 </div>
 
                 {/* Form Body */}
-                <div className="p-8 space-y-6">
+                <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide">
                     <div>
                         <InputLabel value="Nom de site" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
                         <TextInput
@@ -150,7 +150,7 @@ export default function HotelModal({ isOpen, onClose, hotel, regions }: Props) {
                 </div>
 
                 {/* Footer */}
-                <div className="px-8 py-6 border-t border-slate-200 bg-white flex justify-end gap-3">
+                <div className="px-8 py-6 border-t border-slate-200 bg-white flex justify-end gap-3 sticky bottom-0 z-20">
                     <button
                         type="button"
                         onClick={onClose}

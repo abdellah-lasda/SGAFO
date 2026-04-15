@@ -2,21 +2,31 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 
-export default function Dashboard() {
+interface Props extends PageProps {
+    stats: {
+        formations_count: number;
+        secteurs_count: number;
+        sites_count: number;
+        formateurs_count: number;
+    };
+    latestFormations: any[];
+}
+
+export default function Dashboard({ stats: dataStats, latestFormations }: Props) {
     const user = usePage<PageProps>().props.auth.user;
     
     // Mock data for visual wow - will be replaced by real props in the future
     const stats = [
-        { label: 'Formations au Catalogue', value: '42', icon: (
+        { label: 'Formations au Catalogue', value: dataStats.formations_count.toString(), icon: (
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002 2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
         ), color: 'bg-emerald-50 text-emerald-600' },
-        { label: 'Secteurs Couverts', value: '12', icon: (
+        { label: 'Secteurs Couverts', value: dataStats.secteurs_count.toString(), icon: (
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
         ), color: 'bg-blue-50 text-blue-600' },
-        { label: 'Sessions en Attente', value: '08', icon: (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+        { label: 'Sites de Formation', value: dataStats.sites_count.toString(), icon: (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002 2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
         ), color: 'bg-amber-50 text-amber-600' },
-        { label: 'Formateurs Actifs', value: '150', icon: (
+        { label: 'Formateurs Actifs', value: dataStats.formateurs_count.toString(), icon: (
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
         ), color: 'bg-purple-50 text-purple-600' },
     ];
@@ -83,18 +93,28 @@ export default function Dashboard() {
                             Actualités du Catalogue
                         </h2>
                         <div className="space-y-6">
-                            {[1, 2, 3].map((_, i) => (
-                                <div key={i} className="flex items-center gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-slate-100/50 transition-colors cursor-pointer group">
-                                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-blue-600 font-bold border border-slate-100">
-                                        {i === 0 ? 'IT' : i === 1 ? 'MGT' : 'PED'}
+                            {latestFormations.length > 0 ? latestFormations.map((formation, i) => (
+                                <Link 
+                                    key={formation.id} 
+                                    href={route('modules.entites.show', formation.id)}
+                                    className="flex items-center gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-slate-100/50 transition-colors cursor-pointer group"
+                                >
+                                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-blue-600 font-bold border border-slate-100 uppercase text-[10px]">
+                                        {formation.secteur?.nom?.substring(0, 3) || 'FT'}
                                     </div>
                                     <div className="flex-1">
-                                        <h4 className="text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors tracking-tight">Nouvelle entité de formation ajoutée : "Management de projet Agile"</h4>
-                                        <p className="text-xs text-slate-400 font-medium mt-1">Ajouté hier par <b>Sami Bennani</b> • Secteur Digital</p>
+                                        <h4 className="text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors tracking-tight line-clamp-1">{formation.titre}</h4>
+                                        <p className="text-xs text-slate-400 font-medium mt-1">
+                                            Ajouté le {new Date(formation.created_at).toLocaleDateString()} par <b>{formation.createur?.prenom} {formation.createur?.nom}</b> • Secteur {formation.secteur?.nom}
+                                        </p>
                                     </div>
                                     <svg className="w-5 h-5 text-slate-300 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+                                </Link>
+                            )) : (
+                                <div className="p-10 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                    <p className="text-sm font-medium text-slate-400">Aucune activité récente pour le moment.</p>
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
 

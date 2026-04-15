@@ -4,6 +4,10 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Models\EntiteFormation;
+use App\Models\Secteur;
+use App\Models\SiteFormation;
+use App\Models\User;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -15,7 +19,15 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    return Inertia::render('Dashboard', [
+        'stats' => [
+            'formations_count' => EntiteFormation::count(),
+            'secteurs_count' => Secteur::count(),
+            'sites_count' => SiteFormation::count(),
+            'formateurs_count' => User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))->count(),
+        ],
+        'latestFormations' => EntiteFormation::with(['secteur', 'createur'])->latest()->take(3)->get(),
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -27,6 +39,7 @@ Route::middleware('auth')->group(function () {
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\EntiteFormationController;
 use App\Http\Controllers\LogistiqueController;
+
 
 Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('users', AdminUserController::class)->except(['create', 'show', 'edit']);

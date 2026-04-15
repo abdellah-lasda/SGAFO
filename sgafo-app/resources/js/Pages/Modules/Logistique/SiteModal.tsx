@@ -71,10 +71,10 @@ export default function SiteModal({ isOpen, onClose, site, regions, instituts }:
 
     return (
         <Modal show={isOpen} onClose={onClose} maxWidth="2xl">
-            <form onSubmit={handleSubmit} className="bg-slate-50 rounded-2xl overflow-hidden flex flex-col">
+            <form onSubmit={handleSubmit} className="bg-slate-50 rounded-2xl overflow-hidden flex flex-col h-[85vh]">
                 
                 {/* Header */}
-                <div className="px-8 py-5 border-b border-slate-200 bg-white flex justify-between items-center">
+                <div className="px-8 py-5 border-b border-slate-200 bg-white flex justify-between items-center sticky top-0 z-20">
                     <div>
                         <h2 className="text-xl font-black text-slate-900 tracking-tight">
                             {isEdit ? 'Modifier le Site' : 'Ajouter un Site de Formation'}
@@ -88,7 +88,7 @@ export default function SiteModal({ isOpen, onClose, site, regions, instituts }:
                     </button>
                 </div>
 
-                {!isEdit && (
+                {/* {!isEdit && (
                     <div className="px-8 py-4 bg-blue-50/50 border-b border-blue-100 flex items-center gap-4">
                         <div className="flex-1">
                             <InputLabel value="Aide à la saisie (Référentiel Instituts)" className="text-[9px] font-black text-blue-600 uppercase mb-1.5 ml-1" />
@@ -104,10 +104,10 @@ export default function SiteModal({ isOpen, onClose, site, regions, instituts }:
                             </select>
                         </div>
                     </div>
-                )}
+                )} */}
 
                 {/* Form Body */}
-                <div className="p-8 space-y-6">
+                <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide">
                     <div>
                         <InputLabel value="Nom du site" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
                         <TextInput
@@ -157,7 +157,7 @@ export default function SiteModal({ isOpen, onClose, site, regions, instituts }:
                         <InputError message={errors.adresse} className="mt-1" />
                     </div>
 
-                    <div className="w-1/2">
+                    <div className="w-1/2 mx-auto">
                         <InputLabel value="Capacité d'accueil (Sessions)" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
                         <div className="relative">
                             <TextInput
@@ -173,7 +173,7 @@ export default function SiteModal({ isOpen, onClose, site, regions, instituts }:
                 </div>
 
                 {/* Footer */}
-                <div className="px-8 py-6 border-t border-slate-200 bg-white flex justify-end gap-3">
+                <div className="px-8 py-6 border-t border-slate-200 bg-white flex justify-end gap-3 sticky bottom-0 z-20">
                     <button
                         type="button"
                         onClick={onClose}
