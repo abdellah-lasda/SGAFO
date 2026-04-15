@@ -9,7 +9,7 @@ class Institut extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'code', 'region_id'];
+    protected $fillable = ['nom', 'code', 'region_id', 'adresse', 'ville'];
 
     public function region()
     {

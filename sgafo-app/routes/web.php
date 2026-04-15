@@ -26,6 +26,7 @@ Route::middleware('auth')->group(function () {
 
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\EntiteFormationController;
+use App\Http\Controllers\LogistiqueController;
 
 Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('users', AdminUserController::class)->except(['create', 'show', 'edit']);
@@ -33,6 +34,15 @@ Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->grou
 
 Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function () {
     Route::resource('entites', EntiteFormationController::class);
+    
+    // Logistique (Sites & Hotels)
+    Route::prefix('logistique')->name('logistique.')->group(function () {
+        Route::get('/', [LogistiqueController::class, 'index'])->name('index');
+        Route::post('/hotels', [LogistiqueController::class, 'storeHotel'])->name('hotels.store');
+        Route::put('/hotels/{hotel}', [LogistiqueController::class, 'updateHotel'])->name('hotels.update');
+        Route::patch('/hotels/{hotel}/archive', [LogistiqueController::class, 'archiveHotel'])->name('hotels.archive');
+        Route::put('/instituts/{institut}', [LogistiqueController::class, 'updateInstitut'])->name('instituts.update');
+    });
 });
 
 require __DIR__.'/auth.php';
