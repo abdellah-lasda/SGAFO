@@ -79,4 +79,20 @@ class User extends Authenticatable
     {
         return $this->hasRole('ADMIN');
     }
+
+    /**
+     * Plans créés par cet utilisateur.
+     */
+    public function plansCreated()
+    {
+        return $this->hasMany(PlanFormation::class, 'cree_par');
+    }
+
+    /**
+     * Plans validés par cet utilisateur (RF).
+     */
+    public function plansValidated()
+    {
+        return $this->hasMany(PlanFormation::class, 'valide_par');
+    }
 }

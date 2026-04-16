@@ -37,16 +37,25 @@ Route::middleware('auth')->group(function () {
 });
 
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\InstitutController as AdminInstitutController;
 use App\Http\Controllers\EntiteFormationController;
 use App\Http\Controllers\LogistiqueController;
-
+use App\Http\Controllers\PlanFormationController;
 
 Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('users', AdminUserController::class)->except(['create', 'show', 'edit']);
+    Route::resource('instituts', AdminInstitutController::class)->except(['create', 'show', 'edit']);
 });
 
 Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function () {
     Route::resource('entites', EntiteFormationController::class);
+    
+    // Plans de formation (Stepper + Workflow)
+    Route::resource('plans', PlanFormationController::class);
+    Route::post('plans/{plan}/submit', [PlanFormationController::class, 'submit'])->name('plans.submit');
+    Route::post('plans/{plan}/validate', [PlanFormationController::class, 'validatePlan'])->name('plans.validate');
+    Route::post('plans/{plan}/reject', [PlanFormationController::class, 'reject'])->name('plans.reject');
+    Route::post('plans/{plan}/confirm', [PlanFormationController::class, 'confirm'])->name('plans.confirm');
     
     // Logistique (Sites & Hotels)
     Route::prefix('logistique')->name('logistique.')->group(function () {

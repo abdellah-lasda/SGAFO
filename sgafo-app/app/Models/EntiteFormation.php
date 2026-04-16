@@ -31,4 +31,12 @@ class EntiteFormation extends Model
     {
         return $this->belongsTo(User::class, 'cree_par_id');
     }
+
+    /**
+     * Plans de formation générés à partir de cette entité (RG04 : 1 entité → N plans).
+     */
+    public function plans()
+    {
+        return $this->hasMany(PlanFormation::class, 'entite_id');
+    }
 }
