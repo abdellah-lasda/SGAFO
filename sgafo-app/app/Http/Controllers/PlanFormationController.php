@@ -112,7 +112,7 @@ class PlanFormationController extends Controller
                 $plan->participants()->sync($participantData);
             }
 
-            return redirect()->route('modules.plans.edit', $plan)
+            return redirect()->route('modules.plans.show', $plan)
                            ->with('success', 'Plan créé en brouillon.');
         });
     }

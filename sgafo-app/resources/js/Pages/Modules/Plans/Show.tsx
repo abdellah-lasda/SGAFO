@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { PlanFormation, STATUT_CONFIG, PlanStatut } from '@/types/plan';
 import { PageProps } from '@/types';
 import { useState } from 'react';
@@ -32,7 +32,14 @@ export default function Show({ plan }: Props) {
     };
 
     return (
-        <AuthenticatedLayout header={<span>Détail du plan</span>}>
+        <AuthenticatedLayout header={
+        <div className="flex items-center gap-2">
+            <Link href={route('modules.plans.index')} className="text-slate-400 hover:text-blue-600 transition-colors font-bold">Plans de formation</Link>
+            <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+            <span className="font-bold text-slate-900">{plan.titre}</span>
+        </div>
+        
+        }>
             <Head title={plan.titre} />
 
             <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

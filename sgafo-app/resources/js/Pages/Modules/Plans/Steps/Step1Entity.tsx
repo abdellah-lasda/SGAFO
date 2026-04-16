@@ -1,17 +1,20 @@
 import { Entite } from '@/types/entite';
 import { useState } from 'react';
+import EntiteModal from '../../Entites/EntiteModal';
 
 interface Props {
     entites: Entite[];
+    secteurs: { id: number; nom: string }[];
     selectedEntite: Entite | null;
     onSelect: (entite: Entite) => void;
 }
 
-export default function Step1Entity({ entites, selectedEntite, onSelect }: Props) {
+export default function Step1Entity({ entites, secteurs, selectedEntite, onSelect }: Props) {
     const [search, setSearch] = useState('');
     const [filterSecteur, setFilterSecteur] = useState<number | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const secteurs = entites
+    const availableSecteurs = entites
         .map(e => e.secteur)
         .filter((secteur, index, self) => secteur && self.findIndex(s => s?.id === secteur.id) === index);
 
@@ -44,8 +47,15 @@ export default function Step1Entity({ entites, selectedEntite, onSelect }: Props
                     className="px-4 py-3 text-sm font-medium border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 >
                     <option value="">Tous les secteurs</option>
-                    {secteurs.map(s => s && <option key={s.id} value={s.id}>{s.nom}</option>)}
+                    {availableSecteurs.map(s => s && <option key={s.id} value={s.id}>{s.nom}</option>)}
                 </select>
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="flex items-center justify-center w-12 h-12 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors shadow-sm ring-1 ring-inset ring-blue-500/20"
+                    title="Ajouter une entité au catalogue"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                </button>
             </div>
 
             {/* Entity List */}
@@ -94,6 +104,13 @@ export default function Step1Entity({ entites, selectedEntite, onSelect }: Props
             <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest mt-6">
                 ⚠️ Seules les entités avec le statut "actif" sont affichées
             </p>
+
+            <EntiteModal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+                entite={null} 
+                secteurs={secteurs} 
+            />
         </div>
     );
 }

@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
 
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\InstitutController as AdminInstitutController;
+use App\Http\Controllers\Admin\DomaineController as AdminDomaineController;
 use App\Http\Controllers\EntiteFormationController;
 use App\Http\Controllers\LogistiqueController;
 use App\Http\Controllers\PlanFormationController;
@@ -45,7 +46,23 @@ use App\Http\Controllers\PlanFormationController;
 Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('users', AdminUserController::class)->except(['create', 'show', 'edit']);
     Route::resource('instituts', AdminInstitutController::class)->except(['create', 'show', 'edit']);
+    
+    // Spécialités: CDCs, Secteurs, Métiers
+    Route::get('domaines', [AdminDomaineController::class, 'index'])->name('domaines.index');
+    Route::post('domaines/cdcs', [AdminDomaineController::class, 'storeCdc'])->name('cdcs.store');
+    Route::put('domaines/cdcs/{cdc}', [AdminDomaineController::class, 'updateCdc'])->name('cdcs.update');
+    Route::delete('domaines/cdcs/{cdc}', [AdminDomaineController::class, 'destroyCdc'])->name('cdcs.destroy');
+    
+    Route::post('domaines/secteurs', [AdminDomaineController::class, 'storeSecteur'])->name('secteurs.store');
+    Route::put('domaines/secteurs/{secteur}', [AdminDomaineController::class, 'updateSecteur'])->name('secteurs.update');
+    Route::delete('domaines/secteurs/{secteur}', [AdminDomaineController::class, 'destroySecteur'])->name('secteurs.destroy');
+    
+    Route::post('domaines/metiers', [AdminDomaineController::class, 'storeMetier'])->name('metiers.store');
+    Route::put('domaines/metiers/{metier}', [AdminDomaineController::class, 'updateMetier'])->name('metiers.update');
+    Route::delete('domaines/metiers/{metier}', [AdminDomaineController::class, 'destroyMetier'])->name('metiers.destroy');
 });
+
+
 
 Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function () {
     Route::resource('entites', EntiteFormationController::class);

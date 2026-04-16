@@ -197,6 +197,7 @@ export default function Create({ plan, entites, secteurs, sites, formateurs }: P
                             entites={entites}
                             selectedEntite={selectedEntite}
                             onSelect={handleEntitySelect}
+                            secteurs={secteurs}
                         />
                     )}
                     {step === 2 && (

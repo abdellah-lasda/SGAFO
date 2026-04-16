@@ -9,7 +9,7 @@ class Cdc extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['code', 'nom'];
+    protected $fillable = ['code', 'nom', 'description'];
 
     /**
      * Get the sectors managed by this CDC.

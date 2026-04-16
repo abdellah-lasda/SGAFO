@@ -26,4 +26,12 @@ class Secteur extends Model
     {
         return $this->belongsToMany(User::class, 'secteur_user');
     }
+
+    /**
+     * Get the metiers (specialities) assigned to this sector.
+     */
+    public function metiers()
+    {
+        return $this->hasMany(Metier::class);
+    }
 }
