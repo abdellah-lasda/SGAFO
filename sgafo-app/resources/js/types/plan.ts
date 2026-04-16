@@ -21,6 +21,7 @@ export interface PlanFormateur {
     statut?: string;
     instituts?: { id: number; nom: string; region?: { id: number; nom: string } }[];
     regions?: { id: number; nom: string }[];
+    secteurs?: { id: number; nom: string }[];
 }
 
 export interface PlanParticipant extends PlanFormateur {

@@ -52,7 +52,7 @@ class PlanFormationController extends Controller
             'sites' => SiteFormation::where('statut', 'actif')->get(),
             'formateurs' => User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))
                                 ->where('statut', 'actif')
-                                ->with(['instituts.region', 'regions'])
+                                ->with(['instituts.region', 'regions', 'secteurs'])
                                 ->get(),
         ]);
     }
@@ -141,7 +141,7 @@ class PlanFormationController extends Controller
             'sites' => SiteFormation::where('statut', 'actif')->get(),
             'formateurs' => User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))
                                 ->where('statut', 'actif')
-                                ->with(['instituts.region', 'regions'])
+                                ->with(['instituts.region', 'regions', 'secteurs'])
                                 ->get(),
         ]);
     }
