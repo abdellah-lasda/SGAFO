@@ -31,7 +31,7 @@ export interface PlanParticipant extends PlanFormateur {
     };
 }
 
-export type PlanStatut = 'brouillon' | 'soumis' | 'validé' | 'rejeté' | 'confirmé' | 'archivé';
+export type PlanStatut = 'brouillon' | 'soumis' | 'validé' | 'rejeté' | 'confirmé' | 'en_cours' | 'clôturé' | 'archivé';
 
 export interface PlanHebergement {
     id?: number;
@@ -94,5 +94,7 @@ export const STATUT_CONFIG: Record<PlanStatut, { label: string; color: string; b
     'validé': { label: 'Validé', color: 'text-blue-700', bg: 'bg-blue-50' },
     'rejeté': { label: 'Rejeté', color: 'text-red-700', bg: 'bg-red-50' },
     'confirmé': { label: 'Confirmé', color: 'text-emerald-700', bg: 'bg-emerald-50' },
+    'en_cours': { label: 'En Planification', color: 'text-blue-600', bg: 'bg-blue-50' },
+    'clôturé': { label: 'Clôturé', color: 'text-amber-600', bg: 'bg-amber-50' },
     'archivé': { label: 'Archivé', color: 'text-slate-500', bg: 'bg-slate-50' },
 };

@@ -90,6 +90,8 @@ Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function
     Route::post('plans/{plan}/validate', [PlanFormationController::class, 'validatePlan'])->name('plans.validate');
     Route::post('plans/{plan}/reject', [PlanFormationController::class, 'reject'])->name('plans.reject');
     Route::post('plans/{plan}/confirm', [PlanFormationController::class, 'confirm'])->name('plans.confirm');
+    Route::post('plans/{plan}/cloturer', [PlanFormationController::class, 'cloturerPlanning'])->name('plans.cloturer');
+    Route::post('plans/{plan}/reouvrir', [PlanFormationController::class, 'reouvrirPlanning'])->name('plans.reouvrir');
 
     // Centre de Validation (RF)
     Route::get('validations', [PlanValidationController::class, 'index'])->name('validations.index');

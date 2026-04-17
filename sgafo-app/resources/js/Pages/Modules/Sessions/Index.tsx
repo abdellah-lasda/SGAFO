@@ -28,16 +28,19 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
     const [selectedDate, setSelectedDate] = useState(formationDates[0] || '');
     const [isAdding, setIsAdding] = useState(false);
     const [themeToPlan, setThemeToPlan] = useState<any>(null);
+    const [useRecurrence, setUseRecurrence] = useState(false);
 
     const { data, setData, post, processing, reset, errors, transform } = useForm({
         date: selectedDate,
         debut: '08:30',
         fin: '12:30',
         site_id: plan.site_formation_id || '',
+        recurrence_end: null as string | null,
         themes: plan.themes.map(t => ({
             plan_theme_id: t.id,
             nom: t.nom,
             heures_planifiees: 0,
+            formateur_id: (t.animateurs && t.animateurs.length > 0) ? t.animateurs[0].id : '',
             checked: false
         }))
     });
@@ -51,6 +54,7 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
         transform((data) => ({
             ...data,
             date: selectedDate,
+            recurrence_end: useRecurrence ? data.recurrence_end : null,
             themes: data.themes.filter(t => t.checked && t.heures_planifiees > 0)
         }));
 
@@ -59,11 +63,13 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                 reset();
                 setThemeToPlan(null);
                 setIsAdding(false);
+                setUseRecurrence(false);
             }
         });
     };
 
     const deleteSeance = (id: number) => {
+        if (plan.statut === 'clôturé') return;
         if (confirm('Supprimer cette séance du planning ?')) {
             router.delete(route('modules.seances.destroy', id), {
                 preserveScroll: true
@@ -72,16 +78,33 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
     };
 
     const openPlanningForTheme = (theme: any) => {
+        if (plan.statut === 'clôturé') return;
         setThemeToPlan(theme);
         // On pré-coche ce thème et on met à zéro les autres
         const newThemes = data.themes.map(t => ({
             ...t,
             checked: t.plan_theme_id === theme.id,
-            heures_planifiees: t.plan_theme_id === theme.id ? (theme.reste > 4 ? 4 : theme.reste) : 0
+            heures_planifiees: t.plan_theme_id === theme.id ? (theme.reste > 4 ? 4 : theme.reste) : 0,
+            formateur_id: t.formateur_id // Keep existing or default
         }));
         setData('themes', newThemes);
         setIsAdding(true);
     };
+
+    const handleCloturer = () => {
+        if (confirm('Voulez-vous clôturer définitivement le planning ? Cela figera les séances pour l\'exécution.')) {
+            router.post(route('modules.plans.cloturer', plan.id));
+        }
+    };
+
+    const handleReouvrir = () => {
+        if (confirm('Voulez-vous réouvrir le planning pour modifications ?')) {
+            router.post(route('modules.plans.reouvrir', plan.id));
+        }
+    };
+
+    const isComplete = themesStats.every(t => t.reste === 0);
+    const isLocked = plan.statut === 'clôturé';
 
     return (
         <AuthenticatedLayout
@@ -104,13 +127,34 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                             <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Étape d'Exécution — Gestion du Planning</h2>
                             <p className="text-xs text-slate-400 font-medium">Configurez les séances journée par journée.</p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-6">
+                             {isLocked && (
+                                <span className="bg-amber-100 text-amber-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-amber-200">
+                                    🔒 Planning Clôturé
+                                </span>
+                             )}
                              <div className="text-right">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progression Globale</p>
                                 <p className="text-sm font-black text-blue-600">
                                     {Math.round((themesStats.reduce((s,t) => s + t.heures_planifiees, 0) / themesStats.reduce((s,t) => s + t.duree_totale, 0)) * 100)}% planifié
                                 </p>
                              </div>
+                             {isComplete && !isLocked && (
+                                <button 
+                                    onClick={handleCloturer}
+                                    className="px-6 py-3 bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-emerald-500/20"
+                                >
+                                    🏁 Finaliser
+                                </button>
+                             )}
+                             {isLocked && (
+                                <button 
+                                    onClick={handleReouvrir}
+                                    className="px-6 py-3 bg-white border border-slate-200 text-slate-600 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-50 transition-all shadow-sm"
+                                >
+                                    🔓 Réouvrir
+                                </button>
+                             )}
                         </div>
                     </div>
 
@@ -277,7 +321,8 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Début (Heure exacte)</label>
                                         <input 
                                             type="time" 
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-4 px-6 text-sm font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-center"
+                                            disabled={isLocked}
+                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-4 px-6 text-sm font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-center disabled:opacity-50"
                                             value={data.debut}
                                             onChange={e => setData('debut', e.target.value)}
                                             required
@@ -287,7 +332,8 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fin (Heure exacte)</label>
                                         <input 
                                             type="time" 
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-4 px-6 text-sm font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-center"
+                                            disabled={isLocked}
+                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-4 px-6 text-sm font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-center disabled:opacity-50"
                                             value={data.fin}
                                             onChange={e => setData('fin', e.target.value)}
                                             required
@@ -295,42 +341,110 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                                     </div>
                                 </div>
 
+                                <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div 
+                                                onClick={() => !isLocked && setUseRecurrence(!useRecurrence)}
+                                                className={`w-10 h-6 rounded-full p-1 cursor-pointer transition-all ${useRecurrence ? 'bg-blue-600' : 'bg-slate-300'} ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                <div className={`w-4 h-4 bg-white rounded-full transition-all transform ${useRecurrence ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                                            </div>
+                                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Planifier sur plusieurs jours</span>
+                                        </div>
+                                    </div>
+
+                                    {useRecurrence && (
+                                        <div className="animate-in slide-in-from-top-2 duration-300">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Date de fin de récurrence (hors weekends)</label>
+                                            <input 
+                                                type="date" 
+                                                disabled={isLocked}
+                                                className="w-full mt-2 bg-white border-2 border-blue-100 rounded-xl py-3 px-4 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 disabled:opacity-50"
+                                                value={data.recurrence_end || ''}
+                                                min={selectedDate}
+                                                max={formationDates[formationDates.length - 1]}
+                                                onChange={e => setData('recurrence_end', e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Thème(s) affecté(s)</label>
-                                    <div className="space-y-3 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
-                                        {data.themes.map((theme, index) => (
-                                            <div key={theme.plan_theme_id} className={`p-5 rounded-2xl border transition-all ${theme.checked ? 'border-blue-200 bg-blue-50/50' : 'border-slate-100 bg-slate-50 opacity-40'}`}>
-                                                <div className="flex items-center gap-4 mb-3">
-                                                    <div 
-                                                        onClick={() => {
-                                                            const newThemes = [...data.themes];
-                                                            newThemes[index].checked = !newThemes[index].checked;
-                                                            setData('themes', newThemes);
-                                                        }}
-                                                        className={`w-6 h-6 rounded flex items-center justify-center border-2 cursor-pointer transition-colors ${theme.checked ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-300'}`}
-                                                    >
-                                                        {theme.checked && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
-                                                    </div>
-                                                    <span className="text-xs font-black text-slate-900 flex-1">{theme.nom}</span>
-                                                </div>
-                                                {theme.checked && (
-                                                    <div className="flex items-center gap-3">
-                                                        <input 
-                                                            type="number" 
-                                                            step="0.5" 
-                                                            className="w-24 bg-white border-blue-100 rounded-xl py-2 px-4 text-xs font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500"
-                                                            value={theme.heures_planifiees}
-                                                            onChange={e => {
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Thème(s) & Animateur(s)</label>
+                                    <div className="space-y-3 max-h-[25vh] overflow-y-auto pr-2 custom-scrollbar">
+                                        {data.themes.map((theme, index) => {
+                                            const stats = themesStats.find(t => t.id === theme.plan_theme_id);
+                                            return (
+                                                <div key={theme.plan_theme_id} className={`p-4 rounded-2xl border transition-all ${theme.checked ? 'border-blue-200 bg-blue-50/50' : 'border-slate-100 bg-slate-50 opacity-40'}`}>
+                                                    <div className="flex items-center gap-3 mb-4">
+                                                        <div 
+                                                            onClick={() => {
+                                                                if (isLocked) return;
                                                                 const newThemes = [...data.themes];
-                                                                newThemes[index].heures_planifiees = parseFloat(e.target.value) || 0;
+                                                                newThemes[index].checked = !newThemes[index].checked;
                                                                 setData('themes', newThemes);
                                                             }}
-                                                        />
-                                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">heures dédiées</span>
+                                                            className={`w-6 h-6 rounded flex items-center justify-center border-2 cursor-pointer transition-colors ${theme.checked ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-300'}`}
+                                                        >
+                                                            {theme.checked && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <span className="text-xs font-black text-slate-900 line-clamp-1">{theme.nom}</span>
+                                                            {theme.checked && stats && (
+                                                                <p className="text-[9px] font-bold text-blue-500 mt-0.5">Reste à planifier : {stats.reste}h</p>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                )}
-                                            </div>
-                                        ))}
+                                                    
+                                                    {theme.checked && (
+                                                        <div className="grid grid-cols-2 gap-3 items-end translate-y-1">
+                                                            <div>
+                                                                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Animateur</label>
+                                                                <select 
+                                                                    disabled={isLocked}
+                                                                    className="w-full bg-white border-slate-200 rounded-lg py-2 px-3 text-[10px] font-bold focus:ring-blue-500/10 focus:border-blue-500 disabled:opacity-50"
+                                                                    value={theme.formateur_id}
+                                                                    onChange={e => {
+                                                                        const newThemes = [...data.themes];
+                                                                        newThemes[index].formateur_id = e.target.value;
+                                                                        setData('themes', newThemes);
+                                                                    }}
+                                                                    required
+                                                                >
+                                                                    {stats?.animateurs?.map((anim: any) => (
+                                                                        <option key={anim.id} value={anim.id}>{anim.prenom} {anim.nom}</option>
+                                                                    ))}
+                                                                    {(!stats?.animateurs || stats.animateurs.length === 0) && (
+                                                                        <option value="">Aucun animateur affecté</option>
+                                                                    )}
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Durée (Heures)</label>
+                                                                <div className="flex items-center gap-2">
+                                                                    <input 
+                                                                        type="number" 
+                                                                        disabled={isLocked}
+                                                                        step="0.5" 
+                                                                        className="w-full bg-white border-slate-200 rounded-lg py-2 px-3 text-[10px] font-black focus:ring-blue-500/10 focus:border-blue-500 disabled:opacity-50"
+                                                                        value={theme.heures_planifiees}
+                                                                        onChange={e => {
+                                                                            const newThemes = [...data.themes];
+                                                                            newThemes[index].heures_planifiees = parseFloat(e.target.value) || 0;
+                                                                            setData('themes', newThemes);
+                                                                        }}
+                                                                        required
+                                                                    />
+                                                                    <span className="text-[9px] font-black text-slate-400">h</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
@@ -402,10 +516,21 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                                                 <td className="px-6 py-6">
                                                     <div className="flex flex-wrap gap-2">
                                                         {seance.themes.map((t: any) => (
-                                                            <div key={t.id} className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-100">
-                                                                <span className="text-[10px] font-black uppercase truncate max-w-[150px]">{t.nom}</span>
-                                                                <span className="w-1 h-1 bg-blue-300 rounded-full"></span>
-                                                                <span className="text-[10px] font-bold">{t.pivot.heures_planifiees}h</span>
+                                                            <div key={t.id} className="flex flex-col gap-1 bg-blue-50/50 p-2 rounded-xl border border-blue-100 min-w-[150px]">
+                                                                <div className="flex items-center justify-between gap-2">
+                                                                   <span className="text-[10px] font-black text-slate-900 uppercase truncate">{t.nom}</span>
+                                                                   <span className="text-[10px] font-black text-blue-600">{t.pivot.heures_planifiees}h</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5">
+                                                                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                                                   <span className="text-[9px] font-bold text-slate-500">
+                                                                       {(() => {
+                                                                           const originalTheme = plan.themes.find(orig => orig.id === t.id);
+                                                                           const anim = originalTheme?.animateurs?.find((a: any) => a.id == t.pivot.formateur_id);
+                                                                           return anim ? `${anim.prenom} ${anim.nom}` : 'N/A';
+                                                                       })()}
+                                                                   </span>
+                                                                </div>
                                                             </div>
                                                         ))}
                                                     </div>

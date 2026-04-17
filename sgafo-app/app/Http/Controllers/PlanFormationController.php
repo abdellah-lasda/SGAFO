@@ -386,4 +386,37 @@ class PlanFormationController extends Controller
         return redirect()->route('modules.plans.index')
                        ->with('success', 'Plan archivé.');
     }
+
+    /**
+     * Clôture définitive du planning pour passer à l'exécution.
+     */
+    public function cloturerPlanning(PlanFormation $plan)
+    {
+        // On pourrait ajouter des validations ici (ex: 100% des heures planifiées)
+        $plan->update(['statut' => 'clôturé']);
+
+        $plan->validationLogs()->create([
+            'user_id' => auth()->id(),
+            'action' => 'clôturé',
+            'commentaire' => 'Le planning a été clôturé définitivement.',
+        ]);
+
+        return redirect()->back()->with('success', 'Planning clôturé. La formation est prête pour l\'exécution.');
+    }
+
+    /**
+     * Réouverture du planning en cas d'imprévu.
+     */
+    public function reouvrirPlanning(PlanFormation $plan)
+    {
+        $plan->update(['statut' => 'en_cours']);
+
+        $plan->validationLogs()->create([
+            'user_id' => auth()->id(),
+            'action' => 'réouvert',
+            'commentaire' => 'Le planning a été réouvert pour modifications.',
+        ]);
+
+        return redirect()->back()->with('success', 'Planning réouvert pour modifications.');
+    }
 }

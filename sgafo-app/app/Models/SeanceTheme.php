@@ -2,26 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class SeanceTheme extends Model
+class SeanceTheme extends Pivot
 {
-    use HasFactory;
+    protected $table = 'seance_themes';
 
-    protected $fillable = [
-        'seance_id',
-        'plan_theme_id',
-        'heures_planifiees',
-    ];
-
-    public function seance()
+    public function formateur()
     {
-        return $this->belongsTo(Seance::class, 'seance_id');
-    }
-
-    public function theme()
-    {
-        return $this->belongsTo(PlanTheme::class, 'plan_theme_id');
+        return $this->belongsTo(User::class, 'formateur_id');
     }
 }
