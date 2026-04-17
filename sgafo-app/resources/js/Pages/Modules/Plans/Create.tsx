@@ -54,6 +54,8 @@ export default function Create({ plan, entites, secteurs, sites, formateurs }: P
         plan?.participants?.map(p => p.id) || []
     );
     const [siteId, setSiteId] = useState<number | null>(plan?.site_formation_id || null);
+    const [dateDebut, setDateDebut] = useState<string>(plan?.date_debut || '');
+    const [dateFin, setDateFin] = useState<string>(plan?.date_fin || '');
 
     // ─── Navigation ─────────────────────────────────────────
     const canGoNext = useCallback(() => {
@@ -89,6 +91,8 @@ export default function Create({ plan, entites, secteurs, sites, formateurs }: P
     const buildPayload = () => ({
         entite_id: selectedEntite?.id,
         titre,
+        date_debut: dateDebut || null,
+        date_fin: dateFin || null,
         themes: themes.map(t => ({
             nom: t.nom,
             duree_heures: t.duree_heures,
@@ -206,6 +210,10 @@ export default function Create({ plan, entites, secteurs, sites, formateurs }: P
                             setTitre={setTitre}
                             themes={themes}
                             setThemes={setThemes}
+                            dateDebut={dateDebut}
+                            setDateDebut={setDateDebut}
+                            dateFin={dateFin}
+                            setDateFin={setDateFin}
                         />
                     )}
                     {step === 3 && (

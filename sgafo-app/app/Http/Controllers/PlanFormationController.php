@@ -65,6 +65,8 @@ class PlanFormationController extends Controller
         $validated = $request->validate([
             'entite_id' => 'required|exists:entite_formations,id',
             'titre' => 'required|string|max:200',
+            'date_debut' => 'nullable|date',
+            'date_fin' => 'nullable|date|after_or_equal:date_debut',
             'themes' => 'required|array|min:1',
             'themes.*.nom' => 'required|string|max:200',
             'themes.*.duree_heures' => 'required|numeric|min:0.5',
@@ -81,6 +83,8 @@ class PlanFormationController extends Controller
             $plan = PlanFormation::create([
                 'entite_id' => $validated['entite_id'],
                 'titre' => $validated['titre'],
+                'date_debut' => $validated['date_debut'] ?? null,
+                'date_fin' => $validated['date_fin'] ?? null,
                 'statut' => 'brouillon',
                 'cree_par' => auth()->id(),
                 'site_formation_id' => $validated['site_formation_id'] ?? null,
@@ -157,6 +161,8 @@ class PlanFormationController extends Controller
 
         $validated = $request->validate([
             'titre' => 'required|string|max:200',
+            'date_debut' => 'nullable|date',
+            'date_fin' => 'nullable|date|after_or_equal:date_debut',
             'themes' => 'required|array|min:1',
             'themes.*.nom' => 'required|string|max:200',
             'themes.*.duree_heures' => 'required|numeric|min:0.5',
@@ -172,6 +178,8 @@ class PlanFormationController extends Controller
         return DB::transaction(function () use ($validated, $plan) {
             $plan->update([
                 'titre' => $validated['titre'],
+                'date_debut' => $validated['date_debut'] ?? null,
+                'date_fin' => $validated['date_fin'] ?? null,
                 'site_formation_id' => $validated['site_formation_id'] ?? null,
             ]);
 

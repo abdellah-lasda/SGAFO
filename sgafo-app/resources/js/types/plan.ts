@@ -43,6 +43,8 @@ export interface PlanFormation {
     valide_par: number | null;
     date_soumission: string | null;
     date_validation: string | null;
+    date_debut: string | null;
+    date_fin: string | null;
     site_formation_id: number | null;
     created_at: string;
     updated_at: string;

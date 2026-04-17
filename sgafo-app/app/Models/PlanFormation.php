@@ -21,6 +21,8 @@ class PlanFormation extends Model
         'date_soumission',
         'date_validation',
         'site_formation_id',
+        'date_debut',
+        'date_fin',
     ];
 
     protected function casts(): array
@@ -28,6 +30,8 @@ class PlanFormation extends Model
         return [
             'date_soumission' => 'datetime',
             'date_validation' => 'datetime',
+            'date_debut' => 'date:Y-m-d',
+            'date_fin' => 'date:Y-m-d',
         ];
     }
 
