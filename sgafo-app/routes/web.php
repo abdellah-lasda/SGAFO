@@ -19,12 +19,24 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
+    $user = auth()->user();
+    $plansPendingCount = 0;
+    
+    if ($user->hasRole('RF')) {
+        $secteurIds = $user->secteurs()->pluck('secteurs.id')->toArray();
+        $plansPendingCount = \App\Models\PlanFormation::where('statut', 'soumis')
+            ->whereHas('entite', function ($q) use ($secteurIds) {
+                $q->whereIn('secteur_id', $secteurIds);
+            })->count();
+    }
+
     return Inertia::render('Dashboard', [
         'stats' => [
             'formations_count' => EntiteFormation::count(),
             'secteurs_count' => Secteur::count(),
             'sites_count' => SiteFormation::count(),
             'formateurs_count' => User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))->count(),
+            'plans_pending_count' => $plansPendingCount,
         ],
         'latestFormations' => EntiteFormation::with(['secteur', 'createur'])->latest()->take(3)->get(),
     ]);
@@ -42,6 +54,8 @@ use App\Http\Controllers\Admin\DomaineController as AdminDomaineController;
 use App\Http\Controllers\EntiteFormationController;
 use App\Http\Controllers\LogistiqueController;
 use App\Http\Controllers\PlanFormationController;
+use App\Http\Controllers\SeanceController;
+use App\Http\Controllers\PlanValidationController;
 
 Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('users', AdminUserController::class)->except(['create', 'show', 'edit']);
@@ -67,12 +81,23 @@ Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function () {
     Route::resource('entites', EntiteFormationController::class);
     
+    // Catalogue National (Plans Validés)
+    Route::get('catalogue-national', [\App\Http\Controllers\CatalogueController::class, 'index'])->name('catalogue.index');
+    
     // Plans de formation (Stepper + Workflow)
     Route::resource('plans', PlanFormationController::class);
     Route::post('plans/{plan}/submit', [PlanFormationController::class, 'submit'])->name('plans.submit');
     Route::post('plans/{plan}/validate', [PlanFormationController::class, 'validatePlan'])->name('plans.validate');
     Route::post('plans/{plan}/reject', [PlanFormationController::class, 'reject'])->name('plans.reject');
     Route::post('plans/{plan}/confirm', [PlanFormationController::class, 'confirm'])->name('plans.confirm');
+
+    // Centre de Validation (RF)
+    Route::get('validations', [PlanValidationController::class, 'index'])->name('validations.index');
+    
+    // Gestion des Séances (Planning)
+    Route::get('plans/{plan}/planning', [SeanceController::class, 'index'])->name('plans.planning.index');
+    Route::post('plans/{plan}/seances', [SeanceController::class, 'store'])->name('plans.seances.store');
+    Route::resource('seances', SeanceController::class)->only(['destroy']);
     
     // Logistique (Sites & Hotels)
     Route::prefix('logistique')->name('logistique.')->group(function () {

@@ -30,7 +30,8 @@
 12. Reporting et Analytics
 13. Livrables et Planification
 14. Glossaire
-15. Conclusion
+15. Vision Future : La Bibliothèque d'Expériences
+16. Conclusion
 
 ---
 
@@ -1089,7 +1090,28 @@ DOMAINE 6 : Notifications & Audit
 
 ---
 
-## 15. CONCLUSION
+## 15. VISION FUTURE : LA BIBLIOTHÈQUE D'EXPÉRIENCES
+
+Le **Catalogue National** ne sera pas seulement un répertoire de titres, mais deviendra à terme une **Bibliothèque d'Expériences Professionnelles**. Ce module permettra de capitaliser sur le savoir-faire de l'OFPPT en racontant "l'histoire" de chaque formation réalisée.
+
+### 15.1 Concept visuel : "Le Mur des Réussites"
+- **Interface par cartes** : Chaque formation validée ou réalisée est présentée sous forme de carte visuelle élégante (Grille du Catalogue).
+- **Filtrage multicritères** : Recherche par secteur, domaine, période ou popularité.
+- **Accessibilité** : Une vitrine ouverte à tous les acteurs pour s'inspirer des meilleures pratiques.
+
+### 15.2 Contenu de "l'Histoire d'une Formation"
+En cliquant sur une carte, l'utilisateur accède à un espace narratif complet :
+- **Documents & Ressources** : Supports de cours, guides, et livrables produits.
+- **Galerie Média** : Photos des sessions, vidéos des ateliers pratiques, captures des moments clés.
+- **Feedback & Feedback** : Commentaires réels des participants, témoignages et remerciements.
+- **Tableau de Bord d'Impact** : Statistiques de réussite et impressions globales.
+
+### 15.3 Objectif : Mémoire et Inspiration
+L'objectif est de transformer une donnée administrative (un plan de formation) en un actif immatériel précieux, permettant aux futurs formateurs de s'appuyer sur le succès de leurs prédécesseurs.
+
+---
+
+## 16. CONCLUSION
 
 Le présent cahier des charges définit de manière complète et non ambiguë le système **SGAFO** pour l'OFPPT. Il couvre l'intégralité du cycle de vie de la gestion des formations des formateurs : de la conceptualisation d'une idée de formation (entité) jusqu'à l'évaluation post-session et le reporting décisionnel.
 

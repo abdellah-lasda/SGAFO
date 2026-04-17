@@ -33,6 +33,36 @@ export interface PlanParticipant extends PlanFormateur {
 
 export type PlanStatut = 'brouillon' | 'soumis' | 'validé' | 'rejeté' | 'confirmé' | 'archivé';
 
+export interface PlanHebergement {
+    id?: number;
+    plan_id?: number;
+    user_id: number;
+    hotel_id: number;
+    nombre_nuits: number;
+    cout_total: number;
+    hotel?: {
+        id: number;
+        nom: string;
+        ville: string;
+        prix_nuitee: number;
+    };
+    user?: {
+        id: number;
+        nom: string;
+        prenom: string;
+    };
+}
+
+export interface PlanValidationLog {
+    id: number;
+    plan_id: number;
+    user_id: number | null;
+    action: string;
+    commentaire: string | null;
+    created_at: string;
+    user?: { id: number; prenom: string; nom: string };
+}
+
 export interface PlanFormation {
     id: number;
     entite_id: number;
@@ -53,7 +83,9 @@ export interface PlanFormation {
     validateur?: { id: number; prenom: string; nom: string };
     themes: PlanTheme[];
     participants?: PlanParticipant[];
+    hebergements?: PlanHebergement[];
     site_formation?: SiteFormation;
+    validation_logs?: PlanValidationLog[];
 }
 
 export const STATUT_CONFIG: Record<PlanStatut, { label: string; color: string; bg: string }> = {

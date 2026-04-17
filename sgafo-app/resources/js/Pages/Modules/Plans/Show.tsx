@@ -64,6 +64,15 @@ export default function Show({ plan }: Props) {
                             ✏️ Modifier
                         </a>
                     )}
+
+                    {isRF && (plan.statut === 'validé' || plan.statut === 'confirmé') && (
+                        <Link
+                            href={route('modules.plans.planning.index', plan.id)}
+                            className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20"
+                        >
+                            🗓️ Gérer le Planning
+                        </Link>
+                    )}
                 </div>
 
                 {/* Rejection reason */}
@@ -143,6 +152,42 @@ export default function Show({ plan }: Props) {
                         <p className="text-xs text-slate-400 italic">Aucun site défini</p>
                     )}
                 </div>
+
+                {/* Validation History (Timeline) */}
+                {plan.validation_logs && plan.validation_logs.length > 0 && (
+                    <div className="p-6 bg-white rounded-2xl border border-slate-200/60 shadow-sm">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Historique des décisions</h3>
+                        <div className="space-y-6 relative before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-px before:bg-slate-100">
+                            {plan.validation_logs.map((log) => {
+                                const logConfig = log.action === 'soumis' 
+                                    ? { icon: '📤', color: 'bg-amber-100 text-amber-600', label: 'Soumission' }
+                                    : log.action === 'validé'
+                                    ? { icon: '✅', color: 'bg-emerald-100 text-emerald-600', label: 'Validation' }
+                                    : { icon: '❌', color: 'bg-red-100 text-red-600', label: 'Rejet' };
+
+                                return (
+                                    <div key={log.id} className="relative pl-12">
+                                        <div className={`absolute left-0 w-9 h-9 rounded-full ${logConfig.color} flex items-center justify-center text-xs z-10 border-4 border-white shadow-sm font-bold`}>
+                                            {logConfig.icon}
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-900">{logConfig.label}</span>
+                                                <span className="text-[10px] font-bold text-slate-400">· {new Date(log.created_at).toLocaleString()}</span>
+                                            </div>
+                                            <p className="text-xs font-bold text-slate-700">Par {log.user?.prenom} {log.user?.nom}</p>
+                                            {log.commentaire && (
+                                                <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                                    <p className="text-xs text-slate-500 font-medium italic">"{log.commentaire}"</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* RF Validation Panel */}
                 {isRF && plan.statut === 'soumis' && (

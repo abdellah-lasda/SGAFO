@@ -1,9 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState, useCallback } from 'react';
-import { PlanFormation, PlanTheme, PlanFormateur } from '@/types/plan';
+import { PlanFormation, PlanTheme, PlanFormateur, PlanHebergement } from '@/types/plan';
 import { Entite } from '@/types/entite';
-import { SiteFormation } from '@/types/logistique';
+import { SiteFormation, Hotel } from '@/types/logistique';
 import { PageProps } from '@/types';
 import Step1Entity from './Steps/Step1Entity';
 import Step2Themes from './Steps/Step2Themes';
@@ -17,6 +17,7 @@ interface Props extends PageProps {
     entites: Entite[];
     secteurs: { id: number; nom: string }[];
     sites: SiteFormation[];
+    hotels: Hotel[];
     formateurs: PlanFormateur[];
 }
 
@@ -29,7 +30,7 @@ const STEPS = [
     { num: 6, label: 'Récapitulatif' },
 ];
 
-export default function Create({ plan, entites, secteurs, sites, formateurs }: Props) {
+export default function Create({ plan, entites, secteurs, sites, hotels, formateurs }: Props) {
     const { auth } = usePage<PageProps>().props;
     const userRoles = (auth.user as any).roles || [];
     const roleCodes = userRoles.map((r: any) => typeof r === 'object' ? r.code : r);
@@ -56,6 +57,7 @@ export default function Create({ plan, entites, secteurs, sites, formateurs }: P
     const [siteId, setSiteId] = useState<number | null>(plan?.site_formation_id || null);
     const [dateDebut, setDateDebut] = useState<string>(plan?.date_debut || '');
     const [dateFin, setDateFin] = useState<string>(plan?.date_fin || '');
+    const [hebergements, setHebergements] = useState<PlanHebergement[]>(plan?.hebergements || []);
 
     // ─── Navigation ─────────────────────────────────────────
     const canGoNext = useCallback(() => {
@@ -102,8 +104,13 @@ export default function Create({ plan, entites, secteurs, sites, formateurs }: P
         })),
         participant_ids: participantIds,
         site_formation_id: siteId,
+        hebergements: hebergements.map(h => ({
+            user_id: h.user_id,
+            hotel_id: h.hotel_id,
+            nombre_nuits: h.nombre_nuits,
+            cout_total: h.cout_total
+        })),
     });
-
     const handleSave = () => {
         const payload = buildPayload();
         if (plan) {
@@ -236,6 +243,14 @@ export default function Create({ plan, entites, secteurs, sites, formateurs }: P
                             sites={sites}
                             siteId={siteId}
                             setSiteId={setSiteId}
+                            hotels={hotels}
+                            hebergements={hebergements}
+                            setHebergements={setHebergements}
+                            formateurs={formateurs}
+                            participantIds={participantIds}
+                            animateurIds={animateurIds}
+                            dateDebut={dateDebut}
+                            dateFin={dateFin}
                         />
                     )}
                     {step === 6 && (

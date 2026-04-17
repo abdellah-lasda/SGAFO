@@ -72,6 +72,7 @@ export default function UserModal({ isOpen, onClose, user, roles, regions, insti
     const isDR = hasRole('DR');
     const isCDC = hasRole('CDC');
     const isFormateur = hasRole('FORMATEUR');
+    const isRF = hasRole('RF');
 
     return (
         <Modal show={isOpen} onClose={onClose} maxWidth="2xl">
@@ -207,18 +208,20 @@ export default function UserModal({ isOpen, onClose, user, roles, regions, insti
                                     </div>
                                 )}
 
-                                {isFormateur && (
-                                    <div className="p-4 border-l-4 border-orange-500 bg-white shadow-sm rounded-r-lg">
+                                {(isFormateur || isRF) && (
+                                    <div className={`p-4 border-l-4 ${isRF ? 'border-blue-400 bg-white' : 'border-orange-500 bg-white'} shadow-sm rounded-r-lg`}>
                                         <div className="flex items-center gap-2 mb-3">
-                                            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                                            <div className={`w-8 h-8 rounded-full ${isRF ? 'bg-blue-50 text-blue-500' : 'bg-orange-100 text-orange-600'} flex items-center justify-center`}>
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                                             </div>
-                                            <span className="font-bold text-orange-900">Spécialité & Lieu physique</span>
+                                            <span className={`font-bold ${isRF ? 'text-blue-900' : 'text-orange-900'}`}>
+                                                {isRF ? 'Secteur sous responsabilité' : 'Spécialité & Lieu physique'}
+                                            </span>
                                         </div>
                                         
                                         <div className="space-y-4">
                                             <select 
-                                                className="block w-full rounded-md border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                                                className={`block w-full rounded-md border-gray-300 focus:ring-${isRF ? 'blue' : 'orange'}-500 focus:border-${isRF ? 'blue' : 'orange'}-500`}
                                                 value={data.secteurs[0] ? String(data.secteurs[0]) : ''}
                                                 onChange={e => setData('secteurs', [parseInt(e.target.value)])}
                                             >
@@ -228,24 +231,28 @@ export default function UserModal({ isOpen, onClose, user, roles, regions, insti
                                                 ))}
                                             </select>
 
-                                            <div className="flex items-center gap-4 py-2 border-t border-gray-100">
-                                                <label className="flex items-center">
-                                                    <Checkbox checked={data.is_externe} onChange={e => setData('is_externe', e.target.checked)} />
-                                                    <span className="ml-2 text-sm text-gray-600">Formateur Externe</span>
-                                                </label>
-                                            </div>
+                                            {isFormateur && (
+                                                <>
+                                                    <div className="flex items-center gap-4 py-2 border-t border-gray-100">
+                                                        <label className="flex items-center">
+                                                            <Checkbox checked={data.is_externe} onChange={e => setData('is_externe', e.target.checked)} />
+                                                            <span className="ml-2 text-sm text-gray-600">Formateur Externe</span>
+                                                        </label>
+                                                    </div>
 
-                                            {!data.is_externe && (
-                                                <select 
-                                                    className="block w-full rounded-md border-gray-300 focus:ring-orange-500 focus:border-orange-500"
-                                                    value={data.instituts[0] ? String(data.instituts[0]) : ''}
-                                                    onChange={e => setData('instituts', [parseInt(e.target.value)])}
-                                                >
-                                                    <option value="">Sélectionnez l'Institut de rattachement</option>
-                                                    {instituts.map((inst: any) => (
-                                                        <option key={inst.id} value={inst.id}>{inst.nom}</option>
-                                                    ))}
-                                                </select>
+                                                    {!data.is_externe && (
+                                                        <select 
+                                                            className="block w-full rounded-md border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                                                            value={data.instituts[0] ? String(data.instituts[0]) : ''}
+                                                            onChange={e => setData('instituts', [parseInt(e.target.value)])}
+                                                        >
+                                                            <option value="">Sélectionnez l'Institut de rattachement</option>
+                                                            {instituts.map((inst: any) => (
+                                                                <option key={inst.id} value={inst.id}>{inst.nom}</option>
+                                                            ))}
+                                                        </select>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     </div>

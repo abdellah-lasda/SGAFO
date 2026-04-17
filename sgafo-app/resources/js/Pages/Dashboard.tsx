@@ -8,6 +8,7 @@ interface Props extends PageProps {
         secteurs_count: number;
         sites_count: number;
         formateurs_count: number;
+        plans_pending_count: number;
     };
     latestFormations: any[];
 }
@@ -66,6 +67,32 @@ export default function Dashboard({ stats: dataStats, latestFormations }: Props)
                         </div>
                     </div>
                 </div>
+
+                {/* Pending Validation Alert (For RF) */}
+                {dataStats.plans_pending_count > 0 && (
+                    <div className="relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                        <div className="relative p-8 bg-white ring-1 ring-slate-200/60 rounded-2xl flex flex-col md:flex-row items-center gap-6 justify-between shadow-sm">
+                            <div className="flex items-center gap-6">
+                                <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 flex-shrink-0 animate-bounce">
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-black text-slate-900 tracking-tight">Validation en attente</h2>
+                                    <p className="text-sm text-slate-500 font-medium mt-1">
+                                        Il y a <span className="text-amber-600 font-bold">{dataStats.plans_pending_count} plan(s)</span> de formation en attente de votre validation pour votre secteur.
+                                    </p>
+                                </div>
+                            </div>
+                            <Link 
+                                href={route('modules.plans.index', { statut: 'soumis' })}
+                                className="px-8 py-4 bg-amber-500 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/30 active:scale-95 whitespace-nowrap"
+                            >
+                                Examiner les plans
+                            </Link>
+                        </div>
+                    </div>
+                )}
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

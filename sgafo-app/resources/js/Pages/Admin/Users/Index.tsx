@@ -95,6 +95,12 @@ export default function Index({ users, roles, regions, instituts, secteurs, cdcs
                                                 </span>
                                             </div>
                                         )}
+                                        {user.roles.some((r: any) => r.code === 'RF') && (
+                                            <div>
+                                                <span className="block text-blue-700 font-semibold uppercase text-[10px] tracking-tight">Supervise :</span>
+                                                <span className="text-sm font-bold text-slate-700">{user.secteurs.map((s: any) => s.nom).join(', ') || 'Aucun secteur'}</span>
+                                            </div>
+                                        )}
                                         {user.roles.some((r: any) => ['DR', 'CDC'].includes(r.code)) && (
                                             <span className="text-xs italic text-gray-400">Périmètre National/Régional</span>
                                         )}

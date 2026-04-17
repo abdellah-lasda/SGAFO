@@ -15,12 +15,9 @@ class EntiteFormationController extends Controller
     {
         $user = auth()->user();
         
-        $query = EntiteFormation::with(['secteur', 'createur', 'themes']);
+        $query = EntiteFormation::with(['secteur', 'createur', 'themes'])
+            ->where('cree_par_id', $user->id); // Isolation locale
 
-        // Logique de filtrage (À affiner selon les rôles)
-        // Les CDC ne voient que les formations de leurs secteurs ? 
-        // Pour l'instant on affiche tout le catalogue national
-        
         return Inertia::render('Modules/Entites/Index', [
             'entites' => $query->latest()->get(),
             'secteurs' => Secteur::all(),

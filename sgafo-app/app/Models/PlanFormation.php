@@ -68,6 +68,16 @@ class PlanFormation extends Model
         return $this->belongsTo(SiteFormation::class, 'site_formation_id');
     }
 
+    public function hebergements()
+    {
+        return $this->hasMany(PlanHebergement::class, 'plan_id');
+    }
+
+    public function validationLogs()
+    {
+        return $this->hasMany(PlanValidationLog::class, 'plan_id')->orderBy('created_at', 'desc');
+    }
+
     // ─── Helpers ────────────────────────────────────────────
 
     /**

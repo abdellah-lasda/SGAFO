@@ -62,18 +62,18 @@ export default function Index({ auth, entites, secteurs }: Props) {
 
     return (
         <AuthenticatedLayout
-            header={<span>Catalogue</span>}
+            header={<span>Gestion des Modèles</span>}
         >
-            <Head title="Catalogue de formation" />
+            <Head title="Mes Modèles de Formation" />
 
-            <div className="space-y-8 animate-in fade-in duration-500">
+            <div className="space-y-5 animate-in fade-in duration-500">
                 
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Référentiel National</h1>
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Mes Modèles</h1>
                         <p className="text-sm text-slate-500 font-medium mt-1">
-                            {filteredEntites.length} concept(s) de formation répertorié(s)
+                            {filteredEntites.length} concept(s) de formation créés par vous
                         </p>
                     </div>
                     <button
@@ -98,7 +98,7 @@ export default function Index({ auth, entites, secteurs }: Props) {
                         <input
                             type="text"
                             className="block w-full pl-11 pr-4 py-3 bg-transparent border-transparent focus:border-transparent focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-medium"
-                            placeholder="Rechercher par titre de formation..."
+                            placeholder="Rechercher parmi mes modèles..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -137,7 +137,7 @@ export default function Index({ auth, entites, secteurs }: Props) {
                 </div>
 
                 {/* Table Section */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden overflow-x-auto">
+                {filteredEntites.length > 0 &&(<div className="bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden overflow-x-auto">
                     <table className="min-w-full divide-y divide-slate-100">
                         <thead className="bg-slate-50/50">
                             <tr>
@@ -227,10 +227,10 @@ export default function Index({ auth, entites, secteurs }: Props) {
                             ))}
                         </tbody>
                     </table>
-                </div>
+                </div>)}
 
                 {filteredEntites.length === 0 && (
-                    <div className="bg-white rounded-xl p-20 text-center border border-slate-200/60 flex flex-col items-center">
+                    <div className="bg-white rounded-xl p-20  text-center border border-slate-200/60 flex flex-col items-center">
                         <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-6">
                             <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

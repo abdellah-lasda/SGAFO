@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\PlanFormation;
+use App\Models\Secteur;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class CatalogueController extends Controller
+{
+    /**
+     * Affiche le Catalogue National (Plans validés par le RF).
+     */
+    public function index(Request $request)
+    {
+        $query = PlanFormation::with(['entite.secteur', 'createur', 'siteFormation', 'themes'])
+            ->where('statut', 'confirmé'); // Uniquement les plans officiels et publics
+
+        // Filtre par secteur
+        if ($request->filled('secteur')) {
+            $query->whereHas('entite', function($q) use ($request) {
+                $q->where('secteur_id', $request->secteur);
+            });
+        }
+
+        // Filtre par recherche
+        if ($request->filled('search')) {
+            $query->where('titre', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('entite', function($q) use ($request) {
+                      $q->where('titre', 'like', '%' . $request->search . '%');
+                  });
+        }
+
+        return Inertia::render('Modules/Catalogue/Index', [
+            'plans' => $query->latest('date_validation')->get(),
+            'secteurs' => Secteur::all(),
+            'filters' => $request->only(['search', 'secteur'])
+        ]);
+    }
+}

@@ -8,6 +8,8 @@ use App\Models\EntiteFormation;
 use App\Models\Secteur;
 use App\Models\SiteFormation;
 use App\Models\User;
+use App\Models\Hotel;
+use App\Models\PlanHebergement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -22,8 +24,16 @@ class PlanFormationController extends Controller
     {
         $user = auth()->user();
         
-        $query = PlanFormation::with(['entite.secteur', 'createur', 'validateur', 'themes']);
+        $query = PlanFormation::with(['entite.secteur', 'createur', 'validateur', 'themes'])
+                                ->where('cree_par', $user->id);
         
+        // Filtrage spécifique pour le Responsable de Formation
+        if ($user->hasRole('RF')) {
+            $secteurIds = $user->secteurs()->pluck('secteurs.id')->toArray();
+            $query->whereHas('entite', function ($q) use ($secteurIds) {
+                $q->whereIn('secteur_id', $secteurIds);
+            });
+        }
 
         // Filtre par statut
         if ($request->filled('statut')) {
@@ -50,6 +60,7 @@ class PlanFormationController extends Controller
             'entites' => $entites,
             'secteurs' => Secteur::all(),
             'sites' => SiteFormation::where('statut', 'actif')->get(),
+            'hotels' => Hotel::with('region')->where('statut', 'actif')->get(),
             'formateurs' => User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))
                                 ->where('statut', 'actif')
                                 ->with(['instituts.region', 'regions', 'secteurs'])
@@ -77,6 +88,11 @@ class PlanFormationController extends Controller
             'participant_ids' => 'nullable|array',
             'participant_ids.*' => 'exists:users,id',
             'site_formation_id' => 'nullable|exists:sites_formation,id',
+            'hebergements' => 'nullable|array',
+            'hebergements.*.user_id' => 'required|exists:users,id',
+            'hebergements.*.hotel_id' => 'required|exists:hotels,id',
+            'hebergements.*.nombre_nuits' => 'required|integer|min:1',
+            'hebergements.*.cout_total' => 'required|numeric|min:0',
         ]);
 
         return DB::transaction(function () use ($validated) {
@@ -116,6 +132,13 @@ class PlanFormationController extends Controller
                 $plan->participants()->sync($participantData);
             }
 
+            // Ajouter les hébergements
+            if (!empty($validated['hebergements'])) {
+                foreach ($validated['hebergements'] as $heb) {
+                    $plan->hebergements()->create($heb);
+                }
+            }
+
             return redirect()->route('modules.plans.show', $plan)
                            ->with('success', 'Plan créé en brouillon.');
         });
@@ -131,6 +154,7 @@ class PlanFormationController extends Controller
             'entite.themes',
             'themes.animateurs',
             'participants',
+            'hebergements.hotel',
             'siteFormation',
             'createur',
         ]);
@@ -138,11 +162,12 @@ class PlanFormationController extends Controller
         return Inertia::render('Modules/Plans/Create', [
             'plan' => $plan,
             'entites' => EntiteFormation::with(['secteur', 'themes', 'createur'])
-                            ->where('statut', 'actif')
+                            ->where('statut', 'actif')->where('cree_par_id', auth()->id())
                             ->latest()
                             ->get(),
             'secteurs' => Secteur::all(),
             'sites' => SiteFormation::where('statut', 'actif')->get(),
+            'hotels' => Hotel::with('region')->where('statut', 'actif')->get(),
             'formateurs' => User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))
                                 ->where('statut', 'actif')
                                 ->with(['instituts.region', 'regions', 'secteurs'])
@@ -173,6 +198,11 @@ class PlanFormationController extends Controller
             'participant_ids' => 'nullable|array',
             'participant_ids.*' => 'exists:users,id',
             'site_formation_id' => 'nullable|exists:sites_formation,id',
+            'hebergements' => 'nullable|array',
+            'hebergements.*.user_id' => 'required|exists:users,id',
+            'hebergements.*.hotel_id' => 'required|exists:hotels,id',
+            'hebergements.*.nombre_nuits' => 'required|integer|min:1',
+            'hebergements.*.cout_total' => 'required|numeric|min:0',
         ]);
 
         return DB::transaction(function () use ($validated, $plan) {
@@ -208,6 +238,14 @@ class PlanFormationController extends Controller
             }
             $plan->participants()->sync($participantData);
 
+            // Re-sync hebergements
+            $plan->hebergements()->delete();
+            if (!empty($validated['hebergements'])) {
+                foreach ($validated['hebergements'] as $heb) {
+                    $plan->hebergements()->create($heb);
+                }
+            }
+
             return redirect()->back()->with('success', 'Plan mis à jour.');
         });
     }
@@ -221,13 +259,14 @@ class PlanFormationController extends Controller
             'entite.secteur',
             'themes.animateurs',
             'participants.instituts',
+            'hebergements.hotel',
             'siteFormation',
             'createur',
             'validateur',
         ]);
 
         return Inertia::render('Modules/Plans/Show', [
-            'plan' => $plan,
+            'plan' => $plan->load('validationLogs.user'),
         ]);
     }
 
@@ -246,6 +285,12 @@ class PlanFormationController extends Controller
             'motif_rejet' => null, // Nettoyer le motif en cas de re-soumission
         ]);
 
+        $plan->validationLogs()->create([
+            'user_id' => auth()->id(),
+            'action' => 'soumis',
+            'commentaire' => 'Le plan a été soumis pour validation.',
+        ]);
+
         return redirect()->route('modules.plans.show', $plan)
                        ->with('success', 'Plan soumis au Responsable Formation.');
     }
@@ -255,14 +300,22 @@ class PlanFormationController extends Controller
      */
     public function validatePlan(PlanFormation $plan)
     {
+        \Illuminate\Support\Facades\Gate::authorize('validate', $plan);
+
         if (!$plan->canBeValidated()) {
             return redirect()->back()->with('error', 'Ce plan ne peut pas être validé.');
         }
 
         $plan->update([
-            'statut' => 'confirmé',
+            'statut' => 'validé',
             'valide_par' => auth()->id(),
             'date_validation' => now(),
+        ]);
+
+        $plan->validationLogs()->create([
+            'user_id' => auth()->id(),
+            'action' => 'validé',
+            'commentaire' => 'Le plan a été validé par le responsable de secteur.',
         ]);
 
         return redirect()->route('modules.plans.show', $plan)
@@ -274,6 +327,8 @@ class PlanFormationController extends Controller
      */
     public function reject(Request $request, PlanFormation $plan)
     {
+        \Illuminate\Support\Facades\Gate::authorize('validate', $plan);
+
         if (!$plan->canBeValidated()) {
             return redirect()->back()->with('error', 'Ce plan ne peut pas être rejeté.');
         }
@@ -287,6 +342,12 @@ class PlanFormationController extends Controller
             'motif_rejet' => $validated['motif_rejet'],
             'valide_par' => auth()->id(),
             'date_validation' => now(),
+        ]);
+
+        $plan->validationLogs()->create([
+            'user_id' => auth()->id(),
+            'action' => 'rejeté',
+            'commentaire' => $validated['motif_rejet'],
         ]);
 
         return redirect()->route('modules.plans.index')

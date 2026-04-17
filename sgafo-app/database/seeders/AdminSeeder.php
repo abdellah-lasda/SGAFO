@@ -30,5 +30,33 @@ class AdminSeeder extends Seeder
                 $admin->roles()->attach($adminRole->id);
             }
         }
+
+        // Création d'un Responsable de Formation (RF) de test
+        $rfRole = \App\Models\Role::where('code', 'RF')->first();
+        if ($rfRole) {
+            $rfUser = \App\Models\User::firstOrCreate(
+                ['email' => 'rf@ofppt.ma'],
+                [
+                    'nom' => 'Responsable',
+                    'prenom' => 'Formation NTIC',
+                    'password' => bcrypt('password123'),
+                    'statut' => 'actif',
+                ]
+            );
+
+            if (!$rfUser->roles()->where('role_id', $rfRole->id)->exists()) {
+                $rfUser->roles()->attach($rfRole->id);
+            }
+
+            // Associer ce RF à un secteur (le premier disponible, idéalement "NTIC")
+            $secteur = \App\Models\Secteur::firstOrCreate(
+                ['code' => 'NTIC'],
+                ['nom' => 'Nouvelles Technologies']
+            );
+
+            if (!$rfUser->secteurs()->where('secteur_id', $secteur->id)->exists()) {
+                $rfUser->secteurs()->attach($secteur->id);
+            }
+        }
     }
 }
