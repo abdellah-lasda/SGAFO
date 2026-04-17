@@ -98,7 +98,7 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
             <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
                 
                 {/* PARTIE 1 : SÉLECTEUR DE JOURNÉE (STYLE STEP 3) */}
-                <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                         <div className="space-y-1">
                             <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Étape d'Exécution — Gestion du Planning</h2>
@@ -120,7 +120,7 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                             <select
                                 value={selectedDate}
                                 onChange={(e) => setSelectedDate(e.target.value)}
-                                className="w-full bg-slate-50 border-2 border-blue-100 text-blue-900 text-sm font-bold rounded-2xl focus:ring-blue-500 focus:border-blue-500 block p-5 appearance-none shadow-sm transition-all"
+                                className="w-full bg-slate-50 border-2 border-blue-100 text-blue-900 text-sm font-bold rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-5 appearance-none shadow-sm transition-all"
                             >
                                 {formationDates.map((date, idx) => (
                                     <option key={date} value={date}>
@@ -136,7 +136,7 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                 </div>
 
                 {/* PARTIE 2 : PROGRAMME DE LA JOURNÉE (STYLE STEP 3 - RÉSULTATS) */}
-                <div className="bg-blue-50/50 rounded-[2rem] border border-blue-100 p-8">
+                <div className="bg-blue-50/50 rounded-2xl border border-blue-100 p-8">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-sm font-black text-blue-900 flex items-center gap-2 uppercase tracking-widest">
                             <svg className="w-5 h-5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -148,15 +148,15 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                     </div>
 
                     {dailySeances.length === 0 ? (
-                        <div className="text-center py-10 bg-white rounded-2xl border border-blue-100/50 border-dashed">
+                        <div className="text-center py-10 bg-white rounded-xl border border-blue-100/50 border-dashed">
                             <p className="text-xs text-blue-400 font-bold uppercase tracking-widest italic">Aucune séance planifiée pour cette journée</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {dailySeances.map((seance) => (
-                                <div key={seance.id} className="bg-white p-5 rounded-2xl border border-blue-100 shadow-sm flex items-center justify-between group transition-all hover:shadow-md">
+                                <div key={seance.id} className="bg-white p-5 rounded-xl border border-blue-100 shadow-sm flex items-center justify-between group transition-all hover:shadow-md">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex flex-col items-center justify-center">
+                                        <div className="w-12 h-12 rounded-lg bg-blue-600 text-white flex flex-col items-center justify-center">
                                             <span className="text-[8px] font-black uppercase leading-none opacity-80 mb-0.5">Time</span>
                                             <span className="text-xs font-black">{seance.debut.substring(0, 5)}</span>
                                         </div>
@@ -173,7 +173,7 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                                     </div>
                                     <button 
                                         onClick={() => deleteSeance(seance.id)}
-                                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                         title="Supprimer la séance"
                                     >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -191,7 +191,7 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                         Catalogue des thèmes à planifier
                     </h3>
 
-                    <div className="bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-sm">
+                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                         <table className="min-w-full divide-y divide-slate-100">
                             <thead className="bg-slate-50/50">
                                 <tr>
@@ -257,10 +257,10 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                     </div>
                 </div>
 
-                {/* MODALE D'AJOUT DE SÉANCE (REMPLACE LE FORMULAIRE SIDEBAR) */}
+                {/* MODALE D'AJOUT DE SÉANCE */}
                 {isAdding && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-                        <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl border border-slate-200 p-8 space-y-8 animate-in zoom-in-95 duration-300">
+                        <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 p-8 space-y-8 animate-in zoom-in-95 duration-300">
                             <div className="flex justify-between items-center">
                                 <div>
                                     <h3 className="text-xl font-black text-slate-900 tracking-tight">Nouvelle Séance</h3>
@@ -277,7 +277,7 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Début (Heure exacte)</label>
                                         <input 
                                             type="time" 
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-center"
+                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-4 px-6 text-sm font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-center"
                                             value={data.debut}
                                             onChange={e => setData('debut', e.target.value)}
                                             required
@@ -287,7 +287,7 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fin (Heure exacte)</label>
                                         <input 
                                             type="time" 
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-center"
+                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-4 px-6 text-sm font-black focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-center"
                                             value={data.fin}
                                             onChange={e => setData('fin', e.target.value)}
                                             required
@@ -299,7 +299,7 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Thème(s) affecté(s)</label>
                                     <div className="space-y-3 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
                                         {data.themes.map((theme, index) => (
-                                            <div key={theme.plan_theme_id} className={`p-5 rounded-3xl border transition-all ${theme.checked ? 'border-blue-200 bg-blue-50/50' : 'border-slate-100 bg-slate-50 opacity-40'}`}>
+                                            <div key={theme.plan_theme_id} className={`p-5 rounded-2xl border transition-all ${theme.checked ? 'border-blue-200 bg-blue-50/50' : 'border-slate-100 bg-slate-50 opacity-40'}`}>
                                                 <div className="flex items-center gap-4 mb-3">
                                                     <div 
                                                         onClick={() => {
@@ -307,9 +307,9 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                                                             newThemes[index].checked = !newThemes[index].checked;
                                                             setData('themes', newThemes);
                                                         }}
-                                                        className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 cursor-pointer transition-colors ${theme.checked ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-300'}`}
+                                                        className={`w-6 h-6 rounded flex items-center justify-center border-2 cursor-pointer transition-colors ${theme.checked ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-300'}`}
                                                     >
-                                                        {theme.checked && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
+                                                        {theme.checked && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
                                                     </div>
                                                     <span className="text-xs font-black text-slate-900 flex-1">{theme.nom}</span>
                                                 </div>
@@ -337,7 +337,7 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                                 <button 
                                     type="submit" 
                                     disabled={processing}
-                                    className="w-full py-5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-slate-900/20 transition-all transform active:scale-[0.98] disabled:opacity-50"
+                                    className="w-full py-5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-xl shadow-slate-900/20 transition-all transform active:scale-[0.98] disabled:opacity-50"
                                 >
                                     {processing ? 'Planification...' : 'Confirmer la séance'}
                                 </button>
@@ -345,6 +345,105 @@ export default function Index({ plan, seances, themesStats, sites }: Props) {
                         </div>
                     </div>
                 )}
+
+                {/* PARTIE 4 : RÉCAPITULATIF GLOBAL DU PLANNING */}
+                <div className="pt-10 border-t border-slate-200">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                        <div>
+                            <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                                <div className="w-2 h-8 bg-slate-900 rounded-full"></div>
+                                Récapitulatif Global du Planning
+                            </h3>
+                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Vue d'ensemble chronologique de toutes les séances créées</p>
+                        </div>
+                        <div className="px-5 py-2.5 bg-slate-100 rounded-full border border-slate-200">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total : {seances.length} séance(s) planifiée(s)</span>
+                        </div>
+                    </div>
+
+                    {seances.length === 0 ? (
+                        <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-20 text-center">
+                            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-200">
+                                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            </div>
+                            <p className="text-sm font-black text-slate-400">Votre planning est vide pour le moment.</p>
+                            <p className="text-xs text-slate-300 mt-1 uppercase tracking-widest">Utilisez le catalogue ci-dessus pour commencer à planifier.</p>
+                        </div>
+                    ) : (
+                        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xl shadow-slate-200/50">
+                            <table className="min-w-full divide-y divide-slate-100">
+                                <thead className="bg-slate-900 text-white">
+                                    <tr>
+                                        <th className="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Jour & Date</th>
+                                        <th className="px-6 py-5 text-center text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Horaires</th>
+                                        <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Thèmes & Durées</th>
+                                        <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Lieu d'exécution</th>
+                                        <th className="px-8 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {[...seances].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime() || a.debut.localeCompare(b.debut)).map((seance, index) => {
+                                        const seanceDate = new Date(seance.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+                                        return (
+                                            <tr key={seance.id} className="hover:bg-slate-50/80 transition-all group">
+                                                <td className="px-8 py-6">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Séance #{index + 1}</span>
+                                                        <span className="text-sm font-black text-slate-900 capitalize italic">{seanceDate}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-6 text-center">
+                                                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg border border-slate-200">
+                                                        <span className="text-xs font-black text-slate-700">{seance.debut.substring(0, 5)}</span>
+                                                        <div className="w-3 h-px bg-slate-300"></div>
+                                                        <span className="text-xs font-black text-slate-700">{seance.fin.substring(0, 5)}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-6">
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {seance.themes.map((t: any) => (
+                                                            <div key={t.id} className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-100">
+                                                                <span className="text-[10px] font-black uppercase truncate max-w-[150px]">{t.nom}</span>
+                                                                <span className="w-1 h-1 bg-blue-300 rounded-full"></span>
+                                                                <span className="text-[10px] font-bold">{t.pivot.heures_planifiees}h</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-6">
+                                                    <div className="flex items-center gap-2 text-slate-600">
+                                                        <svg className="w-4 h-4 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                        <span className="text-xs font-bold">{seance.site?.nom || 'Site non défini'}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-6 text-right">
+                                                    <div className="flex items-center justify-end gap-3">
+                                                        <button 
+                                                            onClick={() => {
+                                                                setSelectedDate(seance.date.split('T')[0]);
+                                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                            }}
+                                                            className="px-4 py-2 bg-slate-50 text-slate-600 text-[9px] font-black uppercase tracking-widest rounded-lg border border-slate-200 hover:bg-white hover:text-blue-600 hover:border-blue-200 transition-all active:scale-95"
+                                                        >
+                                                            Aller au jour
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => deleteSeance(seance.id)}
+                                                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                                            title="Supprimer"
+                                                        >
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
             </div>
         </AuthenticatedLayout>
     );
