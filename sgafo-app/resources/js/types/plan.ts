@@ -78,11 +78,14 @@ export interface PlanFormation {
     site_formation_id: number | null;
     created_at: string;
     updated_at: string;
+    lien_visio : string | null;
+    plateforme : string | null; 
     entite?: Entite;
     createur?: { id: number; prenom: string; nom: string };
     validateur?: { id: number; prenom: string; nom: string };
     themes: PlanTheme[];
     participants?: PlanParticipant[];
+    animateurs?: PlanFormateur[];
     hebergements?: PlanHebergement[];
     site_formation?: SiteFormation;
     validation_logs?: PlanValidationLog[];

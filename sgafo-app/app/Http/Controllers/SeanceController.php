@@ -73,7 +73,7 @@ class SeanceController extends Controller
             'date' => 'required|date',
             'debut' => 'required',
             'fin' => 'required',
-            'site_id' => 'required|exists:sites_formation,id',
+            'site_id' => 'nullable|exists:sites_formation,id',
             'themes' => 'required|array|min:1',
             'themes.*.plan_theme_id' => 'required|exists:plan_themes,id',
             'themes.*.heures_planifiees' => 'required|numeric|min:0.5',
@@ -146,7 +146,7 @@ class SeanceController extends Controller
                 }
             }
 
-            return redirect()->route('modules.validations.index')->with('success', count($dates) > 1 
+            return redirect()->route('modules.validations.planning.index', $plan->id)->with('success', count($dates) > 1 
                 ? count($dates) . ' séances ajoutées au planning.' 
                 : 'Séance ajoutée au planning.');
         });
@@ -162,7 +162,7 @@ class SeanceController extends Controller
         }
 
         $seance->delete();
-        return redirect()->route('modules.validations.index')->with('success', 'Séance supprimée du planning.');
+        return redirect()->back()->with('success', 'Séance supprimée du planning.');
     }
 
     /**

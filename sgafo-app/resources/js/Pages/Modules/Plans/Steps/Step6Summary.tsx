@@ -10,6 +10,8 @@ interface Props {
     participantIds: number[];
     sites: SiteFormation[];
     siteId: number | null;
+    plateforme: string;
+    lienVisio: string;
     isRF: boolean;
     plan: PlanFormation | null;
     onSave: () => void;
@@ -18,12 +20,15 @@ interface Props {
 }
 
 export default function Step6Summary({
-    selectedEntite, titre, themes, formateurs, participantIds, sites, siteId, isRF, plan, onSave, onSubmit, onConfirm
+    selectedEntite, titre, themes, formateurs, participantIds, sites, siteId, plateforme, lienVisio, isRF, plan, onSave, onSubmit, onConfirm
 }: Props) {
     const getFormateur = (id: number) => formateurs.find(f => f.id === id);
     const site = sites.find(s => s.id === siteId);
     const allAnimateurIds = [...new Set(themes.flatMap(t => t.animateur_ids || []))];
     const totalHeures = themes.reduce((s, t) => s + Number(t.duree_heures || 0), 0);
+
+    const isADistance = selectedEntite?.mode?.toLowerCase().includes('distance');
+    const isHybride = selectedEntite?.mode?.toLowerCase().includes('hybride');
 
     // Validation checks
     const checks = [
@@ -31,6 +36,12 @@ export default function Step6Summary({
         { label: 'Au moins 1 participant sélectionné', ok: participantIds.length > 0 },
         { label: 'Titre du plan renseigné', ok: titre.trim().length > 0 },
     ];
+
+    if (isADistance) {
+        checks.push({ label: 'Plateforme virtuelle sélectionnée', ok: !!plateforme });
+        checks.push({ label: 'Lien de visioconférence renseigné', ok: !!lienVisio });
+    }
+
     const allValid = checks.every(c => c.ok);
 
     return (
@@ -110,13 +121,45 @@ export default function Step6Summary({
                 {/* Logistics */}
                 <div className="p-5 bg-slate-50 rounded-xl border border-slate-100">
                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Logistique</h3>
-                    {site ? (
-                        <p className="text-sm font-bold text-slate-800">
-                            📍 {site.nom} — {site.ville} ({site.capacite} places)
-                        </p>
-                    ) : (
-                        <p className="text-sm font-medium text-slate-400 italic">Aucun site sélectionné</p>
-                    )}
+                    <div className="space-y-4">
+                        {!isADistance && (
+                            <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Site physique</p>
+                                {site ? (
+                                    <p className="text-sm font-bold text-slate-800">
+                                        📍 {site.nom} — {site.ville} ({site.capacite} places)
+                                    </p>
+                                ) : (
+                                    <p className="text-sm font-medium text-slate-400 italic">Aucun site sélectionné</p>
+                                )}
+                            </div>
+                        )}
+
+                        {(isADistance || isHybride) && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Plateforme virtuelle</p>
+                                    {plateforme ? (
+                                        <p className="text-sm font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-lg inline-block border border-blue-100">
+                                            💻 {plateforme}
+                                        </p>
+                                    ) : (
+                                        <p className="text-sm font-medium text-red-400 italic">Non sélectionnée</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Lien Visioconférence</p>
+                                    {lienVisio ? (
+                                        <p className="text-xs font-bold text-slate-600 truncate max-w-xs" title={lienVisio}>
+                                            🔗 {lienVisio}
+                                        </p>
+                                    ) : (
+                                        <p className="text-sm font-medium text-red-400 italic">Non renseigné</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Validation Checklist */}

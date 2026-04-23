@@ -22,6 +22,7 @@ export default function Index({ plans, filtreStatut }: Props) {
         router.get(route('modules.plans.index'), statut ? { statut } : {}, { preserveState: true });
     };
 
+
     return (
         <AuthenticatedLayout header={<span>Plans de formation</span>}>
             <Head title="Plans de formation" />

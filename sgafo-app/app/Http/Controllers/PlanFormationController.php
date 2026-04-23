@@ -24,18 +24,8 @@ class PlanFormationController extends Controller
     {
         $user = auth()->user();
         
-        $query = PlanFormation::with(['entite.secteur', 'createur', 'validateur', 'themes'])
-                                ->where('cree_par', $user->id);
-        
-        // Filtrage spécifique pour le Responsable de Formation
-        if ($user->hasRole('RF')) {
-            $secteurIds = $user->secteurs()->pluck('secteurs.id')->toArray();
-            $query->whereHas('entite', function ($q) use ($secteurIds) {
-                $q->whereIn('secteur_id', $secteurIds);
-            });
-        }
-
-        // Filtre par statut
+        $query = PlanFormation::with(['entite.secteur', 'createur', 'validateur', 'themes']);
+        $query->where('cree_par', $user->id);
         if ($request->filled('statut')) {
             $query->where('statut', $request->statut);
         }
@@ -88,6 +78,8 @@ class PlanFormationController extends Controller
             'participant_ids' => 'nullable|array',
             'participant_ids.*' => 'exists:users,id',
             'site_formation_id' => 'nullable|exists:sites_formation,id',
+            'plateforme' => 'nullable|string|max:100',
+            'lien_visio' => 'nullable|string|max:500',
             'hebergements' => 'nullable|array',
             'hebergements.*.user_id' => 'required|exists:users,id',
             'hebergements.*.hotel_id' => 'required|exists:hotels,id',
@@ -104,6 +96,8 @@ class PlanFormationController extends Controller
                 'statut' => 'brouillon',
                 'cree_par' => auth()->id(),
                 'site_formation_id' => $validated['site_formation_id'] ?? null,
+                'plateforme' => $validated['plateforme'] ?? null,
+                'lien_visio' => $validated['lien_visio'] ?? null,
             ]);
 
             // Créer les thèmes et leurs animateurs
@@ -198,6 +192,8 @@ class PlanFormationController extends Controller
             'participant_ids' => 'nullable|array',
             'participant_ids.*' => 'exists:users,id',
             'site_formation_id' => 'nullable|exists:sites_formation,id',
+            'plateforme' => 'nullable|string|max:100',
+            'lien_visio' => 'nullable|string|max:500',
             'hebergements' => 'nullable|array',
             'hebergements.*.user_id' => 'required|exists:users,id',
             'hebergements.*.hotel_id' => 'required|exists:hotels,id',
@@ -211,6 +207,8 @@ class PlanFormationController extends Controller
                 'date_debut' => $validated['date_debut'] ?? null,
                 'date_fin' => $validated['date_fin'] ?? null,
                 'site_formation_id' => $validated['site_formation_id'] ?? null,
+                'plateforme' => $validated['plateforme'] ?? null,
+                'lien_visio' => $validated['lien_visio'] ?? null,
             ]);
 
             // Re-sync themes
@@ -418,5 +416,29 @@ class PlanFormationController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Planning réouvert pour modifications.');
+    }
+
+    /**
+     * Générer le rapport PDF du plan de formation.
+     */
+    public function exportPdf(PlanFormation $plan)
+    {
+        $plan->load([
+            'entite.secteur',
+            'themes.animateurs.instituts',
+            'participants.instituts',
+            'hebergements.hotel',
+            'hebergements.user',
+            'siteFormation',
+            'createur',
+            'validateur',
+        ]);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.plan_formation', compact('plan'));
+        $pdf->setPaper('a4', 'portrait');
+
+        $filename = 'Plan_Formation_' . $plan->id . '.pdf';
+
+        return $pdf->download($filename);
     }
 }

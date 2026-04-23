@@ -58,6 +58,8 @@ export default function Create({ plan, entites, secteurs, sites, hotels, formate
     const [dateDebut, setDateDebut] = useState<string>(plan?.date_debut || '');
     const [dateFin, setDateFin] = useState<string>(plan?.date_fin || '');
     const [hebergements, setHebergements] = useState<PlanHebergement[]>(plan?.hebergements || []);
+    const [plateforme, setPlateforme] = useState<string>(plan?.plateforme || '');
+    const [lienVisio, setLienVisio] = useState<string>(plan?.lien_visio || '');
 
     // ─── Navigation ─────────────────────────────────────────
     const canGoNext = useCallback(() => {
@@ -104,6 +106,8 @@ export default function Create({ plan, entites, secteurs, sites, hotels, formate
         })),
         participant_ids: participantIds,
         site_formation_id: siteId,
+        plateforme: plateforme || null,
+        lien_visio: lienVisio || null,
         hebergements: hebergements.map(h => ({
             user_id: h.user_id,
             hotel_id: h.hotel_id,
@@ -185,6 +189,21 @@ export default function Create({ plan, entites, secteurs, sites, hotels, formate
                     </div>
                 </div>
 
+                {/* Erreurs de validation */}
+                {Object.keys(usePage().props.errors).length > 0 && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-2xl animate-in shake duration-500">
+                        <div className="flex items-center gap-3 mb-2">
+                            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+                            <h4 className="text-xs font-black text-red-700 uppercase tracking-widest">Attention : Erreurs de validation</h4>
+                        </div>
+                        <ul className="list-disc list-inside space-y-1">
+                            {Object.entries(usePage().props.errors).map(([field, error]) => (
+                                <li key={field} className="text-xs text-red-600 font-medium">{error}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
                 {/* Motif de rejet (si plan rejeté) */}
                 {plan?.statut === 'rejeté' && plan.motif_rejet && (
                     <div className="p-5 bg-red-50 rounded-2xl border border-red-200">
@@ -237,6 +256,7 @@ export default function Create({ plan, entites, secteurs, sites, hotels, formate
                     )}
                     {step === 5 && (
                         <Step5Logistics
+                            mode={selectedEntite?.mode || 'Présentiel'}
                             sites={sites}
                             siteId={siteId}
                             setSiteId={setSiteId}
@@ -248,6 +268,10 @@ export default function Create({ plan, entites, secteurs, sites, hotels, formate
                             animateurIds={animateurIds}
                             dateDebut={dateDebut}
                             dateFin={dateFin}
+                            plateforme={plateforme}
+                            setPlateforme={setPlateforme}
+                            lienVisio={lienVisio}
+                            setLienVisio={setLienVisio}
                         />
                     )}
                     {step === 6 && (
@@ -259,6 +283,8 @@ export default function Create({ plan, entites, secteurs, sites, hotels, formate
                             participantIds={participantIds}
                             sites={sites}
                             siteId={siteId}
+                            plateforme={plateforme}
+                            lienVisio={lienVisio}
                             isRF={isRF}
                             plan={plan || null}
                             onSave={handleSave}

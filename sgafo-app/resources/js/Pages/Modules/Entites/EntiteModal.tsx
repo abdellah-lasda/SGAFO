@@ -165,12 +165,22 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                                 </select>
                             </div>
                             <div className="md:col-span-4">
-                                <InputLabel value="Description rapide" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
+                                <InputLabel value="Description" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
+                                <textarea
+                                    className="block w-full bg-slate-50 border-transparent focus:bg-white focus:ring-blue-500 rounded-lg text-sm font-medium h-12"
+                                    value={data.description}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                    placeholder="Description de la formation ..."
+                                    required
+                                />
+                            </div>
+                            <div className="md:col-span-4">
+                                <InputLabel value="Objectifs" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
                                 <textarea
                                     className="block w-full bg-slate-50 border-transparent focus:bg-white focus:ring-blue-500 rounded-lg text-sm font-medium h-12"
                                     value={data.objectifs}
                                     onChange={(e) => setData('objectifs', e.target.value)}
-                                    placeholder="En quelques mots..."
+                                    placeholder="Objectifs de la formation ..."
                                     required
                                 />
                             </div>

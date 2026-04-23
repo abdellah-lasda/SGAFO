@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router, Link } from '@inertiajs/react';
 import { PlanFormation } from '@/types/plan';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 interface Props {
     plan: PlanFormation;
@@ -67,6 +67,18 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
             skip_sunday: true
         }
     });
+
+    // Synchroniser la date du formulaire avec la date sélectionnée dans le calendrier
+    useEffect(() => {
+        setData(d => ({
+            ...d,
+            date: selectedDate,
+            recurrence: { 
+                ...d.recurrence, 
+                date_fin: d.recurrence.date_fin < selectedDate ? selectedDate : d.recurrence.date_fin 
+            }
+        }));
+    }, [selectedDate]);
 
     // Séances filtrées pour le jour sélectionné
     const dailySeances = seances.filter(s => s.date.split('T')[0] === selectedDate);
@@ -573,6 +585,16 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-white">
+                                {Object.keys(errors).length > 0 && (
+                                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl">
+                                        <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-2">Erreurs de validation</p>
+                                        <ul className="list-disc list-inside text-[10px] text-red-500 font-bold">
+                                            {Object.entries(errors).map(([key, val]) => (
+                                                <li key={key}>{val}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
                                 <form id="session-form" onSubmit={submit} className="space-y-10">
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-3 mb-2 text-slate-400">
@@ -583,12 +605,29 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Début</label>
                                                 <input type="time" className="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-black focus:border-blue-500 transition-all text-center" value={data.debut} onChange={e => setData('debut', e.target.value)} required />
+                                                {errors.debut && <p className="text-[10px] text-red-500 font-bold">{errors.debut}</p>}
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Fin</label>
                                                 <input type="time" className="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-black focus:border-blue-500 transition-all text-center" value={data.fin} onChange={e => setData('fin', e.target.value)} required />
+                                                {errors.fin && <p className="text-[10px] text-red-500 font-bold">{errors.fin}</p>}
                                             </div>
                                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 text-white px-3 py-1 rounded-full text-[10px] font-black border-4 border-white shadow-lg">{sessionDuration}h</div>
+                                        </div>
+
+                                        <div className="space-y-2 px-2">
+                                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Site de formation (Optionnel pour distanciel)</label>
+                                            <select 
+                                                className="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 px-6 text-xs font-black focus:border-blue-500 transition-all"
+                                                value={data.site_id}
+                                                onChange={e => setData('site_id', e.target.value)}
+                                            >
+                                                <option value="">-- Sans site physique --</option>
+                                                {sites.map(s => (
+                                                    <option key={s.id} value={s.id}>{s.nom} ({s.ville})</option>
+                                                ))}
+                                            </select>
+                                            {errors.site_id && <p className="text-[10px] text-red-500 font-bold">{errors.site_id}</p>}
                                         </div>
                                     </div>
 

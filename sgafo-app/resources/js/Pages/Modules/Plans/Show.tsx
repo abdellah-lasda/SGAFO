@@ -18,9 +18,11 @@ export default function Show({ plan }: Props) {
     const allAnimateurs = plan.themes
         .flatMap(t => t.animateurs || [])
         .filter((a, index, self) => self.findIndex(anim => anim.id === a.id) === index);
-
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [motifRejet, setMotifRejet] = useState('');
+    const isADistance = plan.entite?.mode?.toLowerCase().includes('distance') || null ;
+    const isHybride = plan.entite?.mode?.toLowerCase().includes('hybride') || null;
+    const isPresentiel = plan.entite?.mode?.toLowerCase().includes('présentiel') || null ;
 
     const handleValidate = () => {
         router.post(route('modules.plans.validate', plan.id));
@@ -56,23 +58,32 @@ export default function Show({ plan }: Props) {
                             Créé par {plan.createur?.prenom} {plan.createur?.nom} · {new Date(plan.created_at).toLocaleDateString()}
                         </p>
                     </div>
-                    {(plan.statut === 'brouillon' || plan.statut === 'rejeté') && (
+                    <div className="flex items-center gap-3">
                         <a
-                            href={route('modules.plans.edit', plan.id)}
-                            className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20"
+                            href={route('modules.plans.export-pdf', plan.id)}
+                            className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-white text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm"
                         >
-                            ✏️ Modifier
+                            📄 Générer PDF
                         </a>
-                    )}
 
-                    {isRF && (plan.statut === 'validé' || plan.statut === 'confirmé') && (
-                        <Link
-                            href={route('modules.validations.planning.index', plan.id)}
-                            className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20"
-                        >
-                            🗓️ Gérer le Planning
-                        </Link>
-                    )}
+                        {(plan.statut === 'brouillon' || plan.statut === 'rejeté') && (
+                            <Link
+                                href={route('modules.plans.edit', plan.id)}
+                                className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20"
+                            >
+                                ✏️ Modifier
+                            </Link>
+                        )}
+
+                        {isRF && (plan.statut === 'validé' || plan.statut === 'confirmé') && (
+                            <Link
+                                href={route('modules.validations.planning.index', plan.id)}
+                                className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20"
+                            >
+                                🗓️ Gérer le Planning
+                            </Link>
+                        )}
+                    </div>
                 </div>
 
                 {/* Rejection reason */}
@@ -143,13 +154,62 @@ export default function Show({ plan }: Props) {
                     </div>
                 </div>
 
+                {/* Animateurs */}
+                <div className="p-6 bg-white rounded-2xl border border-slate-200/60 shadow-sm">
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Animateurs ({allAnimateurs?.length || 0})</h3>
+                    <div className="flex flex-wrap gap-2">
+                        {allAnimateurs?.map(p => (
+                            <div key={p.id} className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-100">
+                                <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[9px] font-black">
+                                    {p.prenom[0]}{p.nom[0]}
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-700">{p.prenom} {p.nom}</p>
+                                    <p className="text-[9px] text-slate-400">{(p as any).instituts?.[0]?.nom || ''}</p>
+                                </div>
+                            </div>
+                        ))}
+                        {(!plan.participants || plan.participants.length === 0) && (
+                            <p className="text-xs text-slate-400 italic">Aucun participant</p>
+                        )}
+                    </div>
+                </div>
+
+
                 {/* Logistics */}
                 <div className="p-6 bg-white rounded-2xl border border-slate-200/60 shadow-sm">
                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Logistique</h3>
-                    {plan.site_formation ? (
-                        <p className="text-sm font-bold text-slate-800">📍 {plan.site_formation.nom} — {plan.site_formation.ville} ({plan.site_formation.capacite} places)</p>
-                    ) : (
-                        <p className="text-xs text-slate-400 italic">Aucun site défini</p>
+                    {(isADistance || isHybride) && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
+                            <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Plateforme virtuelle</p>
+                                {plan.plateforme ? (
+                                    <p className="text-[10px] font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-lg inline-block border border-blue-100">
+                                        💻 {plan.plateforme}
+                                    </p>
+                                ) : (
+                                    <p className="text-[10px] font-medium text-red-400 italic">Non sélectionnée</p>
+                                )}
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Lien Visioconférence</p>
+                                {plan.lien_visio ? (
+                                    <p className="text-[10px] font-bold text-slate-600 truncate max-w-xs" title={plan.lien_visio}>
+                                        🔗 {plan.lien_visio}
+                                    </p>
+                                ) : (
+                                    <p className="text-[10px] font-medium text-red-400 italic">Non renseigné</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {(isPresentiel || isHybride) && (
+                        plan.site_formation ? (
+                            <p className="text-sm font-bold text-slate-800">📍 {plan.site_formation.nom} — {plan.site_formation.ville} ({plan.site_formation.capacite} places)</p>
+                        ) : (
+                            <p className="text-xs text-slate-400 italic">Aucun site défini</p>
+                        )
                     )}
                 </div>
 

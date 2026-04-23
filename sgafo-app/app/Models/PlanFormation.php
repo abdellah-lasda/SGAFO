@@ -23,6 +23,8 @@ class PlanFormation extends Model
         'site_formation_id',
         'date_debut',
         'date_fin',
+        'plateforme',
+        'lien_visio',
     ];
 
     protected function casts(): array

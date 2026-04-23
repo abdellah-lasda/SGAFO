@@ -87,6 +87,7 @@ Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function
     
     // Plans de formation (Stepper + Workflow)
     Route::resource('plans', PlanFormationController::class);
+    Route::get('plans/{plan}/export-pdf', [PlanFormationController::class, 'exportPdf'])->name('plans.export-pdf');
     Route::post('plans/{plan}/submit', [PlanFormationController::class, 'submit'])->name('plans.submit');
     Route::post('plans/{plan}/validate', [PlanFormationController::class, 'validatePlan'])->name('plans.validate');
     Route::post('plans/{plan}/reject', [PlanFormationController::class, 'reject'])->name('plans.reject');

@@ -1,15 +1,16 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { Entite } from '@/types/entite';
+// import { Auth } from '@/types/auth';
 
 interface Props {
-    auth: any;
+    // auth : Auth ;
     entite: Entite;
 }
 
-export default function Show({ auth, entite }: Props) {
+export default function Show({ entite }: Props) {
     const totalHours = entite.themes.reduce((acc, t) => acc + Number(t.duree_heures), 0);
-
+    console.log(entite);
     return (
         <AuthenticatedLayout
             header={
@@ -54,11 +55,13 @@ export default function Show({ auth, entite }: Props) {
                                         ID Référentiel: #{String(entite.id).padStart(6, '0')}
                                     </p>
                                 </div>
-
                                 <div className="space-y-3">
                                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description & Objectifs Pédagogiques</h3>
                                     <div className="text-slate-600 text-sm leading-relaxed font-medium bg-slate-50 p-6 rounded-xl border border-slate-100 whitespace-pre-line italic">
-                                        {entite.objectifs}
+                                       <span className=' text-[11px] font-black text-slate-900 uppercase tracking-widest' > Description de la formation : </span><br></br> {entite.description}
+                                    </div>
+                                    <div className="text-slate-600 text-sm leading-relaxed font-medium bg-slate-50 p-6 rounded-xl border border-slate-100 whitespace-pre-line italic">
+                                        <span className=' text-[11px] font-black text-slate-900 uppercase tracking-widest' > Objectifs de la formation : </span><br></br>{entite.objectifs}
                                     </div>
                                 </div>
                             </div>
@@ -96,13 +99,6 @@ export default function Show({ auth, entite }: Props) {
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                         Exporter en PDF
                                     </a>
-                                    <button 
-                                        onClick={() => window.print()}
-                                        className="w-full py-3 bg-white border border-slate-200 text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all flex items-center justify-center gap-2 shadow-sm"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2-2H9v4h10z" /></svg>
-                                        Imprimer
-                                    </button>
                                     <Link 
                                         href={route('dashboard')}
                                         className="w-full py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-lg"
