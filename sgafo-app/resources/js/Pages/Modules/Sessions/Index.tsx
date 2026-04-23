@@ -156,13 +156,6 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
         <AuthenticatedLayout
             header={
                     <div className="flex items-center gap-4">
-                        <Link 
-                            href={route('modules.validations.index')}
-                            className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-100 hover:shadow-lg hover:shadow-blue-500/10 transition-all active:scale-90 group"
-                        >
-                            <svg className="w-5 h-5 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                        </Link>
-
                         <div className="flex items-center gap-2">
                             <Link href={route('modules.validations.index')} className="text-slate-400 hover:text-blue-600 transition-colors font-bold">Centre de Validation</Link>
                             <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
