@@ -91,9 +91,11 @@ export default function Index({ plans, secteurs, filters }: Props) {
 
                             {/* Card Body */}
                             <div className="p-6 flex-1">
-                                <h3 className="text-xl font-black text-slate-900 tracking-tight leading-tight group-hover:text-blue-600 transition-colors">
-                                    {plan.titre}
-                                </h3>
+                                <Link href={route('modules.catalogue.show', plan.id)}>
+                                    <h3 className="text-xl font-black text-slate-900 tracking-tight leading-tight group-hover:text-blue-600 transition-colors">
+                                        {plan.titre}
+                                    </h3>
+                                </Link>
                                 <p className="mt-3 text-sm text-slate-500 font-medium line-clamp-2 italic">
                                     "{plan.entite?.titre}"
                                 </p>
@@ -125,7 +127,7 @@ export default function Index({ plans, secteurs, filters }: Props) {
                                 </div>
                                 
                                 <Link
-                                    href={route('modules.plans.show', plan.id)}
+                                    href={route('modules.catalogue.show', plan.id)}
                                     className="p-3 bg-white text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl shadow-sm border border-slate-200 transition-all hover:scale-110 active:scale-90"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

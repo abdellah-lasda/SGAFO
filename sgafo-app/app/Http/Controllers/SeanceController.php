@@ -155,14 +155,18 @@ class SeanceController extends Controller
     /**
      * Supprime une séance.
      */
-    public function destroy(Seance $seance)
+    public function destroy($id)
     {
+        $seance = Seance::with('plan')->findOrFail($id);
+
         if ($seance->plan->statut === 'confirmé') {
             return redirect()->back()->with('error', 'Le planning est clôturé et ne peut plus être modifié.');
         }
 
+        $planId = $seance->plan_id;
         $seance->delete();
-        return redirect()->back()->with('success', 'Séance supprimée du planning.');
+        
+        return redirect()->route('modules.validations.planning.index', $planId)->with('success', 'Séance supprimée du planning.');
     }
 
     /**
@@ -180,7 +184,7 @@ class SeanceController extends Controller
             'commentaire' => 'Le planning a été clôturé et verrouillé pour exécution.',
         ]);
 
-        return redirect()->back()->with('success', 'Planning clôturé avec succès.');
+        return redirect()->route('modules.validations.planning.index', $plan->id)->with('success', 'Planning clôturé avec succès.');
     }
 
     /**
@@ -198,6 +202,6 @@ class SeanceController extends Controller
             'commentaire' => 'Le planning a été réouvert pour modifications.',
         ]);
 
-        return redirect()->back()->with('success', 'Planning réouvert pour modifications.');
+        return redirect()->route('modules.validations.planning.index', $plan->id)->with('success', 'Planning réouvert pour modifications.');
     }
 }

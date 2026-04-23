@@ -80,6 +80,11 @@ class PlanFormation extends Model
         return $this->hasMany(PlanValidationLog::class, 'plan_id')->orderBy('created_at', 'desc');
     }
 
+    public function seances()
+    {
+        return $this->hasMany(Seance::class, 'plan_id')->orderBy('date')->orderBy('debut');
+    }
+
     // ─── Helpers ────────────────────────────────────────────
 
     /**

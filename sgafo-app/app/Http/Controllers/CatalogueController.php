@@ -38,4 +38,31 @@ class CatalogueController extends Controller
             'filters' => $request->only(['search', 'secteur'])
         ]);
     }
+
+    /**
+     * Affiche les détails d'un plan du catalogue.
+     */
+    public function show(PlanFormation $plan)
+    {
+        if ($plan->statut !== 'confirmé') {
+            abort(404);
+        }
+
+        $plan->load([
+            'entite.secteur',
+            'themes.animateurs.instituts',
+            'participants.instituts',
+            'siteFormation',
+            'createur',
+            'validateur',
+            'hebergements.hotel',
+            'hebergements.user',
+            'seances.themes',
+            'seances.site'
+        ]);
+
+        return Inertia::render('Modules/Catalogue/Show', [
+            'plan' => $plan
+        ]);
+    }
 }

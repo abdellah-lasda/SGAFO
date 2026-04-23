@@ -144,10 +144,16 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
     };
 
     const deleteSeance = (id: number) => {
-        if (isLocked) return;
+        if (isLocked) {
+            alert("Le planning est clôturé. Vous devez le réouvrir pour supprimer une séance.");
+            return;
+        }
         if (confirm('Supprimer cette séance du planning ?')) {
             router.delete(route('modules.seances.destroy', id), {
-                preserveScroll: true
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Optionnel : refresh local
+                }
             });
         }
     };
@@ -351,36 +357,51 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                         Catalogue Thèmes
                                     </button>
                                 )}
-                                <button 
-                                    onClick={() => setIsAdding(true)}
-                                    className="px-6 py-3 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
-                                    Ajouter une séance
-                                </button>
+                                
+                                {!isLocked ? (
+                                    <button 
+                                        onClick={() => setIsAdding(true)}
+                                        className="px-6 py-3 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                                        Ajouter une séance
+                                    </button>
+                                ) : (
+                                    <div className="px-6 py-3 bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl border border-slate-200 flex items-center gap-2 cursor-not-allowed">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                        Planning Verrouillé
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {dailySeances.length === 0 ? (
-                            <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] p-24 text-center group cursor-pointer hover:bg-slate-100 transition-all" onClick={() => setIsAdding(true)}>
+                            <div className={`bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] p-24 text-center group transition-all ${!isLocked ? 'cursor-pointer hover:bg-slate-100' : 'cursor-default'}`} onClick={() => !isLocked && setIsAdding(true)}>
                                 <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
                                     <svg className="w-10 h-10 text-slate-300 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
                                 </div>
                                 <p className="text-sm font-black text-slate-400">Aucune séance pour ce jour-là.</p>
-                                <p className="text-xs text-slate-300 mt-2 font-bold uppercase tracking-widest">Cliquez pour planifier votre première séance</p>
+                                {!isLocked ? (
+                                    <p className="text-xs text-slate-300 mt-2 font-bold uppercase tracking-widest">Cliquez pour planifier votre première séance</p>
+                                ) : (
+                                    <p className="text-xs text-slate-300 mt-2 font-bold uppercase tracking-widest italic">Le planning est en lecture seule</p>
+                                )}
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-4 duration-500">
                                 {dailySeances.map((seance) => (
                                     <div key={seance.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-blue-200 transition-all">
-                                        <div className="absolute top-0 right-0 p-6 flex gap-2 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all">
-                                            <button 
-                                                onClick={() => deleteSeance(seance.id)}
-                                                className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            </button>
-                                        </div>
+                                        {!isLocked && (
+                                            <div className="absolute top-0 right-0 p-6 flex gap-2 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all">
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => deleteSeance(seance.id)}
+                                                    className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm cursor-pointer"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </div>
+                                        )}
 
                                         <div className="flex flex-col h-full">
                                             <div className="flex items-center gap-4 mb-6">
@@ -547,9 +568,11 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                     >
                                                         Accéder
                                                     </button>
-                                                    <button onClick={() => deleteSeance(seance.id)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all shadow-sm">
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                    </button>
+                                                    {!isLocked && (
+                                                        <button type="button" onClick={() => deleteSeance(seance.id)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all shadow-sm cursor-pointer">
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

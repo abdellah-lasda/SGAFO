@@ -83,6 +83,7 @@ Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function
     
     // Catalogue National (Plans Validés)
     Route::get('catalogue-national', [\App\Http\Controllers\CatalogueController::class, 'index'])->name('catalogue.index');
+    Route::get('catalogue-national/{plan}', [\App\Http\Controllers\CatalogueController::class, 'show'])->name('catalogue.show');
     Route::get('entites/{entite}/export-pdf', [EntiteFormationController::class, 'exportPdf'])->name('entites.export-pdf');
     
     // Plans de formation (Stepper + Workflow)
