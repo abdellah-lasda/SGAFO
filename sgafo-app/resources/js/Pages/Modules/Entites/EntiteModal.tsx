@@ -112,8 +112,9 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                             <div className="w-1.5 h-4 bg-blue-600 rounded-full"></div>
                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Étape 1: Détails Généraux</span>
                         </div>
-                        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="md:col-span-2">
+
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div className="md:col-span-3">
                                 <InputLabel value="Intitulé exact de la formation" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
                                 <TextInput
                                     className="block w-full text-base font-bold bg-slate-50 border-transparent focus:bg-white focus:ring-blue-500 rounded-lg"
@@ -127,7 +128,7 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                             <div>
                                 <InputLabel value="Secteur porteur" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
                                 <select
-                                    className="block w-full bg-slate-50 border-transparent focus:bg-white focus:ring-blue-500 rounded-lg text-sm font-bold"
+                                    className="block w-full text-base font-bold bg-slate-50 border-transparent focus:bg-white focus:ring-blue-500 rounded-lg"
                                     value={data.secteur_id}
                                     onChange={(e) => setData('secteur_id', e.target.value)}
                                     required
@@ -138,7 +139,7 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                                     ))}
                                 </select>
                             </div>
-                            <div>
+                            <div className='md:col-span-2 ' >
                                 <InputLabel value="Type" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
                                 <select
                                     className="block w-full bg-slate-50 border-transparent focus:bg-white focus:ring-blue-500 rounded-lg text-sm font-bold"
@@ -151,7 +152,7 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                                     <option value="transversale">Transversale</option>
                                 </select>
                             </div>
-                            <div>
+                            <div className='md:col-span-2' >
                                 <InputLabel value="Mode" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
                                 <select
                                     className="block w-full bg-slate-50 border-transparent focus:bg-white focus:ring-blue-500 rounded-lg text-sm font-bold"
@@ -163,7 +164,7 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                                     <option value="hybride">Hybride</option>
                                 </select>
                             </div>
-                            <div className="md:col-span-1">
+                            <div className="md:col-span-4">
                                 <InputLabel value="Description rapide" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
                                 <textarea
                                     className="block w-full bg-slate-50 border-transparent focus:bg-white focus:ring-blue-500 rounded-lg text-sm font-medium h-12"

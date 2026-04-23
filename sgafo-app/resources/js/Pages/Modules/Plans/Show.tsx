@@ -67,7 +67,7 @@ export default function Show({ plan }: Props) {
 
                     {isRF && (plan.statut === 'validé' || plan.statut === 'confirmé') && (
                         <Link
-                            href={route('modules.plans.planning.index', plan.id)}
+                            href={route('modules.validations.planning.index', plan.id)}
                             className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20"
                         >
                             🗓️ Gérer le Planning

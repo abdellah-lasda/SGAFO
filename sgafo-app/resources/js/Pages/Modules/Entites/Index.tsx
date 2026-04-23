@@ -197,6 +197,16 @@ export default function Index({ auth, entites, secteurs }: Props) {
                                     </td>
                                     <td className="px-8 py-6 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 transition-transform">
+                                            <a
+                                                href={route('modules.entites.export-pdf', entite.id)}
+                                                target="_blank"
+                                                className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                                title="Générer Rapport PDF"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                            </a>
                                             <Link
                                                 href={route('modules.entites.show', entite.id)}
                                                 className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"

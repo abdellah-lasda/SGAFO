@@ -83,6 +83,7 @@ Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function
     
     // Catalogue National (Plans Validés)
     Route::get('catalogue-national', [\App\Http\Controllers\CatalogueController::class, 'index'])->name('catalogue.index');
+    Route::get('entites/{entite}/export-pdf', [EntiteFormationController::class, 'exportPdf'])->name('entites.export-pdf');
     
     // Plans de formation (Stepper + Workflow)
     Route::resource('plans', PlanFormationController::class);
@@ -93,12 +94,15 @@ Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function
     Route::post('plans/{plan}/cloturer', [PlanFormationController::class, 'cloturerPlanning'])->name('plans.cloturer');
     Route::post('plans/{plan}/reouvrir', [PlanFormationController::class, 'reouvrirPlanning'])->name('plans.reouvrir');
 
-    // Centre de Validation (RF)
-    Route::get('validations', [PlanValidationController::class, 'index'])->name('validations.index');
+    // Centre de Validation & Planification (RF)
+    Route::prefix('validations')->name('validations.')->group(function () {
+        Route::get('/', [PlanValidationController::class, 'index'])->name('index');
+        Route::get('plans/{plan}/planning', [SeanceController::class, 'index'])->name('planning.index');
+        Route::post('plans/{plan}/seances', [SeanceController::class, 'store'])->name('planning.store');
+        Route::post('plans/{plan}/planning/cloturer', [SeanceController::class, 'cloturer'])->name('planning.cloturer');
+        Route::post('plans/{plan}/planning/reouvrir', [SeanceController::class, 'reouvrir'])->name('planning.reouvrir');
+    });
     
-    // Gestion des Séances (Planning)
-    Route::get('plans/{plan}/planning', [SeanceController::class, 'index'])->name('plans.planning.index');
-    Route::post('plans/{plan}/seances', [SeanceController::class, 'store'])->name('plans.seances.store');
     Route::resource('seances', SeanceController::class)->only(['destroy']);
     
     // Logistique (Sites & Hotels)

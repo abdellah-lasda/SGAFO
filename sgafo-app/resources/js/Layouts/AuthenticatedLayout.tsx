@@ -9,6 +9,7 @@ export default function Authenticated({
 }: PropsWithChildren<{ header?: ReactNode }>) {
     const user = usePage<PageProps>().props.auth.user;
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    console.log(user)
 
     return (
         <div className="h-screen bg-[#f8fafc] flex overflow-hidden">

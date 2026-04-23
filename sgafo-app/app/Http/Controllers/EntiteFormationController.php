@@ -8,6 +8,7 @@ use App\Models\EntiteFormation;
 use App\Models\Secteur;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class EntiteFormationController extends Controller
 {
@@ -21,10 +22,6 @@ class EntiteFormationController extends Controller
         return Inertia::render('Modules/Entites/Index', [
             'entites' => $query->latest()->get(),
             'secteurs' => Secteur::all(),
-            'auth' => [
-                'user' => $user,
-                'roles' => $user->roles->pluck('code'),
-            ]
         ]);
     }
 
@@ -102,5 +99,16 @@ class EntiteFormationController extends Controller
     {
         $entite->update(['statut' => 'archivé']);
         return redirect()->back()->with('success', 'Entité archivée.');
+    }
+
+    public function exportPdf(EntiteFormation $entite)
+    {
+        $entite->load(['themes', 'secteur']);
+        
+        $pdf = Pdf::loadView('pdf.entite', compact('entite'));
+        
+        $filename = 'Fiche_Descriptive_' . str_replace(' ', '_', $entite->titre) . '.pdf';
+        
+        return $pdf->download($filename);
     }
 }

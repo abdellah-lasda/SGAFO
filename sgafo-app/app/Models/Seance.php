@@ -35,8 +35,7 @@ class Seance extends Model
     public function themes()
     {
         return $this->belongsToMany(PlanTheme::class, 'seance_themes', 'seance_id', 'plan_theme_id')
-                    ->using(SeanceTheme::class)
-                    ->withPivot('heures_planifiees', 'formateur_id')
+                    ->withPivot(['heures_planifiees', 'formateur_id'])
                     ->withTimestamps();
     }
 }

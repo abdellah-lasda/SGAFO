@@ -38,7 +38,7 @@ class HandleInertiaRequests extends Middleware
                     'prenom' => $request->user()->prenom,
                     'email' => $request->user()->email,
                     'is_externe' => $request->user()->is_externe,
-                    'roles' => $request->user()->roles->pluck('code')->toArray(),
+                    'roles' => $request->user()->roles,
                     'primary_role' => $request->user()->primaryRole(),
                 ] : null,
             ],
