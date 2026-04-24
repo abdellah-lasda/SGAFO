@@ -1,7 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { PageProps } from '@/types';
-import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -25,7 +24,6 @@ interface Props extends PageProps {
 }
 
 export default function AttendanceSheet({ seance, participants }: Props) {
-    // Initialiser les présences avec les données existantes ou par défaut (présent)
     const initialPresences = participants.map(p => {
         const existing = seance.presences.find((pr: any) => pr.participant_id === p.id);
         return {
@@ -44,7 +42,6 @@ export default function AttendanceSheet({ seance, participants }: Props) {
     const updateStatus = (index: number, status: 'présent' | 'absent' | 'retard') => {
         const newPresences = [...data.presences];
         newPresences[index].statut = status;
-        // Si on change vers présent, on reset la justification
         if (status === 'présent') {
             newPresences[index].est_justifie = false;
             newPresences[index].motif = '';
@@ -81,129 +78,122 @@ export default function AttendanceSheet({ seance, participants }: Props) {
         }>
             <Head title="Feuille d'appel" />
 
-            <div className="max-w-4xl mx-auto space-y-6 pb-24">
-                {/* Session Info Header */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="max-w-5xl mx-auto space-y-8 pb-32 animate-in fade-in duration-700">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h1 className="text-xl font-black text-slate-900 tracking-tight">Feuille d'émargement numérique</h1>
-                        <p className="text-sm text-slate-500 font-medium mt-1">
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Appel & Présences</h1>
+                        <p className="text-slate-400 font-medium mt-1 uppercase text-[10px] tracking-widest">
                             {format(new Date(seance.date), 'EEEE d MMMM yyyy', { locale: fr })} · {seance.debut} - {seance.fin}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-100">
-                            {participants.length} Participants
+                        <div className="px-4 py-2 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center gap-3">
+                            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                            <span className="text-xs font-black text-slate-600 uppercase tracking-widest">{participants.length} Participants</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Search Bar Placeholder */}
-                <div className="relative">
-                    <input 
-                        type="text" 
-                        placeholder="Rechercher un participant..."
-                        className="w-full pl-12 pr-4 py-4 bg-white border-slate-200 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all"
-                    />
-                    <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </div>
-
-                {/* Participants List */}
-                <div className="space-y-4">
-                    {participants.map((participant, index) => {
-                        const pres = data.presences[index];
-                        return (
-                            <div key={participant.id} className={`bg-white rounded-2xl border transition-all duration-300 ${
-                                pres.statut === 'absent' ? 'border-red-200 shadow-lg shadow-red-500/5' : 
-                                pres.statut === 'retard' ? 'border-amber-200 shadow-lg shadow-amber-500/5' : 
-                                'border-slate-200 hover:border-blue-300'
-                            }`}>
-                                <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-black border transition-colors ${
-                                            pres.statut === 'présent' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                            pres.statut === 'absent' ? 'bg-red-50 text-red-600 border-red-100' :
-                                            'bg-amber-50 text-amber-600 border-amber-100'
-                                        }`}>
-                                            {participant.prenom[0]}{participant.nom[0]}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-black text-slate-900">{participant.prenom} {participant.nom}</p>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-                                                {participant.instituts?.[0]?.nom || 'Sans institut'}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Attendance Toggles */}
-                                    <div className="flex items-center bg-slate-100 p-1 rounded-xl w-full sm:w-auto">
-                                        <button 
-                                            onClick={() => updateStatus(index, 'présent')}
-                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                                pres.statut === 'présent' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                                            }`}
-                                        >
-                                            Présent
-                                        </button>
-                                        <button 
-                                            onClick={() => updateStatus(index, 'absent')}
-                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                                pres.statut === 'absent' ? 'bg-white text-red-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                                            }`}
-                                        >
-                                            Absent
-                                        </button>
-                                        <button 
-                                            onClick={() => updateStatus(index, 'retard')}
-                                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                                pres.statut === 'retard' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                                            }`}
-                                        >
-                                            Retard
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Justification Panel (Conditionally Visible) */}
-                                {(pres.statut === 'absent' || pres.statut === 'retard') && (
-                                    <div className="px-6 pb-6 pt-0 animate-in slide-in-from-top-2 duration-300">
-                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-4">
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Justification reçue ?</label>
-                                                <div className="flex bg-white border border-slate-200 rounded-lg p-0.5">
-                                                    <button 
-                                                        onClick={() => updateJustification(index, true)}
-                                                        className={`px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all ${pres.est_justifie ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400'}`}
-                                                    >
-                                                        Oui
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => updateJustification(index, false)}
-                                                        className={`px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all ${!pres.est_justifie ? 'bg-slate-200 text-slate-700 shadow-sm' : 'text-slate-400'}`}
-                                                    >
-                                                        Non
-                                                    </button>
+                {/* Main Table Layout */}
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-slate-50/50 border-b border-slate-100">
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Participant</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Etablissement</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Présence</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Justification & Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {data.presences.map((pres, index) => {
+                                const participant = participants.find(p => p.id === pres.participant_id);
+                                return (
+                                    <tr key={pres.participant_id} className="group hover:bg-blue-50/20 transition-colors">
+                                        {/* Colonne Participant */}
+                                        <td className="px-8 py-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-[10px] border transition-all ${
+                                                    pres.statut === 'présent' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                    pres.statut === 'absent' ? 'bg-red-50 text-red-600 border-red-100' :
+                                                    'bg-amber-50 text-amber-600 border-amber-100'
+                                                }`}>
+                                                    {participant?.prenom[0]}{participant?.nom[0]}
                                                 </div>
+                                                <p className="text-sm font-black text-slate-900 leading-tight">{participant?.prenom} {participant?.nom}</p>
                                             </div>
-                                            {pres.est_justifie && (
-                                                <textarea 
-                                                    value={pres.motif || ''}
-                                                    onChange={(e) => updateMotif(index, e.target.value)}
-                                                    placeholder="Motif de la justification..."
-                                                    className="w-full bg-white border-slate-200 rounded-lg text-[11px] font-medium p-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
-                                                    rows={2}
-                                                />
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
+                                        </td>
+                                        <td className="px-8 py-6">
+                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                {participant?.instituts?.[0]?.nom || "OFPPT"}
+                                             </span>
+                                        </td>
+
+                                        {/* Colonne Statut */}
+                                        <td className="px-8 py-6 text-center">
+                                            <div className="flex items-center justify-center gap-1 bg-slate-100/50 p-1 rounded-xl w-fit mx-auto border border-slate-200/50">
+                                                {[
+                                                    { id: 'présent', label: 'P', full: 'Présent', color: 'text-emerald-600', active: 'bg-white shadow-sm text-emerald-600' },
+                                                    { id: 'absent', label: 'A', full: 'Absent', color: 'text-red-600', active: 'bg-white shadow-sm text-red-600' },
+                                                    { id: 'retard', label: 'R', full: 'Retard', color: 'text-amber-600', active: 'bg-white shadow-sm text-amber-600' }
+                                                ].map(status => (
+                                                    <button
+                                                        key={status.id}
+                                                        type="button"
+                                                        title={status.full}
+                                                        onClick={() => updateStatus(index, status.id as any)}
+                                                        className={`w-8 h-8 rounded-lg text-[10px] font-black uppercase transition-all ${
+                                                            pres.statut === status.id ? status.active : 'text-slate-400 hover:text-slate-600'
+                                                        }`}
+                                                    >
+                                                        {status.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </td>
+
+                                        {/* Colonne Justification */}
+                                        <td className="px-8 py-6 min-w-[300px]">
+                                            <div className="space-y-3">
+                                                {(pres.statut === 'absent' || pres.statut === 'retard') ? (
+                                                    <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                        <label className="flex items-center gap-2 cursor-pointer group/toggle w-fit">
+                                                            <div className="relative inline-flex items-center">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    className="sr-only peer"
+                                                                    checked={pres.est_justifie}
+                                                                    onChange={(e) => updateJustification(index, e.target.checked)}
+                                                                />
+                                                                <div className="w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
+                                                            </div>
+                                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Justifié</span>
+                                                        </label>
+                                                        
+                                                        <textarea 
+                                                            value={pres.motif || ''}
+                                                            onChange={(e) => updateMotif(index, e.target.value)}
+                                                            placeholder="Note ou motif..."
+                                                            className="w-full bg-slate-50 border-slate-200 rounded-xl text-[10px] font-medium p-3 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all resize-none"
+                                                            rows={2}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-[10px] font-bold text-slate-300 uppercase italic">Ok</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            {/* Bottom Actions Bar - Floating Dock Design */}
-            <div className="fixed bottom-6 left-6 right-6 lg:left-80 lg:right-10 z-40">
+            {/* Bottom Actions Bar */}
+            <div className="mx-auto max-w-5xl left-6 right-6 lg:left-80 lg:right-10 ">
                 <div className="bg-white/90 backdrop-blur-xl border border-slate-200/50 shadow-2xl shadow-slate-900/10 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all duration-500">
                     <div className="flex items-center gap-4 pl-4">
                         <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
@@ -219,10 +209,19 @@ export default function AttendanceSheet({ seance, participants }: Props) {
                         <a 
                             href={route('modules.animateur.seances.print-sheet', seance.id)}
                             target="_blank"
-                            className="flex-1 sm:flex-none px-6 py-4 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2"
+                            title="Imprimer la feuille d'émargement manuelle"
+                            className="px-6 py-4 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
                             <span>🖨️</span>
-                            <span className="hidden md:inline">Imprimer</span>
+                            <span className="hidden md:inline">Feuille d'Absences</span>
+                        </a>
+                        <a 
+                            href={route('modules.animateur.seances.export-absences', seance.id)}
+                            target="_blank"
+                            className="px-6 py-4 bg-red-50 text-red-600 border border-red-100 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        >
+                            <span>📄</span>
+                            <span className="hidden md:inline">Rapport Absences</span>
                         </a>
                         <button 
                             onClick={() => handleSubmit(false)}

@@ -141,4 +141,35 @@ class AnimateurDashboardController extends Controller
 
         return $pdf->stream('Feuille_Presence_Manuelle_' . $seance->id . '.pdf');
     }
+    public function exportAbsences(Seance $seance)
+    {
+        $user = Auth::user();
+        $isAssigned = $seance->themes()->where('seance_themes.formateur_id', $user->id)->exists();
+        if (!$isAssigned) {
+            abort(403);
+        }
+
+        $seance->load(['plan.entite', 'plan.participants.instituts', 'site', 'themes', 'presences' => function($q) {
+            $q->where('statut', '!=', 'présent');
+        }]);
+
+        // Calcul des stats flash
+        $totalParticipants = $seance->plan->participants->count();
+        $absentsCount = $seance->presences->count();
+        $unjustifiedCount = $seance->presences->where('est_justifie', false)->count();
+        $absenceRate = $totalParticipants > 0 ? round(($absentsCount / $totalParticipants) * 100, 1) : 0;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.rapport_absences', [
+            'seance' => $seance,
+            'animateur' => $user,
+            'stats' => [
+                'total' => $totalParticipants,
+                'absents' => $absentsCount,
+                'unjustified' => $unjustifiedCount,
+                'rate' => $absenceRate
+            ]
+        ]);
+
+        return $pdf->stream('Rapport_Absences_Seance_' . $seance->id . '.pdf');
+    }
 }
