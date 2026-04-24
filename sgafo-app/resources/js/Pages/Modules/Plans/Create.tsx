@@ -60,18 +60,47 @@ export default function Create({ plan, entites, secteurs, sites, hotels, formate
     const [hebergements, setHebergements] = useState<PlanHebergement[]>(plan?.hebergements || []);
     const [plateforme, setPlateforme] = useState<string>(plan?.plateforme || '');
     const [lienVisio, setLienVisio] = useState<string>(plan?.lien_visio || '');
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const isValidUrl = (url: string) => {
+        if (!url) return true; // Optionnel
+        try {
+            new URL(url);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    };
 
     // ─── Navigation ─────────────────────────────────────────
     const canGoNext = useCallback(() => {
         switch (step) {
             case 1: return selectedEntite !== null;
-            case 2: return titre.trim().length > 0 && themes.length > 0 && themes.every(t => t.nom.trim() && Number(t.duree_heures) > 0);
+            case 2: {
+                const datesValid = dateDebut && dateFin && new Date(dateFin) >= new Date(dateDebut);
+                return titre.trim().length > 0 && 
+                       themes.length > 0 && 
+                       themes.every(t => t.nom.trim() && Number(t.duree_heures) > 0) &&
+                       datesValid;
+            }
             case 3: return themes.every(t => (t.animateur_ids?.length || 0) > 0);
             case 4: return participantIds.length > 0;
-            case 5: return true; // Site is optional in sous-phase A
+            case 5: {
+                const animateurIds = [...new Set(themes.flatMap(t => t.animateur_ids || []))];
+                const totalPeopleCount = animateurIds.length + participantIds.length;
+                
+                const siteOk = (selectedEntite?.mode === 'distance') || (siteId !== null);
+                // Si virtuel, lienVisio est obligatoire et doit être une URL valide
+                const virtuelOk = (selectedEntite?.mode === 'présentiel') || 
+                                 (plateforme.trim().length > 0 && lienVisio.trim().length > 0 && isValidUrl(lienVisio));
+                
+                // On rend hebOk toujours vrai pour l'instant car l'hébergement peut être facultatif (ex: tout le monde est local)
+                // Mais on garde la validation du site et du virtuel
+                return siteOk && virtuelOk;
+            }
             default: return true;
         }
-    }, [step, selectedEntite, titre, themes, participantIds]);
+    }, [step, selectedEntite, titre, themes, participantIds, dateDebut, dateFin, plateforme, siteId, hebergements, lienVisio]);
 
     const goNext = () => { if (canGoNext() && step < 6) setStep(step + 1); };
     const goPrev = () => { if (step > 1) setStep(step - 1); };

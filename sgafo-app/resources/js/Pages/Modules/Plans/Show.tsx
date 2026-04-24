@@ -6,9 +6,10 @@ import { useState } from 'react';
 
 interface Props extends PageProps {
     plan: PlanFormation;
+    isValidationContext?: boolean;
 }
 
-export default function Show({ plan }: Props) {
+export default function Show({ plan, isValidationContext }: Props) {
     const { auth } = usePage<PageProps>().props;
     const userRoles = (auth.user as any).roles || [];
     const roleCodes = userRoles.map((r: any) => typeof r === 'object' ? r.code : r);
@@ -36,7 +37,12 @@ export default function Show({ plan }: Props) {
     return (
         <AuthenticatedLayout header={
         <div className="flex items-center gap-2">
-            <Link href={route('modules.plans.index')} className="text-slate-400 hover:text-blue-600 transition-colors font-bold">Plans de formation</Link>
+            <Link 
+                href={isValidationContext ? route('modules.validations.index') : route('modules.plans.index')} 
+                className="text-slate-400 hover:text-blue-600 transition-colors font-bold"
+            >
+                {isValidationContext ? 'Centre de Validation' : 'Plans de formation'}
+            </Link>
             <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
             <span className="font-bold text-slate-900">{plan.titre}</span>
         </div>

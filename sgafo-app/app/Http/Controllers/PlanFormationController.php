@@ -13,6 +13,9 @@ use App\Models\PlanHebergement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use App\Notifications\PlanFormationSoumis;
+use App\Notifications\PlanFormationDecision;
+use Illuminate\Support\Facades\Notification;
 use Log;
 
 class PlanFormationController extends Controller
@@ -63,21 +66,31 @@ class PlanFormationController extends Controller
      */
     public function store(Request $request)
     {
+        $messages = [
+            'titre.required' => 'Le titre du plan est obligatoire.',
+            'date_debut.required' => 'La date de début est obligatoire pour planifier les séances.',
+            'date_fin.after_or_equal' => 'La date de fin doit être égale ou postérieure à la date de début.',
+            'themes.required' => 'Vous devez configurer au moins un thème.',
+            'themes.*.animateur_ids.required' => 'Chaque thème doit avoir au moins un formateur affecté.',
+            'themes.*.animateur_ids.min' => 'Chaque thème doit avoir au moins un formateur affecté.',
+            'site_formation_id.required_without' => 'Veuillez sélectionner un site de formation ou spécifier une plateforme distancielle.',
+        ];
+
         $validated = $request->validate([
             'entite_id' => 'required|exists:entite_formations,id',
             'titre' => 'required|string|max:200',
-            'date_debut' => 'nullable|date',
-            'date_fin' => 'nullable|date|after_or_equal:date_debut',
+            'date_debut' => 'required|date',
+            'date_fin' => 'required|date|after_or_equal:date_debut',
             'themes' => 'required|array|min:1',
             'themes.*.nom' => 'required|string|max:200',
             'themes.*.duree_heures' => 'required|numeric|min:0.5',
             'themes.*.objectifs' => 'nullable|string',
             'themes.*.ordre' => 'required|integer|min:1',
-            'themes.*.animateur_ids' => 'nullable|array',
+            'themes.*.animateur_ids' => 'required|array|min:1',
             'themes.*.animateur_ids.*' => 'exists:users,id',
-            'participant_ids' => 'nullable|array',
+            'participant_ids' => 'required|array|min:1',
             'participant_ids.*' => 'exists:users,id',
-            'site_formation_id' => 'nullable|exists:sites_formation,id',
+            'site_formation_id' => 'nullable|required_without:plateforme|exists:sites_formation,id',
             'plateforme' => 'nullable|string|max:100',
             'lien_visio' => 'nullable|string|max:500',
             'hebergements' => 'nullable|array',
@@ -85,7 +98,7 @@ class PlanFormationController extends Controller
             'hebergements.*.hotel_id' => 'required|exists:hotels,id',
             'hebergements.*.nombre_nuits' => 'required|integer|min:1',
             'hebergements.*.cout_total' => 'required|numeric|min:0',
-        ]);
+        ], $messages);
 
         return DB::transaction(function () use ($validated) {
             $plan = PlanFormation::create([
@@ -178,20 +191,31 @@ class PlanFormationController extends Controller
             return redirect()->back()->with('error', 'Ce plan ne peut plus être modifié.');
         }
 
+        $messages = [
+            'titre.required' => 'Le titre du plan est obligatoire.',
+            'date_debut.required' => 'La date de début est obligatoire.',
+            'date_fin.after_or_equal' => 'La date de fin doit être égale ou postérieure à la date de début.',
+            'themes.required' => 'Vous devez configurer au moins un thème.',
+            'themes.*.animateur_ids.required' => 'Chaque thème doit avoir au moins un formateur affecté.',
+            'themes.*.animateur_ids.min' => 'Chaque thème doit avoir au moins un formateur affecté.',
+            'participant_ids.required' => 'Vous devez ajouter au moins un participant.',
+            'site_formation_id.required_without' => 'Veuillez sélectionner un site de formation ou spécifier une plateforme distancielle.',
+        ];
+
         $validated = $request->validate([
             'titre' => 'required|string|max:200',
-            'date_debut' => 'nullable|date',
-            'date_fin' => 'nullable|date|after_or_equal:date_debut',
+            'date_debut' => 'required|date',
+            'date_fin' => 'required|date|after_or_equal:date_debut',
             'themes' => 'required|array|min:1',
             'themes.*.nom' => 'required|string|max:200',
             'themes.*.duree_heures' => 'required|numeric|min:0.5',
             'themes.*.objectifs' => 'nullable|string',
             'themes.*.ordre' => 'required|integer|min:1',
-            'themes.*.animateur_ids' => 'nullable|array',
+            'themes.*.animateur_ids' => 'required|array|min:1',
             'themes.*.animateur_ids.*' => 'exists:users,id',
-            'participant_ids' => 'nullable|array',
+            'participant_ids' => 'required|array|min:1',
             'participant_ids.*' => 'exists:users,id',
-            'site_formation_id' => 'nullable|exists:sites_formation,id',
+            'site_formation_id' => 'nullable|required_without:plateforme|exists:sites_formation,id',
             'plateforme' => 'nullable|string|max:100',
             'lien_visio' => 'nullable|string|max:500',
             'hebergements' => 'nullable|array',
@@ -199,7 +223,7 @@ class PlanFormationController extends Controller
             'hebergements.*.hotel_id' => 'required|exists:hotels,id',
             'hebergements.*.nombre_nuits' => 'required|integer|min:1',
             'hebergements.*.cout_total' => 'required|numeric|min:0',
-        ]);
+        ], $messages);
 
         return DB::transaction(function () use ($validated, $plan) {
             $plan->update([
@@ -277,6 +301,32 @@ class PlanFormationController extends Controller
             return redirect()->back()->with('error', 'Ce plan ne peut pas être soumis.');
         }
 
+        // Validation de complétude avant soumission
+        $errors = [];
+        if (!$plan->date_debut || !$plan->date_fin) {
+            $errors[] = "Les dates de début et de fin sont obligatoires.";
+        }
+        if ($plan->themes()->count() === 0) {
+            $errors[] = "Le plan doit contenir au moins un thème.";
+        }
+        if ($plan->participants()->count() === 0) {
+            $errors[] = "Le plan doit contenir au moins un participant.";
+        }
+        
+        foreach ($plan->themes as $theme) {
+            if ($theme->animateurs()->count() === 0) {
+                $errors[] = "Le thème '{$theme->nom}' n'a aucun formateur affecté.";
+            }
+        }
+
+        if (!$plan->site_formation_id && !$plan->plateforme) {
+            $errors[] = "Veuillez spécifier un site de formation ou une plateforme (Teams, Zoom, etc.).";
+        }
+
+        if (!empty($errors)) {
+            return redirect()->back()->with('error', 'Plan incomplet : ' . implode(' ', $errors));
+        }
+
         $plan->update([
             'statut' => 'soumis',
             'date_soumission' => now(),
@@ -288,6 +338,14 @@ class PlanFormationController extends Controller
             'action' => 'soumis',
             'commentaire' => 'Le plan a été soumis pour validation.',
         ]);
+
+        // Notifier les RF du secteur
+        $secteurId = $plan->entite->secteur_id;
+        $rfs = User::whereHas('roles', fn($q) => $q->where('code', 'RF'))
+            ->whereHas('secteurs', fn($q) => $q->where('secteurs.id', $secteurId))
+            ->get();
+
+        Notification::send($rfs, new PlanFormationSoumis($plan));
 
         return redirect()->route('modules.plans.show', $plan)
                        ->with('success', 'Plan soumis au Responsable Formation.');
@@ -315,6 +373,9 @@ class PlanFormationController extends Controller
             'action' => 'validé',
             'commentaire' => 'Le plan a été validé par le responsable de secteur.',
         ]);
+
+        // Notifier le créateur
+        $plan->createur->notify(new PlanFormationDecision($plan, 'validé'));
 
         return redirect()->route('modules.plans.show', $plan)
                        ->with('success', 'Plan validé et confirmé.');
@@ -347,6 +408,9 @@ class PlanFormationController extends Controller
             'action' => 'rejeté',
             'commentaire' => $validated['motif_rejet'],
         ]);
+
+        // Notifier le créateur
+        $plan->createur->notify(new PlanFormationDecision($plan, 'rejeté', $validated['motif_rejet']));
 
         return redirect()->route('modules.plans.index')
                        ->with('success', 'Plan rejeté. Le CDC a été notifié.');

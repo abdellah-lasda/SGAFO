@@ -138,6 +138,7 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                                         <option key={s.id} value={s.id}>{s.nom}</option>
                                     ))}
                                 </select>
+                                <InputError message={errors.secteur_id} className="mt-1" />
                             </div>
                             <div className='md:col-span-2 ' >
                                 <InputLabel value="Type" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
@@ -151,6 +152,7 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                                     <option value="manageriale">Managériale</option>
                                     <option value="transversale">Transversale</option>
                                 </select>
+                                <InputError message={errors.type} className="mt-1" />
                             </div>
                             <div className='md:col-span-2' >
                                 <InputLabel value="Mode" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
@@ -163,6 +165,7 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                                     <option value="distance">À distance</option>
                                     <option value="hybride">Hybride</option>
                                 </select>
+                                <InputError message={errors.mode} className="mt-1" />
                             </div>
                             <div className="md:col-span-4">
                                 <InputLabel value="Description" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
@@ -173,6 +176,7 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                                     placeholder="Description de la formation ..."
                                     required
                                 />
+                                <InputError message={errors.description} className="mt-1" />
                             </div>
                             <div className="md:col-span-4">
                                 <InputLabel value="Objectifs" className="text-[9px] font-black text-slate-400 uppercase mb-2 ml-1" />
@@ -183,6 +187,7 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                                     placeholder="Objectifs de la formation ..."
                                     required
                                 />
+                                <InputError message={errors.objectifs} className="mt-1" />
                             </div>
                         </div>
                     </div>
@@ -228,15 +233,18 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                                                     placeholder="Titre du thème..."
                                                     required
                                                 />
+                                                <InputError message={errors[`themes.${index}.titre` as keyof typeof errors]} className="mt-1" />
                                             </td>
-                                            <td className="px-4 py-3 align-top">
+                                            <td className="px-4 py-3 align-top text-center">
                                                 <input
                                                     type="number"
+                                                    step="0.5"
                                                     className="w-full bg-slate-50 text-sm font-black border-transparent focus:bg-white focus:ring-blue-500 rounded-md p-2 text-center shadow-inner"
                                                     value={theme.duree_heures}
                                                     onChange={(e) => handleThemeChange(index, 'duree_heures', e.target.value)}
                                                     required
                                                 />
+                                                <InputError message={errors[`themes.${index}.duree_heures` as keyof typeof errors]} className="mt-1" />
                                             </td>
                                             <td className="px-4 py-3 align-top">
                                                 <textarea
@@ -245,6 +253,7 @@ export default function EntiteModal({ isOpen, onClose, entite, secteurs }: Props
                                                     onChange={(e) => handleThemeChange(index, 'objectifs', e.target.value)}
                                                     placeholder="Contenu indicatif..."
                                                 />
+                                                <InputError message={errors[`themes.${index}.objectifs` as keyof typeof errors]} className="mt-1" />
                                             </td>
                                             <td className="px-4 py-3 text-right align-top pt-4">
                                                 <button

@@ -97,7 +97,7 @@ export const ValidationTable: FC<TableProps> = ({ plans }) => {
                                             </Link>
                                         )}
                                         <Link
-                                            href={route('modules.plans.show', plan.id)}
+                                            href={route('modules.validations.show', plan.id)}
                                             className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-700 transition-all shadow-sm active:scale-95"
                                         >
                                             {plan.statut === 'soumis' ? 'Examiner' : 'Détails'}

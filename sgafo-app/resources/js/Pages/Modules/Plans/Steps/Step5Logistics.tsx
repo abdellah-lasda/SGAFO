@@ -41,6 +41,10 @@ export default function Step5Logistics({
     lienVisio,
     setLienVisio
 }: Props) {
+    console.log('Step 5 - Hebergements:', hebergements);
+    console.log('Step 5 - Hotels:', hotels);
+    console.log('Step 5 - Sites:', sites);
+
     const isADistance = mode?.toLowerCase().includes('distance');
     const isHybride = mode?.toLowerCase().includes('hybride');
 

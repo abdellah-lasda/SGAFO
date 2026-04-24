@@ -40,6 +40,7 @@ class HandleInertiaRequests extends Middleware
                     'is_externe' => $request->user()->is_externe,
                     'roles' => $request->user()->roles,
                     'primary_role' => $request->user()->primaryRole(),
+                    'notifications' => $request->user() ? $request->user()->unreadNotifications : [],
                 ] : null,
             ],
         ];

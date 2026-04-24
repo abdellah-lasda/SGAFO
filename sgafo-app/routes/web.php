@@ -99,6 +99,7 @@ Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function
     // Centre de Validation & Planification (RF)
     Route::prefix('validations')->name('validations.')->group(function () {
         Route::get('/', [PlanValidationController::class, 'index'])->name('index');
+        Route::get('plans/{plan}', [PlanValidationController::class, 'show'])->name('show');
         Route::get('plans/{plan}/planning', [SeanceController::class, 'index'])->name('planning.index');
         Route::post('plans/{plan}/seances', [SeanceController::class, 'store'])->name('planning.store');
         Route::post('plans/{plan}/planning/cloturer', [SeanceController::class, 'cloturer'])->name('planning.cloturer');
@@ -121,6 +122,10 @@ Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function
 
         Route::put('/instituts/{institut}', [LogistiqueController::class, 'updateInstitut'])->name('instituts.update');
     });
+
+    // Notifications
+    Route::post('notifications/{id}/mark-as-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('notifications/mark-all-as-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
 });
 
 require __DIR__.'/auth.php';

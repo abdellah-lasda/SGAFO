@@ -27,7 +27,7 @@ export default function Index({ plans, secteurs, filters }: Props) {
 
     return (
         <AuthenticatedLayout
-            header={<span className="font-black text-slate-900">📚 Catalogue National des Formations</span>}
+            header={<span className="font-black text-slate-900">Catalogue National des Formations</span>}
         >
             <Head title="Catalogue National" />
 

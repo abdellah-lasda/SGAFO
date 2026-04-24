@@ -27,18 +27,35 @@ class EntiteFormationController extends Controller
 
     public function store(Request $request)
     {
+        $messages = [
+            'titre.required' => 'L\'intitulé de la formation est obligatoire.',
+            'titre.unique' => 'Une formation avec cet intitulé existe déjà dans le référentiel.',
+            'type.required' => 'Le type de formation est obligatoire.',
+            'mode.required' => 'Le mode d\'apprentissage est obligatoire.',
+            'secteur_id.required' => 'Veuillez sélectionner un secteur.',
+            'description.min' => 'La description doit faire au moins 30 caractères.',
+            'objectifs.required' => 'Les objectifs de la formation sont obligatoires.',
+            'objectifs.min' => 'Les objectifs doivent faire au moins 30 caractères.',
+            'themes.required' => 'Vous devez ajouter au moins un thème/module.',
+            'themes.min' => 'Vous devez ajouter au moins un thème/module.',
+            'themes.*.titre.required' => 'L\'intitulé du thème est obligatoire.',
+            'themes.*.duree_heures.required' => 'La durée est obligatoire.',
+            'themes.*.duree_heures.numeric' => 'La durée doit être un nombre.',
+            'themes.*.duree_heures.min' => 'La durée minimum est de 30 minutes (0.5).',
+        ];
+
         $validated = $request->validate([
-            'titre' => 'required|string|max:200',
+            'titre' => 'required|string|max:200|unique:entite_formations,titre',
             'type' => 'required|in:technique,pedagogique,manageriale,transversale',
             'mode' => 'required|in:présentiel,distance,hybride',
             'secteur_id' => 'required|exists:secteurs,id',
-            'description' => 'nullable|string',
-            'objectifs' => 'required|string',
+            'description' => 'nullable|string|min:30',
+            'objectifs' => 'required|string|min:30',
             'themes' => 'required|array|min:1',
             'themes.*.titre' => 'required|string|max:200',
             'themes.*.duree_heures' => 'required|numeric|min:0.5',
             'themes.*.objectifs' => 'nullable|string',
-        ]);
+        ], $messages);
 
         return DB::transaction(function () use ($validated) {
             $entite = EntiteFormation::create([
@@ -61,19 +78,36 @@ class EntiteFormationController extends Controller
 
     public function update(Request $request, EntiteFormation $entite)
     {
+        $messages = [
+            'titre.required' => 'L\'intitulé de la formation est obligatoire.',
+            'titre.unique' => 'Une formation avec cet intitulé existe déjà dans le référentiel.',
+            'type.required' => 'Le type de formation est obligatoire.',
+            'mode.required' => 'Le mode d\'apprentissage est obligatoire.',
+            'secteur_id.required' => 'Veuillez sélectionner un secteur.',
+            'description.min' => 'La description doit faire au moins 30 caractères.',
+            'objectifs.required' => 'Les objectifs de la formation sont obligatoires.',
+            'objectifs.min' => 'Les objectifs doivent faire au moins 30 caractères.',
+            'themes.required' => 'Vous devez ajouter au moins un thème/module.',
+            'themes.min' => 'Vous devez ajouter au moins un thème/module.',
+            'themes.*.titre.required' => 'L\'intitulé du thème est obligatoire.',
+            'themes.*.duree_heures.required' => 'La durée est obligatoire.',
+            'themes.*.duree_heures.numeric' => 'La durée doit être un nombre.',
+            'themes.*.duree_heures.min' => 'La durée minimum est de 30 minutes (0.5).',
+        ];
+
         $validated = $request->validate([
-            'titre' => 'required|string|max:200',
+            'titre' => 'required|string|max:200|unique:entite_formations,titre,' . $entite->id,
             'type' => 'required|in:technique,pedagogique,manageriale,transversale',
             'mode' => 'required|in:présentiel,distance,hybride',
             'secteur_id' => 'required|exists:secteurs,id',
-            'description' => 'nullable|string',
-            'objectifs' => 'required|string',
+            'description' => 'nullable|string|min:30',
+            'objectifs' => 'required|string|min:30',
             'themes' => 'required|array|min:1',
             'themes.*.id' => 'nullable|exists:entite_themes,id',
             'themes.*.titre' => 'required|string|max:200',
             'themes.*.duree_heures' => 'required|numeric|min:0.5',
             'themes.*.objectifs' => 'nullable|string',
-        ]);
+        ], $messages);
 
         return DB::transaction(function () use ($validated, $entite) {
             $entite->update($validated);
@@ -81,6 +115,7 @@ class EntiteFormationController extends Controller
             // Sync Themes
             $entite->themes()->delete();
             foreach ($validated['themes'] as $themeData) {
+                unset($themeData['id']); // On recrée tout pour simplifier la synchro
                 $entite->themes()->create($themeData);
             }
 

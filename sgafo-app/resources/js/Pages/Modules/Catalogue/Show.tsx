@@ -7,6 +7,9 @@ interface Props {
     plan: PlanFormation;
 }
 
+
+
+
 export default function Show({ plan }: Props) {
     const [activeTab, setActiveTab] = useState('resume');
 
@@ -24,11 +27,10 @@ export default function Show({ plan }: Props) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center gap-4">
-                    <Link href={route('modules.catalogue.index')} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-                        <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-                    </Link>
-                    <span className="font-black text-slate-900">Détails de la Formation</span>
+                <div className="flex items-center gap-2">
+                    <Link href={route('modules.entites.index')} className="text-slate-400 hover:text-blue-600 transition-colors font-bold">Catalogue National</Link>
+                    <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+                    <span className="font-bold text-slate-900">Détails de la Formation</span>
                 </div>
             }
         >
@@ -71,7 +73,7 @@ export default function Show({ plan }: Props) {
                                 <div>
                                     <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Période</p>
                                     <p className="text-sm font-bold text-white">
-                                        {new Date(plan.date_debut).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })} - {new Date(plan.date_fin).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
+                                        {new Date(plan?.date_debut).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })} - {new Date(plan?.date_fin).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
                                     </p>
                                 </div>
                             </div>
@@ -113,7 +115,7 @@ export default function Show({ plan }: Props) {
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-bold text-slate-500">Modalité</span>
                                         <span className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black uppercase text-slate-600">
-                                            {plan.is_remote ? 'Distanciel' : plan.is_hybrid ? 'Hybride' : 'Présentiel'}
+                                            {plan.entite?.mode === "distance" ? 'Distanciel' : plan.entite?.mode === "hybride" ? 'Hybride' : 'Présentiel'}
                                         </span>
                                     </div>
                                 </div>
@@ -159,7 +161,7 @@ export default function Show({ plan }: Props) {
                                             Description du projet
                                         </h2>
                                         <p className="text-slate-600 font-medium leading-relaxed whitespace-pre-wrap">
-                                            {plan.description || "Aucune description détaillée fournie."}
+                                            {plan?.entite?.description || "Aucune description détaillée fournie."}
                                         </p>
                                     </div>
 
@@ -167,13 +169,13 @@ export default function Show({ plan }: Props) {
                                         <div className="bg-blue-50/50 rounded-3xl p-8 border border-blue-100/50">
                                             <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Objectif Global</h3>
                                             <p className="text-slate-900 font-bold leading-relaxed italic">
-                                                "{plan.objectif_global || "Non défini"}"
+                                                "{plan?.entite?.objectifs || "Non défini"}"
                                             </p>
                                         </div>
                                         <div className="bg-slate-50 rounded-3xl p-8 border border-slate-100">
                                             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Objectifs Spécifiques</h3>
                                             <p className="text-slate-600 font-medium leading-relaxed whitespace-pre-wrap text-sm">
-                                                {plan.objectifs_specifiques || "Non définis"}
+                                                {/* {plan.objectifs_specifiques || "Non définis"} */}Non définis
                                             </p>
                                         </div>
                                     </div>
@@ -254,7 +256,7 @@ export default function Show({ plan }: Props) {
                                                     <p className="mt-4 text-slate-400 text-sm font-medium">{plan.site_formation.adresse || "Adresse non spécifiée"}</p>
                                                 </div>
                                             </div>
-                                        ) : plan.is_remote ? (
+                                        ) : plan?.entite?.mode === "distance" ? (
                                             <div className="p-10 bg-indigo-50 border-2 border-indigo-100 border-dashed rounded-3xl text-center">
                                                 <div className="w-16 h-16 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
                                                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
@@ -272,11 +274,11 @@ export default function Show({ plan }: Props) {
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
                                                 <span className="text-sm font-bold text-slate-500">Participants hébergés</span>
-                                                <span className="text-sm font-black text-slate-900">{plan.hebergements?.filter(h => plan.participants.some(p => p.id === h.user_id)).length || 0}</span>
+                                                <span className="text-sm font-black text-slate-900">{plan?.hebergements?.filter(h => plan?.participants?.some(p => p.id === h.user_id)).length || 0}</span>
                                             </div>
                                             <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
                                                 <span className="text-sm font-bold text-slate-500">Animateurs hébergés</span>
-                                                <span className="text-sm font-black text-slate-900">{plan.hebergements?.filter(h => !plan.participants.some(p => p.id === h.user_id)).length || 0}</span>
+                                                <span className="text-sm font-black text-slate-900">{plan?.hebergements?.filter(h => !plan?.participants?.some(p => p.id === h.user_id)).length || 0}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -295,21 +297,21 @@ export default function Show({ plan }: Props) {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-50">
-                                                {plan.seances?.map(seance => (
+                                                {plan.sessions?.map(seance => (
                                                     <tr key={seance.id} className="group hover:bg-slate-50/50 transition-all">
                                                         <td className="py-6 pl-4">
                                                             <div className="flex flex-col">
-                                                                <span className="text-sm font-black text-slate-900">{new Date(seance.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                                                                <span className="text-[10px] font-bold text-slate-400 uppercase">{new Date(seance.date).getFullYear()}</span>
+                                                                <span className="text-sm font-black text-slate-900">{new Date(seance.date_debut).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase">{new Date(seance.date_fin).getFullYear()}</span>
                                                             </div>
                                                         </td>
                                                         <td className="py-6">
                                                             <span className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-600">
-                                                                {seance.debut.substring(0, 5)} - {seance.fin.substring(0, 5)}
+                                                                {seance.heure_debut.substring(0, 5)} - {seance.heure_fin.substring(0, 5)}
                                                             </span>
                                                         </td>
                                                         <td className="py-6">
-                                                            <p className="text-sm font-bold text-slate-800">{seance.themes?.[0]?.nom || "Multi-thèmes"}</p>
+                                                            <p className="text-sm font-bold text-slate-800">{seance.theme?.nom || "Multi-thèmes"}</p>
                                                         </td>
                                                         <td className="py-6">
                                                             <div className="flex items-center gap-2">
@@ -321,7 +323,7 @@ export default function Show({ plan }: Props) {
                                                         </td>
                                                     </tr>
                                                 ))}
-                                                {(!plan.seances || plan.seances.length === 0) && (
+                                                {(!plan.sessions || plan.sessions.length === 0) && (
                                                     <tr>
                                                         <td colSpan={4} className="py-10 text-center text-slate-400 font-medium italic">Planning en cours de finalisation...</td>
                                                     </tr>

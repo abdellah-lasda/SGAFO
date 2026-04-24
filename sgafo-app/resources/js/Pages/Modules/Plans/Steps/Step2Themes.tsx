@@ -96,16 +96,23 @@ export default function Step2Themes({ titre, setTitre, themes, setThemes, dateDe
                         />
                     </div>
                     {/* Durée calculée */}
-                    <div className="flex items-end">
+                    <div className="flex flex-col gap-2 justify-end">
                         {nbJours ? (
                             <div className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl text-center">
                                 <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Durée</p>
                                 <p className="text-lg font-black">{nbJours} jour{nbJours > 1 ? 's' : ''}</p>
                             </div>
                         ) : (
-                            <div className="w-full px-4 py-3 bg-slate-100 text-slate-400 rounded-xl text-center">
-                                <p className="text-xs font-bold">Sélectionnez les dates</p>
+                            <div className={`w-full px-4 py-3 rounded-xl text-center border-2 border-dashed transition-all ${dateDebut && dateFin && new Date(dateFin) < new Date(dateDebut) ? 'bg-red-50 border-red-200 text-red-500' : 'bg-slate-100 border-slate-200 text-slate-400'}`}>
+                                <p className="text-xs font-bold">
+                                    {dateDebut && dateFin && new Date(dateFin) < new Date(dateDebut) 
+                                        ? 'Date de fin invalide' 
+                                        : 'Sélectionnez les dates'}
+                                </p>
                             </div>
+                        )}
+                        {dateDebut && dateFin && new Date(dateFin) < new Date(dateDebut) && (
+                             <p className="text-[9px] text-red-500 font-black uppercase tracking-widest text-center animate-pulse">La fin doit être après le début</p>
                         )}
                     </div>
                 </div>

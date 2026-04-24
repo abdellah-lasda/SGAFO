@@ -61,4 +61,31 @@ class PlanValidationController extends Controller
             ]
         ]);
     }
+
+    public function show(PlanFormation $plan)
+    {
+        $user = Auth::user();
+        
+        // Vérifier que le RF a accès au secteur de ce plan
+        $secteurIds = $user->secteurs()->pluck('secteurs.id')->toArray();
+        if (!in_array($plan->entite->secteur_id, $secteurIds)) {
+            abort(403, 'Vous n\'avez pas accès à ce plan de formation.');
+        }
+
+        $plan->load([
+            'entite.secteur',
+            'themes.animateurs',
+            'participants.instituts',
+            'hebergements.hotel',
+            'siteFormation',
+            'createur',
+            'validateur',
+            'validationLogs.user'
+        ]);
+
+        return Inertia::render('Modules/Plans/Show', [
+            'plan' => $plan,
+            'isValidationContext' => true, // Flag pour adapter l'UI (ex: breadcrumbs, actions)
+        ]);
+    }
 }

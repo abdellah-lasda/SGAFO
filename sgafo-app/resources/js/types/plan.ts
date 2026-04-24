@@ -63,6 +63,19 @@ export interface PlanValidationLog {
     user?: { id: number; prenom: string; nom: string };
 }
 
+export interface PlanSeance {
+    id: number;
+    plan_id: number;
+    theme_id: number;
+    date_debut: string;
+    date_fin: string;
+    heure_debut: string;
+    heure_fin: string;
+    salle_id: number | null;
+    theme?: PlanTheme;
+    salle?: { id: number; nom: string; capacite: number; site_id: number };
+}
+
 export interface PlanFormation {
     id: number;
     entite_id: number;
@@ -73,8 +86,8 @@ export interface PlanFormation {
     valide_par: number | null;
     date_soumission: string | null;
     date_validation: string | null;
-    date_debut: string | null;
-    date_fin: string | null;
+    date_debut: string ;
+    date_fin: string ;
     site_formation_id: number | null;
     created_at: string;
     updated_at: string;
@@ -89,6 +102,7 @@ export interface PlanFormation {
     hebergements?: PlanHebergement[];
     site_formation?: SiteFormation;
     validation_logs?: PlanValidationLog[];
+    sessions: PlanSeance[];
 }
 
 export const STATUT_CONFIG: Record<PlanStatut, { label: string; color: string; bg: string }> = {
