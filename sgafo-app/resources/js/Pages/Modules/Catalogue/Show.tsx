@@ -171,7 +171,7 @@ export default function Show({ plan }: Props) {
                                         </p>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                    <div className="grid grid-cols-1 gap-10">
                                         <div className="bg-blue-50/50 rounded-3xl p-8 border border-blue-100/50">
                                             <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Objectif Global</h3>
                                             <p className="text-slate-900 font-bold leading-relaxed italic">

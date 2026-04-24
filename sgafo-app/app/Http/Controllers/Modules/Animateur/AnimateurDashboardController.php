@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Modules\Animateur;
 
 use App\Http\Controllers\Controller;
+use App\Models\PlanFormation;
 use App\Models\Seance;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,6 +44,52 @@ class AnimateurDashboardController extends Controller
             'seances' => $seances,
             'stats' => $stats,
             'nextSession' => $nextSession,
+        ]);
+    }
+
+    public function formations()
+    {
+        $user = Auth::user();
+
+        // Récupérer les Plans de formation où l'animateur intervient
+        $plans = PlanFormation::whereHas('seances.themes', function ($query) use ($user) {
+            $query->where('seance_themes.formateur_id', $user->id);
+        })
+        ->with(['entite', 'seances' => function ($query) use ($user) {
+            $query->whereHas('themes', function ($q) use ($user) {
+                $q->where('seance_themes.formateur_id', $user->id);
+            })->with('site', 'themes');
+        }])
+        ->get();
+
+        // Récupérer toutes les séances de l'animateur (pour le calendrier)
+        $allSeances = Seance::whereHas('themes', function ($query) use ($user) {
+            $query->where('seance_themes.formateur_id', $user->id);
+        })
+        ->with(['plan.entite', 'site', 'themes'])
+        ->orderBy('date', 'asc')
+        ->get();
+
+        // Statistiques
+        $totalHours = 0;
+        $completedHours = 0;
+        foreach ($allSeances as $seance) {
+            $duration = 4;
+            $totalHours += $duration;
+            if ($seance->statut === 'terminée') {
+                $completedHours += $duration;
+            }
+        }
+
+        return Inertia::render('Modules/Animateur/Formations', [
+            'plans' => $plans,
+            'allSeances' => $allSeances,
+            'stats' => [
+                'total_plans' => $plans->count(),
+                'total_hours' => $totalHours,
+                'completed_hours' => $completedHours,
+                'completion_rate' => $totalHours > 0 ? round(($completedHours / $totalHours) * 100) : 0,
+            ]
         ]);
     }
 

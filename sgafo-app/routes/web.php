@@ -134,6 +134,7 @@ Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function
 // Espace Animateur (Accessible sans le préfixe 'modules')
 Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('modules.animateur.')->group(function () {
     Route::get('/dashboard', [AnimateurDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/formations', [AnimateurDashboardController::class, 'formations'])->name('formations');
     Route::get('/seances/{seance}/appel', [AnimateurDashboardController::class, 'attendance'])->name('seances.attendance');
     Route::post('/seances/{seance}/appel', [AnimateurDashboardController::class, 'submitAttendance'])->name('seances.submit-attendance');
     Route::get('/seances/{seance}/print-sheet', [AnimateurDashboardController::class, 'printSheet'])->name('seances.print-sheet');
