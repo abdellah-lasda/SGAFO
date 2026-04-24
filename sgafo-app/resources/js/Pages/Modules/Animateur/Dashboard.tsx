@@ -36,6 +36,7 @@ interface Props extends PageProps {
 export default function Dashboard({ auth, seances, stats, nextSession }: Props) {
     const user = auth.user;
     const isToday = nextSession && nextSession.date === format(new Date(), 'yyyy-MM-dd');
+    const isFuture = nextSession && nextSession.date > format(new Date(), 'yyyy-MM-dd');
 
     return (
         <AuthenticatedLayout header={<span>Espace Animateur</span>}>
@@ -51,8 +52,8 @@ export default function Dashboard({ auth, seances, stats, nextSession }: Props) 
                         <p className="text-slate-400 font-medium mt-2">
                             {isToday 
                                 ? "🌟 Vous avez une séance prévue aujourd'hui !" 
-                                : nextSession 
-                                ? `Votre prochaine séance est prévue pour le ${format(new Date(nextSession.date), 'd MMMM', { locale: fr })}.`
+                                : isFuture
+                                ? `Votre prochaine séance est prévue pour le ${format(new Date(nextSession!.date), 'd MMMM', { locale: fr })}.`
                                 : "Vous n'avez pas de séance prévue pour le moment."}
                         </p>
                     </div>
@@ -84,7 +85,7 @@ export default function Dashboard({ auth, seances, stats, nextSession }: Props) 
                                 <div className="relative z-10">
                                     <div className="flex items-center gap-3 mb-6">
                                         <span className="px-3 py-1 bg-blue-600 text-[10px] font-black uppercase tracking-widest rounded-lg">Prochaine séance</span>
-                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                        {isToday && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>}
                                     </div>
 
                                     <h2 className="text-2xl font-black mb-2 leading-tight">
@@ -120,12 +121,18 @@ export default function Dashboard({ auth, seances, stats, nextSession }: Props) 
                                     </div>
 
                                     <div className="flex flex-col sm:flex-row gap-4">
-                                        <Link 
-                                            href={route('modules.animateur.seances.attendance', nextSession.id)}
-                                            className="px-8 py-4 bg-white text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all text-center shadow-lg active:scale-95"
-                                        >
-                                            ✅ Faire l'appel
-                                        </Link>
+                                        {!isFuture ? (
+                                            <Link 
+                                                href={route('modules.animateur.seances.attendance', nextSession.id)}
+                                                className="px-8 py-4 bg-white text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all text-center shadow-lg active:scale-95"
+                                            >
+                                                ✅ Faire l'appel
+                                            </Link>
+                                        ) : (
+                                            <div className="px-8 py-4 bg-white/10 text-white/50 border border-white/10 rounded-2xl text-[11px] font-black uppercase tracking-widest text-center italic">
+                                                🔒 Appel bientôt disponible
+                                            </div>
+                                        )}
                                         <a 
                                             href={route('modules.animateur.seances.print-sheet', nextSession.id)}
                                             target="_blank"

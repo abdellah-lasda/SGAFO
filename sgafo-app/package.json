@@ -27,6 +27,7 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
+        "@tinymce/tinymce-react": "^6.3.0",
         "date-fns": "^4.1.0"
     }
 }

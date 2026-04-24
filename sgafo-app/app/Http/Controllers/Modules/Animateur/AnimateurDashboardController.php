@@ -93,6 +93,36 @@ class AnimateurDashboardController extends Controller
         ]);
     }
 
+    public function showFormation(PlanFormation $plan)
+    {
+        $user = Auth::user();
+
+        // Vérifier que l'animateur est rattaché à au moins un thème de ce plan
+        $isAssigned = $plan->seances()->whereHas('themes', function ($query) use ($user) {
+            $query->where('seance_themes.formateur_id', $user->id);
+        })->exists();
+
+        if (!$isAssigned) {
+            abort(403, "Vous n'êtes pas assigné à ce plan de formation.");
+        }
+
+        // Charger les données nécessaires
+        $plan->load([
+            'entite', 
+            'themes', 
+            'seances' => function($q) use ($user) {
+                $q->whereHas('themes', function($t) use ($user) {
+                    $t->where('seance_themes.formateur_id', $user->id);
+                })->with('site', 'themes');
+            },
+            'participants.groupe'
+        ]);
+
+        return Inertia::render('Modules/Animateur/FormationDetails', [
+            'plan' => $plan,
+        ]);
+    }
+
     public function attendance(Seance $seance)
     {
         $user = Auth::user();
