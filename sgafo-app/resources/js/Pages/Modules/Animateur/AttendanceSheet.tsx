@@ -202,24 +202,39 @@ export default function AttendanceSheet({ seance, participants }: Props) {
                 </div>
             </div>
 
-            {/* Bottom Actions Bar */}
-            <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-md border-t border-slate-200 z-30 lg:pl-72">
-                <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-                    <p className="hidden sm:block text-xs text-slate-400 font-medium">
-                        Dernière sauvegarde automatique : {format(new Date(), 'HH:mm')}
-                    </p>
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* Bottom Actions Bar - Floating Dock Design */}
+            <div className="fixed bottom-6 left-6 right-6 lg:left-80 lg:right-10 z-40">
+                <div className="bg-white/90 backdrop-blur-xl border border-slate-200/50 shadow-2xl shadow-slate-900/10 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all duration-500">
+                    <div className="flex items-center gap-4 pl-4">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                        <div className="hidden sm:block">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Dernière sauvegarde</p>
+                            <p className="text-xs font-bold text-slate-700">{format(new Date(), 'HH:mm')}</p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <a 
+                            href={route('modules.animateur.seances.print-sheet', seance.id)}
+                            target="_blank"
+                            className="flex-1 sm:flex-none px-6 py-4 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        >
+                            <span>🖨️</span>
+                            <span className="hidden md:inline">Imprimer</span>
+                        </a>
                         <button 
                             onClick={() => handleSubmit(false)}
                             disabled={processing}
-                            className="flex-1 sm:flex-none px-6 py-4 bg-slate-100 text-slate-700 text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50"
+                            className="flex-1 sm:flex-none px-6 py-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-800 transition-all shadow-lg active:scale-95 disabled:opacity-50"
                         >
-                            Enregistrer (Brouillon)
+                            Enregistrer
                         </button>
                         <button 
                             onClick={() => handleSubmit(true)}
                             disabled={processing}
-                            className="flex-1 sm:flex-none px-8 py-4 bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50"
+                            className="flex-1 sm:flex-none px-8 py-4 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50 border-b-4 border-blue-700 active:border-b-0"
                         >
                             Clôturer la séance
                         </button>

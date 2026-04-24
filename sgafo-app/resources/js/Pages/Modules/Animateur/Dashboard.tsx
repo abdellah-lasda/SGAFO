@@ -35,6 +35,7 @@ interface Props extends PageProps {
 
 export default function Dashboard({ auth, seances, stats, nextSession }: Props) {
     const user = auth.user;
+    const isToday = nextSession && nextSession.date === format(new Date(), 'yyyy-MM-dd');
 
     return (
         <AuthenticatedLayout header={<span>Espace Animateur</span>}>
@@ -48,9 +49,11 @@ export default function Dashboard({ auth, seances, stats, nextSession }: Props) 
                             Bonjour, {user.prenom} ! 👋
                         </h1>
                         <p className="text-slate-400 font-medium mt-2">
-                            {nextSession 
-                                ? `Votre prochaine séance commence bientôt.` 
-                                : "Vous n'avez pas de séance prévue aujourd'hui."}
+                            {isToday 
+                                ? "🌟 Vous avez une séance prévue aujourd'hui !" 
+                                : nextSession 
+                                ? `Votre prochaine séance est prévue pour le ${format(new Date(nextSession.date), 'd MMMM', { locale: fr })}.`
+                                : "Vous n'avez pas de séance prévue pour le moment."}
                         </p>
                     </div>
 
@@ -123,9 +126,13 @@ export default function Dashboard({ auth, seances, stats, nextSession }: Props) 
                                         >
                                             ✅ Faire l'appel
                                         </Link>
-                                        <button className="px-8 py-4 bg-white/10 text-white border border-white/10 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-white/20 transition-all text-center active:scale-95">
-                                            📍 Localiser le site
-                                        </button>
+                                        <a 
+                                            href={route('modules.animateur.seances.print-sheet', nextSession.id)}
+                                            target="_blank"
+                                            className="px-8 py-4 bg-white/10 text-white border border-white/10 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-white/20 transition-all text-center active:scale-95"
+                                        >
+                                            🖨️ Imprimer l'émargement
+                                        </a>
                                     </div>
                                 </div>
                             </div>

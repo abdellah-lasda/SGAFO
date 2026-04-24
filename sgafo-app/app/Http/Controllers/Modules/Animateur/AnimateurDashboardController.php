@@ -29,12 +29,12 @@ class AnimateurDashboardController extends Controller
             'total_hours' => $seances->where('statut', 'terminée')->sum(function($s) {
                 return $s->themes->sum('pivot.heures_planifiees');
             }),
-            'upcoming_count' => $seances->where('statut', 'confirmée')->where('date', '>=', now()->toDateString())->count(),
+            'upcoming_count' => $seances->whereIn('statut', ['planifiée', 'confirmée'])->where('date', '>=', now()->toDateString())->count(),
             'pending_attendance' => $seances->where('statut', 'en_cours')->count(),
         ];
 
         // Identifier la prochaine séance (la plus proche dans le futur)
-        $nextSession = $seances->where('statut', 'confirmée')
+        $nextSession = $seances->whereIn('statut', ['planifiée', 'confirmée'])
             ->where('date', '>=', now()->toDateString())
             ->sortBy('date')
             ->first();
@@ -120,5 +120,25 @@ class AnimateurDashboardController extends Controller
         }
 
         return back()->with('success', 'Présences mises à jour.');
+    }
+    public function printSheet(Seance $seance)
+    {
+        $user = Auth::user();
+        $isAssigned = $seance->themes()->where('seance_themes.formateur_id', $user->id)->exists();
+        if (!$isAssigned) {
+            abort(403);
+        }
+
+        $seance->load(['plan.entite', 'plan.participants.instituts', 'site', 'themes']);
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.feuille_presence_manuelle', [
+            'seance' => $seance,
+            'participants' => $seance->plan->participants,
+            'animateur' => $user
+        ]);
+
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream('Feuille_Presence_Manuelle_' . $seance->id . '.pdf');
     }
 }

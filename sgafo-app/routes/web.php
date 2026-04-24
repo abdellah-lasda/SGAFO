@@ -135,6 +135,7 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
     Route::get('/dashboard', [\App\Http\Controllers\Modules\Animateur\AnimateurDashboardController::class, 'index'])->name('dashboard');
     Route::get('/seances/{seance}/appel', [\App\Http\Controllers\Modules\Animateur\AnimateurDashboardController::class, 'attendance'])->name('seances.attendance');
     Route::post('/seances/{seance}/appel', [\App\Http\Controllers\Modules\Animateur\AnimateurDashboardController::class, 'submitAttendance'])->name('seances.submit-attendance');
+    Route::get('/seances/{seance}/print-sheet', [\App\Http\Controllers\Modules\Animateur\AnimateurDashboardController::class, 'printSheet'])->name('seances.print-sheet');
 });
 
 require __DIR__.'/auth.php';
