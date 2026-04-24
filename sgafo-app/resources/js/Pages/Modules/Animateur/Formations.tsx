@@ -239,12 +239,20 @@ export default function Formations({ plans, allSeances, stats }: Props) {
                                                         </span>
 
                                                         {(!isFuture && seance.statut !== 'terminée') ? (
-                                                            <Link 
-                                                                href={route('modules.animateur.seances.attendance', seance.id)}
-                                                                className="px-5 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-600 transition-all shadow-sm active:scale-95"
-                                                            >
-                                                                Appel
-                                                            </Link>
+                                                            <div className="flex gap-2">
+                                                                 <Link 
+                                                                     href={route('modules.animateur.seances.preparation', seance.id)}
+                                                                     className="px-4 py-2 bg-white text-slate-900 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-50 transition-all border border-slate-200"
+                                                                 >
+                                                                     ✍️
+                                                                 </Link>
+                                                                 <Link 
+                                                                     href={route('modules.animateur.seances.attendance', seance.id)}
+                                                                     className="px-5 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-600 transition-all shadow-sm active:scale-95"
+                                                                 >
+                                                                     Appel
+                                                                 </Link>
+                                                            </div>
                                                         ) : seance.statut === 'terminée' ? (
                                                             <div className="px-5 py-2 bg-slate-100 text-slate-400 text-[9px] font-black uppercase tracking-widest rounded-lg border border-slate-200">
                                                                 Clôturée

@@ -28,6 +28,7 @@
     },
     "dependencies": {
         "@tinymce/tinymce-react": "^6.3.0",
-        "date-fns": "^4.1.0"
+        "date-fns": "^4.1.0",
+        "tinymce": "^8.4.0"
     }
 }

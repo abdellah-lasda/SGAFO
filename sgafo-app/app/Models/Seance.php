@@ -16,6 +16,7 @@ class Seance extends Model
         'debut',
         'fin',
         'statut',
+        'description',
     ];
 
     protected $casts = [
@@ -42,5 +43,10 @@ class Seance extends Model
     public function presences()
     {
         return $this->hasMany(Presence::class);
+    }
+
+    public function ressources()
+    {
+        return $this->hasMany(SeanceRessource::class);
     }
 }

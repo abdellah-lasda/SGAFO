@@ -153,11 +153,12 @@ export default function Dashboard({ auth, seances, stats, nextSession }: Props) 
                             </div>
                         )}
 
+
                         {/* Recent History or List */}
                         <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden">
                             <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                                 <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Planning des séances</h3>
-                                <button className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">Voir tout le calendrier</button>
+                                <Link href={route('modules.animateur.formations')} className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">Voir tout le calendrier</Link>
                             </div>
                             <div className="divide-y divide-slate-50">
                                 {seances.length > 0 ? (

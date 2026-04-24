@@ -11,24 +11,12 @@ interface Props extends PageProps {
 
 export default function FormationDetails({ plan }: Props) {
     const [activeTab, setActiveTab] = useState<'aperçu' | 'planning' | 'documents' | 'qcm'>('aperçu');
-
     return (
         <AuthenticatedLayout header={
             <div className="flex items-center gap-4">
-                <Link 
-                    href={route('modules.animateur.formations')}
-                    className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-                </Link>
-                <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{plan.entite?.nom}</span>
-                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID: #{plan.id}</span>
-                    </div>
-                    <h2 className="font-black text-xl text-slate-800 leading-tight">{plan.titre}</h2>
-                </div>
+                <Link className="text-slate-400 hover:text-blue-600 transition-colors font-bold" href={route('modules.animateur.formations')} >Mes Formations</Link>
+                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+                <span className="font-bold text-slate-900">{plan.titre}</span>
             </div>
         }>
             <Head title={plan.titre} />
@@ -158,11 +146,12 @@ export default function FormationDetails({ plan }: Props) {
                                                 {seance.site?.nom || 'Visio'}
                                             </td>
                                             <td className="px-8 py-6">
-                                                <div className="flex flex-wrap gap-2">
+                                                <div className="flex flex-wrap gap-2"> 
                                                     {seance.themes.map((t: any) => (
                                                         <span key={t.id} className="px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-[9px] font-black uppercase">
-                                                            {t.code}
+                                                            {t.nom}
                                                         </span>
+                                                        
                                                     ))}
                                                 </div>
                                             </td>
@@ -174,12 +163,21 @@ export default function FormationDetails({ plan }: Props) {
                                                 </span>
                                             </td>
                                             <td className="px-8 py-6 text-right">
-                                                <Link 
-                                                    href={route('modules.animateur.seances.attendance', seance.id)}
-                                                    className="px-4 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-600 transition-all shadow-sm"
-                                                >
-                                                    Appel
-                                                </Link>
+                                                <div className="flex justify-end gap-2">
+                                                    <Link 
+                                                        href={route('modules.animateur.seances.preparation', seance.id)}
+                                                        className="px-4 py-2 bg-white text-slate-900 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-50 transition-all border border-slate-200"
+                                                        title="Préparer le contenu et les documents"
+                                                    >
+                                                        ✍️ Préparer
+                                                    </Link>
+                                                    <Link 
+                                                        href={route('modules.animateur.seances.attendance', seance.id)}
+                                                        className="px-4 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-600 transition-all shadow-sm"
+                                                    >
+                                                        Appel
+                                                    </Link>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}

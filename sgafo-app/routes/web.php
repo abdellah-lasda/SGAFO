@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Modules\Animateur\AnimateurDashboardController;
+use App\Http\Controllers\Modules\Animateur\SeancePedagogiqueController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -136,6 +137,13 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
     Route::get('/dashboard', [AnimateurDashboardController::class, 'index'])->name('dashboard');
     Route::get('/formations', [AnimateurDashboardController::class, 'formations'])->name('formations');
     Route::get('/formations/{plan}', [AnimateurDashboardController::class, 'showFormation'])->name('formations.show');
+
+    // Préparation de Séance (TinyMCE & Documents)
+    Route::get('/seances/{seance}/preparation', [SeancePedagogiqueController::class, 'edit'])->name('seances.preparation');
+    Route::post('/seances/{seance}/description', [SeancePedagogiqueController::class, 'updateDescription'])->name('seances.update-description');
+    Route::post('/seances/{seance}/ressources', [SeancePedagogiqueController::class, 'addResource'])->name('seances.add-resource');
+    Route::delete('/ressources/{ressource}', [SeancePedagogiqueController::class, 'deleteResource'])->name('ressources.delete');
+
     Route::get('/seances/{seance}/appel', [AnimateurDashboardController::class, 'attendance'])->name('seances.attendance');
     Route::post('/seances/{seance}/appel', [AnimateurDashboardController::class, 'submitAttendance'])->name('seances.submit-attendance');
     Route::get('/seances/{seance}/print-sheet', [AnimateurDashboardController::class, 'printSheet'])->name('seances.print-sheet');
