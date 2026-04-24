@@ -78,12 +78,14 @@ Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->grou
 
 
 
+// Catalogue National (Accessible sans le préfixe 'modules')
+Route::middleware(['auth'])->group(function () {
+    Route::get('catalogue-national', [\App\Http\Controllers\CatalogueController::class, 'index'])->name('modules.catalogue.index');
+    Route::get('catalogue-national/{plan}', [\App\Http\Controllers\CatalogueController::class, 'show'])->name('modules.catalogue.show');
+});
+
 Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function () {
     Route::resource('entites', EntiteFormationController::class);
-    
-    // Catalogue National (Plans Validés)
-    Route::get('catalogue-national', [\App\Http\Controllers\CatalogueController::class, 'index'])->name('catalogue.index');
-    Route::get('catalogue-national/{plan}', [\App\Http\Controllers\CatalogueController::class, 'show'])->name('catalogue.show');
     Route::get('entites/{entite}/export-pdf', [EntiteFormationController::class, 'exportPdf'])->name('entites.export-pdf');
     
     // Plans de formation (Stepper + Workflow)
@@ -126,6 +128,13 @@ Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function
     // Notifications
     Route::post('notifications/{id}/mark-as-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
     Route::post('notifications/mark-all-as-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+});
+
+// Espace Animateur (Accessible sans le préfixe 'modules')
+Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('modules.animateur.')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\Modules\Animateur\AnimateurDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/seances/{seance}/appel', [\App\Http\Controllers\Modules\Animateur\AnimateurDashboardController::class, 'attendance'])->name('seances.attendance');
+    Route::post('/seances/{seance}/appel', [\App\Http\Controllers\Modules\Animateur\AnimateurDashboardController::class, 'submitAttendance'])->name('seances.submit-attendance');
 });
 
 require __DIR__.'/auth.php';

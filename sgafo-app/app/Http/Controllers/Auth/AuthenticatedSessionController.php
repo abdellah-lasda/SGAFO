@@ -32,6 +32,11 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        
+        $user = Auth::user();
+        if ($user->hasRole('FORMATEUR')) {
+            return redirect()->route('modules.animateur.dashboard');
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

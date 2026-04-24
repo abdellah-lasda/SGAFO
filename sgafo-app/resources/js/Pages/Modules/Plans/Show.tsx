@@ -227,9 +227,15 @@ export default function Show({ plan, isValidationContext }: Props) {
                             {plan.validation_logs.map((log) => {
                                 const logConfig = log.action === 'soumis' 
                                     ? { icon: '📤', color: 'bg-amber-100 text-amber-600', label: 'Soumission' }
-                                    : log.action === 'validé'
-                                    ? { icon: '✅', color: 'bg-emerald-100 text-emerald-600', label: 'Validation' }
-                                    : { icon: '❌', color: 'bg-red-100 text-red-600', label: 'Rejet' };
+                                    : log.action === 'validé' || log.action === 'confirmé'
+                                    ? { icon: '✅', color: 'bg-emerald-100 text-emerald-600', label: log.action === 'validé' ? 'Validation' : 'Confirmation' }
+                                    : log.action === 'clôturé'
+                                    ? { icon: '🔒', color: 'bg-slate-100 text-slate-600', label: 'Clôture' }
+                                    : log.action === 'réouvert'
+                                    ? { icon: '🔄', color: 'bg-blue-100 text-blue-600', label: 'Réouverture' }
+                                    : log.action === 'rejeté'
+                                    ? { icon: '❌', color: 'bg-red-100 text-red-600', label: 'Rejet' }
+                                    : { icon: '📝', color: 'bg-slate-100 text-slate-400', label: 'Action' };
 
                                 return (
                                     <div key={log.id} className="relative pl-12">
@@ -299,6 +305,20 @@ export default function Show({ plan, isValidationContext }: Props) {
                                 </button>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* RF Direct Confirmation (Self-Created) */}
+                {isRF && plan.cree_par === auth.user.id && plan.statut === 'brouillon' && (
+                    <div className="p-6 bg-white rounded-2xl border-2 border-emerald-300 shadow-sm">
+                        <h3 className="text-sm font-black text-emerald-700 uppercase tracking-widest mb-1">Confirmation directe</h3>
+                        <p className="text-xs text-emerald-500 font-medium mb-6">En tant que RF, vous pouvez confirmer directement votre propre plan.</p>
+                        <button
+                            onClick={() => router.post(route('modules.plans.confirm', plan.id))}
+                            className="w-full py-4 text-xs font-black uppercase tracking-widest text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                        >
+                            ✅ Confirmer le plan
+                        </button>
                     </div>
                 )}
             </div>

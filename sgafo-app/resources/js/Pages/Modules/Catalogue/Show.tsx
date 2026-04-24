@@ -110,7 +110,13 @@ export default function Show({ plan }: Props) {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-bold text-slate-500">Participants</span>
-                                        <span className="text-lg font-black text-slate-900">{plan.participants?.length}</span>
+                                        <span className="text-lg font-black text-slate-900">{plan.participants?.length || 0}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-bold text-slate-500">Animateurs</span>
+                                        <span className="text-lg font-black text-slate-900">
+                                            {Array.from(new Set(plan.themes?.flatMap(t => t.animateurs?.map(a => a.id) || []))).length}
+                                        </span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-bold text-slate-500">Modalité</span>
@@ -219,20 +225,47 @@ export default function Show({ plan }: Props) {
                         {/* Tab Content: Equipe */}
                         {activeTab === 'equipe' && (
                             <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {/* Section Animateurs */}
+                                <div className="bg-white rounded-[2rem] p-10 border border-slate-100 shadow-sm">
+                                    <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
+                                        👨‍🏫 Corps Enseignant
+                                        <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs rounded-full border border-blue-100">
+                                            {Array.from(new Set(plan.themes?.flatMap(t => t.animateurs?.map(a => a.id) || []))).length}
+                                        </span>
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {Array.from(new Map(plan.themes?.flatMap(t => t.animateurs || []).map(a => [a.id, a])).values()).map(anim => (
+                                            <div key={anim.id} className="p-5 bg-slate-900 rounded-[2rem] text-white flex items-center gap-5 shadow-xl">
+                                                <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center font-black text-blue-400 text-lg border border-white/10">
+                                                    {anim.prenom[0]}{anim.nom[0]}
+                                                </div>
+                                                <div>
+                                                    <p className="text-base font-black leading-none mb-1">{anim.prenom} {anim.nom}</p>
+                                                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">
+                                                        {(anim as any).instituts?.[0]?.nom || "Expert Formateur"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 <div className="bg-white rounded-[2rem] p-10 border border-slate-100 shadow-sm">
                                     <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
                                         👥 Liste des Participants
-                                        <span className="px-3 py-1 bg-slate-100 text-slate-500 text-xs rounded-full">{plan.participants?.length}</span>
+                                        <span className="px-3 py-1 bg-slate-100 text-slate-500 text-xs rounded-full border border-slate-200">
+                                            {plan.participants?.length || 0}
+                                        </span>
                                     </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {plan.participants?.map(user => (
                                             <div key={user.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-black text-slate-400">
+                                                <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-black text-slate-400 text-xs">
                                                     {user.prenom[0]}{user.nom[0]}
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-black text-slate-900">{user.prenom} {user.nom}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user.instituts?.[0]?.nom || "OFPPT"}</p>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-black text-slate-900 truncate">{user.prenom} {user.nom}</p>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">{user.instituts?.[0]?.nom || "OFPPT"}</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -292,38 +325,41 @@ export default function Show({ plan }: Props) {
                                                 <tr className="border-b-2 border-slate-50">
                                                     <th className="text-left py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest pl-4">Date</th>
                                                     <th className="text-left py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Horaires</th>
-                                                    <th className="text-left py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Thème / Module</th>
-                                                    <th className="text-left py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Formateur</th>
+                                                    <th className="text-left py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Thèmes abordés</th>
+                                                    <th className="text-left py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4 text-right">Lieu</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-50">
-                                                {plan.sessions?.map(seance => (
+                                                {plan.seances?.map((seance: any) => (
                                                     <tr key={seance.id} className="group hover:bg-slate-50/50 transition-all">
                                                         <td className="py-6 pl-4">
                                                             <div className="flex flex-col">
-                                                                <span className="text-sm font-black text-slate-900">{new Date(seance.date_debut).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                                                                <span className="text-[10px] font-bold text-slate-400 uppercase">{new Date(seance.date_fin).getFullYear()}</span>
+                                                                <span className="text-sm font-black text-slate-900">{new Date(seance.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase">{new Date(seance.date).getFullYear()}</span>
                                                             </div>
                                                         </td>
                                                         <td className="py-6">
                                                             <span className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-600">
-                                                                {seance.heure_debut.substring(0, 5)} - {seance.heure_fin.substring(0, 5)}
+                                                                {seance.debut.substring(0, 5)} - {seance.fin.substring(0, 5)}
                                                             </span>
                                                         </td>
                                                         <td className="py-6">
-                                                            <p className="text-sm font-bold text-slate-800">{seance.theme?.nom || "Multi-thèmes"}</p>
-                                                        </td>
-                                                        <td className="py-6">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[8px] font-black text-blue-600">
-                                                                    FA
-                                                                </div>
-                                                                <span className="text-xs font-bold text-slate-600">Formateur Affecté</span>
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {seance.themes?.map((t: any) => (
+                                                                    <span key={t.id} className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-bold rounded-md border border-blue-100">
+                                                                        {t.nom}
+                                                                    </span>
+                                                                ))}
                                                             </div>
+                                                        </td>
+                                                        <td className="py-6 pr-4 text-right">
+                                                            <span className="text-xs font-bold text-slate-500">
+                                                                {seance.site?.nom || (plan.plateforme ? `💻 ${plan.plateforme}` : '—')}
+                                                            </span>
                                                         </td>
                                                     </tr>
                                                 ))}
-                                                {(!plan.sessions || plan.sessions.length === 0) && (
+                                                {(!plan.seances || plan.seances.length === 0) && (
                                                     <tr>
                                                         <td colSpan={4} className="py-10 text-center text-slate-400 font-medium italic">Planning en cours de finalisation...</td>
                                                     </tr>

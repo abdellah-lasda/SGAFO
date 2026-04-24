@@ -38,4 +38,9 @@ class Seance extends Model
                     ->withPivot(['heures_planifiees', 'formateur_id'])
                     ->withTimestamps();
     }
+
+    public function presences()
+    {
+        return $this->hasMany(Presence::class);
+    }
 }

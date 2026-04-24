@@ -66,14 +66,14 @@ export interface PlanValidationLog {
 export interface PlanSeance {
     id: number;
     plan_id: number;
-    theme_id: number;
-    date_debut: string;
-    date_fin: string;
-    heure_debut: string;
-    heure_fin: string;
-    salle_id: number | null;
+    date: string;
+    debut: string;
+    fin: string;
+    site_id: number | null;
+    statut: string;
     theme?: PlanTheme;
-    salle?: { id: number; nom: string; capacite: number; site_id: number };
+    themes?: PlanTheme[];
+    site?: SiteFormation;
 }
 
 export interface PlanFormation {
@@ -102,7 +102,8 @@ export interface PlanFormation {
     hebergements?: PlanHebergement[];
     site_formation?: SiteFormation;
     validation_logs?: PlanValidationLog[];
-    sessions: PlanSeance[];
+    sessions?: PlanSeance[];
+    seances?: PlanSeance[];
 }
 
 export const STATUT_CONFIG: Record<PlanStatut, { label: string; color: string; bg: string }> = {
