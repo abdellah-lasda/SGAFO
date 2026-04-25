@@ -11,6 +11,11 @@ interface Seance {
     debut: string;
     fin: string;
     description: string | null;
+    qcms: Array<{
+        id: number;
+        titre: string;
+        est_publie: boolean;
+    }>;
     plan: {
         id: number;
         titre: string;
@@ -38,6 +43,20 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
         url: '',
     });
 
+    const { data: qcmData, setData: setQcmData, post: postQcm, processing: qcmProcessing, reset: resetQcm } = useForm({
+        titre: '',
+    });
+
+    const handleCreateQcm = (e: React.FormEvent) => {
+        e.preventDefault();
+        postQcm(route('modules.animateur.qcms.store', seance.id), {
+            onSuccess: () => {
+                resetQcm();
+                setShowQcmModal(false);
+            },
+        });
+    };
+
     const handleSaveDescription = (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -63,6 +82,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
     };
 
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showQcmModal, setShowQcmModal] = useState(false);
 
     return (
         <AuthenticatedLayout header={
@@ -209,9 +229,88 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                                 Un résumé clair et quelques documents clés permettent aux participants de mieux assimiler les concepts après la séance.
                             </p>
                         </div>
+
+                        {/* QCMs List */}
+                        <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
+                            <div className="flex items-center justify-between mb-8">
+                                <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Évaluations (QCM)</h3>
+                                <button 
+                                    onClick={() => setShowQcmModal(true)}
+                                    className="px-4 py-2 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-md"
+                                >
+                                    + Créer un QCM
+                                </button>
+                            </div>
+
+                            <div className="space-y-3">
+                                {seance.qcms && seance.qcms.length > 0 ? seance.qcms.map((qcm) => (
+                                    <div key={qcm.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:border-emerald-200 transition-all">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-600 border border-slate-100 shadow-sm">
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-[11px] font-black text-slate-900 truncate max-w-[150px]">{qcm.titre}</p>
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                    {qcm.est_publie ? '🟢 Publié' : '🟠 Brouillon'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <Link 
+                                            href={route('modules.animateur.qcms.edit', qcm.id)} 
+                                            className="px-3 py-1.5 bg-slate-200 text-slate-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            Modifier
+                                        </Link>
+                                    </div>
+                                )) : (
+                                    <div className="py-8 text-center border-2 border-dashed border-slate-100 rounded-3xl">
+                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Aucune évaluation</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* Create QCM Modal */}
+            {showQcmModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+                        <h2 className="text-xl font-black text-slate-900 mb-6">Nouveau QCM</h2>
+                        <form onSubmit={handleCreateQcm} className="space-y-4">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Titre du QCM</label>
+                                <input 
+                                    type="text"
+                                    required
+                                    placeholder="Ex: Évaluation finale"
+                                    className="w-full bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500"
+                                    value={qcmData.titre}
+                                    onChange={e => setQcmData('titre', e.target.value)}
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-6">
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowQcmModal(false)}
+                                    className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl text-[11px] font-black uppercase tracking-widest"
+                                >
+                                    Annuler
+                                </button>
+                                <button 
+                                    type="submit"
+                                    disabled={qcmProcessing}
+                                    className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20"
+                                >
+                                    {qcmProcessing ? 'Création...' : 'Créer'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Add Resource Modal (Simple) */}
             {showAddModal && (

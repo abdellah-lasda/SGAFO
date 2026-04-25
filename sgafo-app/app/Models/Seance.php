@@ -49,4 +49,9 @@ class Seance extends Model
     {
         return $this->hasMany(SeanceRessource::class);
     }
+
+    public function qcms()
+    {
+        return $this->hasMany(Qcm::class);
+    }
 }

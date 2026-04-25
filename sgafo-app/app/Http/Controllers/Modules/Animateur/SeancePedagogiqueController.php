@@ -24,7 +24,7 @@ class SeancePedagogiqueController extends Controller
         }
 
         $seance->refresh(); // Forcer la lecture de la DB
-        $seance->load(['plan.entite', 'site', 'themes', 'ressources']);
+        $seance->load(['plan.entite', 'site', 'themes', 'ressources', 'qcms']);
 
         return Inertia::render('Modules/Animateur/SeancePreparation', [
             'seance' => $seance

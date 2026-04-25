@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Modules\Animateur\AnimateurDashboardController;
 use App\Http\Controllers\Modules\Animateur\SeancePedagogiqueController;
+use App\Http\Controllers\Modules\Animateur\QcmAnimateurController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -143,6 +144,13 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
     Route::post('/seances/{seance}/description', [SeancePedagogiqueController::class, 'updateDescription'])->name('seances.update-description');
     Route::post('/seances/{seance}/ressources', [SeancePedagogiqueController::class, 'addResource'])->name('seances.add-resource');
     Route::delete('/ressources/{ressource}', [SeancePedagogiqueController::class, 'deleteResource'])->name('ressources.delete');
+
+    // QCM (Animateur)
+    Route::post('/seances/{seance}/qcms', [QcmAnimateurController::class, 'store'])->name('qcms.store');
+    Route::get('/qcms/{qcm}/edit', [QcmAnimateurController::class, 'edit'])->name('qcms.edit');
+    Route::put('/qcms/{qcm}', [QcmAnimateurController::class, 'update'])->name('qcms.update');
+    Route::delete('/qcms/{qcm}', [QcmAnimateurController::class, 'destroy'])->name('qcms.destroy');
+    Route::post('/qcms/{qcm}/structure', [QcmAnimateurController::class, 'saveStructure'])->name('qcms.structure.save');
 
     Route::get('/seances/{seance}/appel', [AnimateurDashboardController::class, 'attendance'])->name('seances.attendance');
     Route::post('/seances/{seance}/appel', [AnimateurDashboardController::class, 'submitAttendance'])->name('seances.submit-attendance');
