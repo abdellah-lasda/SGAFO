@@ -95,4 +95,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(PlanFormation::class, 'valide_par');
     }
+
+    /**
+     * Plans auxquels cet utilisateur participe.
+     */
+    public function plans()
+    {
+        return $this->belongsToMany(PlanFormation::class, 'plan_participants', 'participant_id', 'plan_id');
+    }
 }

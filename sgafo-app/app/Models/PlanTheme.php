@@ -28,4 +28,6 @@ class PlanTheme extends Model
     {
         return $this->belongsToMany(User::class, 'plan_theme_animateurs', 'theme_id', 'animateur_id');
     }
+
+    
 }

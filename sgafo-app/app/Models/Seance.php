@@ -40,6 +40,11 @@ class Seance extends Model
                     ->withTimestamps();
     }
 
+    public function seanceThemes()
+    {
+        return $this->hasMany(SeanceTheme::class, 'seance_id');
+    }
+
     public function presences()
     {
         return $this->hasMany(Presence::class);

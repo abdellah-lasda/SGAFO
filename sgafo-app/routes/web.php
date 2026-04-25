@@ -164,4 +164,15 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
     Route::get('/seances/{seance}/rapport-absences', [AnimateurDashboardController::class, 'exportAbsences'])->name('seances.export-absences');
 });
 
+// Espace Participant
+Route::middleware(['auth'])->prefix('participant')->name('participant.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Modules\Participant\ParticipantDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/formations', [App\Http\Controllers\Modules\Participant\SeanceController::class, 'formations'])->name('formations');
+    Route::get('/formation/{plan}', [App\Http\Controllers\Modules\Participant\SeanceController::class, 'planShow'])->name('plan.show');
+    Route::get('/seance/{seance}', [App\Http\Controllers\Modules\Participant\SeanceController::class, 'show'])->name('seance.show');
+    Route::get('/qcm/{qcm}', [App\Http\Controllers\Modules\Participant\QcmController::class, 'show'])->name('qcm.passage');
+    Route::post('/qcm/{qcm}/submit', [App\Http\Controllers\Modules\Participant\QcmController::class, 'submit'])->name('qcm.submit');
+    Route::get('/qcm/resultat/{tentative}', [App\Http\Controllers\Modules\Participant\QcmController::class, 'resultat'])->name('qcm.resultat');
+});
+
 require __DIR__.'/auth.php';
