@@ -7,6 +7,7 @@ import InputError from '@/Components/InputError';
 import Checkbox from '@/Components/Checkbox';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { validateEmail, validatePassword, validateRequiredString } from '@/utils/validators';
 
 export default function UserModal({ isOpen, onClose, user, roles, regions, instituts, secteurs, cdcs }: any) {
     const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
@@ -47,9 +48,41 @@ export default function UserModal({ isOpen, onClose, user, roles, regions, insti
     }, [isOpen, user]);
 
     const isEdit = !!user;
+    const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
+    const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
+
+    const handlePasswordChange = (value: string) => {
+        setData('password', value);
+        const { strength } = validatePassword(value, !isEdit);
+        setPasswordStrength(strength);
+        if (clientErrors.password) setClientErrors(p => ({ ...p, password: '' }));
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        const newErrors: Record<string, string> = {};
+
+        const prenomErr = validateRequiredString(data.prenom, 'Prénom');
+        if (prenomErr) newErrors.prenom = prenomErr;
+
+        const nomErr = validateRequiredString(data.nom, 'Nom');
+        if (nomErr) newErrors.nom = nomErr;
+
+        const emailErr = validateEmail(data.email);
+        if (emailErr) newErrors.email = emailErr;
+
+        const { error: pwErr } = validatePassword(data.password, !isEdit);
+        if (pwErr) newErrors.password = pwErr;
+
+        if (!data.roles || data.roles.length === 0) {
+            newErrors.roles = 'Veuillez sélectionner un rôle.';
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setClientErrors(newErrors);
+            return;
+        }
+        setClientErrors({});
         
         if (isEdit) {
             put(route('admin.users.update', user.id), {
@@ -95,13 +128,17 @@ export default function UserModal({ isOpen, onClose, user, roles, regions, insti
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <InputLabel htmlFor="prenom" value="Prénom" />
-                                    <TextInput id="prenom" className="mt-1 block w-full bg-white" value={data.prenom} onChange={e => setData('prenom', e.target.value)} required />
-                                    <InputError message={errors.prenom} className="mt-2" />
+                                    <TextInput id="prenom" className="mt-1 block w-full bg-white" value={data.prenom}
+                                        onChange={e => { setData('prenom', e.target.value); setClientErrors(p => ({...p, prenom: ''})); }}
+                                    />
+                                    <InputError message={clientErrors.prenom || errors.prenom} className="mt-2" />
                                 </div>
                                 <div>
                                     <InputLabel htmlFor="nom" value="Nom" />
-                                    <TextInput id="nom" className="mt-1 block w-full bg-white" value={data.nom} onChange={e => setData('nom', e.target.value)} required />
-                                    <InputError message={errors.nom} className="mt-2" />
+                                    <TextInput id="nom" className="mt-1 block w-full bg-white" value={data.nom}
+                                        onChange={e => { setData('nom', e.target.value); setClientErrors(p => ({...p, nom: ''})); }}
+                                    />
+                                    <InputError message={clientErrors.nom || errors.nom} className="mt-2" />
                                 </div>
                             </div>
                         </div>
@@ -115,8 +152,10 @@ export default function UserModal({ isOpen, onClose, user, roles, regions, insti
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="md:col-span-2">
                                     <InputLabel htmlFor="email" value="Email professionnel" />
-                                    <TextInput id="email" type="email" className="mt-1 block w-full bg-white" value={data.email} onChange={e => setData('email', e.target.value)} required />
-                                    <InputError message={errors.email} className="mt-2" />
+                                    <TextInput id="email" type="email" className="mt-1 block w-full bg-white" value={data.email}
+                                        onChange={e => { setData('email', e.target.value); setClientErrors(p => ({...p, email: ''})); }}
+                                    />
+                                    <InputError message={clientErrors.email || errors.email} className="mt-2" />
                                 </div>
                                 <div>
                                     <InputLabel htmlFor="statut" value="État du compte" />
@@ -134,8 +173,24 @@ export default function UserModal({ isOpen, onClose, user, roles, regions, insti
 
                                 <div className="md:col-span-3">
                                     <InputLabel htmlFor="password" value={isEdit ? "Changer le mot de passe (optionnel)" : "Mot de passe initial"} />
-                                    <TextInput id="password" type="text" className="mt-1 block w-full bg-white font-mono" value={data.password} onChange={e => setData('password', e.target.value)} required={!isEdit} placeholder={isEdit ? "••••••••" : ""} />
-                                    <InputError message={errors.password} className="mt-2" />
+                                    <TextInput id="password" type="text" className="mt-1 block w-full bg-white font-mono" value={data.password}
+                                        onChange={e => handlePasswordChange(e.target.value)}
+                                        required={!isEdit} placeholder={isEdit ? '••••••••' : ''}
+                                    />
+                                    {/* Indicateur de force du mot de passe */}
+                                    {data.password && (
+                                        <div className="mt-2 space-y-1">
+                                            <div className="flex gap-1 h-1.5">
+                                                <div className={`flex-1 rounded-full transition-colors ${ passwordStrength ? 'bg-red-400' : 'bg-slate-100' }`} />
+                                                <div className={`flex-1 rounded-full transition-colors ${ passwordStrength === 'medium' || passwordStrength === 'strong' ? 'bg-yellow-400' : 'bg-slate-100' }`} />
+                                                <div className={`flex-1 rounded-full transition-colors ${ passwordStrength === 'strong' ? 'bg-emerald-500' : 'bg-slate-100' }`} />
+                                            </div>
+                                            <p className={`text-[10px] font-black uppercase tracking-widest ${ passwordStrength === 'strong' ? 'text-emerald-600' : passwordStrength === 'medium' ? 'text-yellow-600' : 'text-red-500' }`}>
+                                                { passwordStrength === 'strong' ? '✓ Fort' : passwordStrength === 'medium' ? '~ Moyen' : '✗ Faible' }
+                                            </p>
+                                        </div>
+                                    )}
+                                    <InputError message={clientErrors.password || errors.password} className="mt-2" />
                                 </div>
                             </div>
                         </div>
@@ -151,9 +206,9 @@ export default function UserModal({ isOpen, onClose, user, roles, regions, insti
                                 <InputLabel htmlFor="role" value="Sélectionnez le rôle principal" className="font-semibold" />
                                 <select 
                                     id="role"
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ofppt-500 focus:ring-ofppt-500"
+                                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ofppt-500 focus:ring-ofppt-500 ${clientErrors.roles ? 'border-red-400 ring-1 ring-red-400' : ''}`}
                                     value={data.roles[0] ? String(data.roles[0]) : ''}
-                                    onChange={(e) => setData('roles', [parseInt(e.target.value)])}
+                                    onChange={(e) => { setData('roles', [parseInt(e.target.value)]); setClientErrors(p => ({...p, roles: ''})); }}
                                     required
                                 >
                                     <option value="">-- Choisir le rôle --</option>
@@ -161,7 +216,7 @@ export default function UserModal({ isOpen, onClose, user, roles, regions, insti
                                         <option key={role.id} value={role.id}>{role.libelle}</option>
                                     ))}
                                 </select>
-                                <InputError message={errors.roles as string} className="mt-2" />
+                                <InputError message={clientErrors.roles || errors.roles as string} className="mt-2" />
                             </div>
 
                             {/* Blocs Conditionnels */}

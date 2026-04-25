@@ -4,6 +4,8 @@ import { Editor } from '@tinymce/tinymce-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useState, useEffect, useRef } from 'react';
+import { validateFile, validateUrl, validateRequiredString } from '@/utils/validators';
+import ConfirmDialog from '@/Components/ConfirmDialog';
 
 interface Seance {
     id: number;
@@ -73,6 +75,26 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
 
     const handleAddResource = (e: React.FormEvent) => {
         e.preventDefault();
+        const newErrors: Record<string, string> = {};
+
+        // Validation côté client
+        const titreError = validateRequiredString(resData.titre, 'Titre');
+        if (titreError) newErrors.titre = titreError;
+
+        if (resData.type === 'file') {
+            const fileError = validateFile(resData.file);
+            if (fileError) newErrors.file = fileError;
+        } else {
+            const urlError = validateUrl(resData.url);
+            if (urlError) newErrors.url = urlError;
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setClientErrors(newErrors);
+            return;
+        }
+
+        setClientErrors({});
         postRes(route('modules.animateur.seances.add-resource', seance.id), {
             onSuccess: () => {
                 resetRes();
@@ -83,7 +105,9 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
 
     const [showAddModal, setShowAddModal] = useState(false);
     const [showQcmModal, setShowQcmModal] = useState(false);
-    const [activeTab, setActiveTab] = useState('contenu'); // 'contenu', 'documents', 'evaluations', 'presences'
+    const [activeTab, setActiveTab] = useState('contenu');
+    const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
     return (
         <AuthenticatedLayout header={
@@ -228,14 +252,13 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                                                 </p>
                                             </div>
                                         </div>
-                                        <Link
-                                            href={route('modules.animateur.ressources.delete', res.id)}
-                                            method="delete"
-                                            as="button"
+                                        <button
+                                            type="button"
+                                            onClick={() => setDeleteTarget(res.id)}
                                             className="p-3 bg-white text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors opacity-0 group-hover:opacity-100 shadow-sm"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                        </Link>
+                                        </button>
                                     </div>
                                 )) : (
                                     <div className="col-span-2 py-12 text-center border-2 border-dashed border-slate-100 rounded-3xl">
@@ -331,7 +354,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                 </div>
             )}
 
-            {/* Add Resource Modal (Simple) */}
+            {/* Add Resource Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
@@ -341,11 +364,11 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Titre de la ressource</label>
                                 <input
                                     type="text"
-                                    required
-                                    className="w-full bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500"
+                                    className={`w-full bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 ${clientErrors.titre ? 'ring-2 ring-red-400 bg-red-50' : 'focus:ring-blue-500'}`}
                                     value={resData.titre}
-                                    onChange={e => setResData('titre', e.target.value)}
+                                    onChange={e => { setResData('titre', e.target.value); setClientErrors(p => ({...p, titre: ''})); }}
                                 />
+                                {clientErrors.titre && <p className="text-xs font-bold text-red-500 mt-1">{clientErrors.titre}</p>}
                             </div>
                             <div>
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Type</label>
@@ -354,19 +377,21 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                                     value={resData.type}
                                     onChange={e => setResData('type', e.target.value)}
                                 >
-                                    <option value="file">Fichier (PDF, PPTX, Docx)</option>
+                                    <option value="file">Fichier (PDF, PPTX, Docx, Image)</option>
                                     <option value="link">Lien Externe (URL)</option>
                                 </select>
                             </div>
 
                             {resData.type === 'file' ? (
                                 <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Fichier (Max 10Mo)</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Fichier (Max 5 Mo)</label>
                                     <input
                                         type="file"
-                                        className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                        onChange={e => setResData('file', e.target.files?.[0] || null)}
+                                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.jpg,.jpeg,.png"
+                                        className={`w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 ${clientErrors.file ? 'ring-2 ring-red-400 rounded-xl' : ''}`}
+                                        onChange={e => { setResData('file', e.target.files?.[0] || null); setClientErrors(p => ({...p, file: ''})); }}
                                     />
+                                    {clientErrors.file && <p className="text-xs font-bold text-red-500 mt-1">{clientErrors.file}</p>}
                                 </div>
                             ) : (
                                 <div>
@@ -374,17 +399,18 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                                     <input
                                         type="url"
                                         placeholder="https://..."
-                                        className="w-full bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 ${clientErrors.url ? 'ring-2 ring-red-400 bg-red-50' : 'focus:ring-blue-500'}`}
                                         value={resData.url}
-                                        onChange={e => setResData('url', e.target.value)}
+                                        onChange={e => { setResData('url', e.target.value); setClientErrors(p => ({...p, url: ''})); }}
                                     />
+                                    {clientErrors.url && <p className="text-xs font-bold text-red-500 mt-1">{clientErrors.url}</p>}
                                 </div>
                             )}
 
                             <div className="flex gap-3 pt-6">
                                 <button
                                     type="button"
-                                    onClick={() => setShowAddModal(false)}
+                                    onClick={() => { setShowAddModal(false); setClientErrors({}); }}
                                     className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl text-[11px] font-black uppercase tracking-widest"
                                 >
                                     Annuler
@@ -401,6 +427,22 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                     </div>
                 </div>
             )}
+            <ConfirmDialog
+                isOpen={deleteTarget !== null}
+                title="Supprimer cette ressource ?"
+                message="Ce fichier ou lien sera définitivement supprimé de la séance."
+                confirmLabel="Oui, supprimer"
+                isDanger={true}
+                onConfirm={() => {
+                    if (deleteTarget) {
+                        router.delete(route('modules.animateur.ressources.delete', deleteTarget), {
+                            preserveScroll: true,
+                            onSuccess: () => setDeleteTarget(null),
+                        });
+                    }
+                }}
+                onCancel={() => setDeleteTarget(null)}
+            />
         </AuthenticatedLayout>
     );
 }

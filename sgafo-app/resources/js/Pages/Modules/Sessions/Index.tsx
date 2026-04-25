@@ -2,6 +2,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router, Link } from '@inertiajs/react';
 import { PlanFormation } from '@/types/plan';
 import { useState, useMemo, useEffect } from 'react';
+import { validateTimeRange } from '@/utils/validators';
+import ConfirmDialog from '@/Components/ConfirmDialog';
 
 interface Props {
     plan: PlanFormation;
@@ -30,6 +32,10 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
     const [isAdding, setIsAdding] = useState(false);
     const [showDrawer, setShowDrawer] = useState(false);
     const [themeToPlan, setThemeToPlan] = useState<any>(null);
+    const [confirmCloture, setConfirmCloture] = useState(false);
+    const [confirmReouverture, setConfirmReouverture] = useState(false);
+    const [deleteSeanceId, setDeleteSeanceId] = useState<number | null>(null);
+    const [timeError, setTimeError] = useState<string | null>(null);
 
     // STATS CALCULATIONS
     const stats = useMemo(() => {
@@ -102,15 +108,18 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
+        // Validation côté client : cohérence horaire
+        const timeErr = validateTimeRange(data.debut, data.fin);
+        if (timeErr) { setTimeError(timeErr); return; }
+        setTimeError(null);
+
         if (!isDurationValid) return;
 
-        // Validation des formateurs
         const selectedThemes = data.themes.filter(t => t.checked && t.heures_planifiees > 0);
         const missingFormateur = selectedThemes.some(t => !t.formateur_id);
-        
         if (missingFormateur) {
-            alert("Veuillez affecter un formateur à chaque thème sélectionné.");
+            setTimeError('Veuillez affecter un animateur à chaque thème sélectionné.');
             return;
         }
 
@@ -132,30 +141,16 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
     const isLocked = plan.statut === 'confirmé';
 
     const handleCloture = () => {
-        if (confirm('Voulez-vous clôturer ce planning ? Il sera verrouillé pour exécution.')) {
-            router.post(route('modules.validations.planning.cloturer', plan.id));
-        }
+        setConfirmCloture(true);
     };
 
     const handleReouverture = () => {
-        if (confirm('Voulez-vous réouvrir ce planning ? Cela permettra de le modifier à nouveau.')) {
-            router.post(route('modules.validations.planning.reouvrir', plan.id));
-        }
+        setConfirmReouverture(true);
     };
 
     const deleteSeance = (id: number) => {
-        if (isLocked) {
-            alert("Le planning est clôturé. Vous devez le réouvrir pour supprimer une séance.");
-            return;
-        }
-        if (confirm('Supprimer cette séance du planning ?')) {
-            router.delete(route('modules.seances.destroy', id), {
-                preserveScroll: true,
-                onSuccess: () => {
-                    // Optionnel : refresh local
-                }
-            });
-        }
+        if (isLocked) return; // bouton caché si locked
+        setDeleteSeanceId(id);
     };
 
     const openPlanningForTheme = (theme: any) => {
@@ -627,14 +622,29 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                         <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-3xl border border-slate-100 relative">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Début</label>
-                                                <input type="time" className="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-black focus:border-blue-500 transition-all text-center" value={data.debut} onChange={e => setData('debut', e.target.value)} required />
+                                                <input type="time"
+                                                    className={`w-full bg-white border-2 rounded-2xl py-4 px-6 text-sm font-black focus:border-blue-500 transition-all text-center ${timeError ? 'border-red-400' : 'border-slate-100'}`}
+                                                    value={data.debut}
+                                                    onChange={e => { setData('debut', e.target.value); setTimeError(null); }}
+                                                    required
+                                                />
                                                 {errors.debut && <p className="text-[10px] text-red-500 font-bold">{errors.debut}</p>}
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Fin</label>
-                                                <input type="time" className="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-black focus:border-blue-500 transition-all text-center" value={data.fin} onChange={e => setData('fin', e.target.value)} required />
+                                                <input type="time"
+                                                    className={`w-full bg-white border-2 rounded-2xl py-4 px-6 text-sm font-black focus:border-blue-500 transition-all text-center ${timeError ? 'border-red-400' : 'border-slate-100'}`}
+                                                    value={data.fin}
+                                                    onChange={e => { setData('fin', e.target.value); setTimeError(null); }}
+                                                    required
+                                                />
                                                 {errors.fin && <p className="text-[10px] text-red-500 font-bold">{errors.fin}</p>}
                                             </div>
+                                            {timeError && (
+                                                <div className="col-span-2 bg-red-50 border border-red-200 rounded-2xl p-3">
+                                                    <p className="text-[10px] font-black text-red-600">{timeError}</p>
+                                                </div>
+                                            )}
                                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 text-white px-3 py-1 rounded-full text-[10px] font-black border-4 border-white shadow-lg">{sessionDuration}h</div>
                                         </div>
 
@@ -876,6 +886,50 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                     </div>
                 </button>
             )}
+
+            {/* ─── CONFIRM DIALOGS ─── */}
+            <ConfirmDialog
+                isOpen={confirmCloture}
+                title="Clôturer le planning ?"
+                message="Le planning sera officiellement verrouillé pour exécution. Les séances ne pourront plus être ajoutées ou supprimées."
+                confirmLabel="Oui, clôturer"
+                isDanger={false}
+                onConfirm={() => {
+                    setConfirmCloture(false);
+                    router.post(route('modules.validations.planning.cloturer', plan.id));
+                }}
+                onCancel={() => setConfirmCloture(false)}
+            />
+
+            <ConfirmDialog
+                isOpen={confirmReouverture}
+                title="Réouvrir le planning ?"
+                message="Le planning repassera en mode édition. Vous pourrez à nouveau ajouter ou supprimer des séances."
+                confirmLabel="Oui, réouvrir"
+                isDanger={false}
+                onConfirm={() => {
+                    setConfirmReouverture(false);
+                    router.post(route('modules.validations.planning.reouvrir', plan.id));
+                }}
+                onCancel={() => setConfirmReouverture(false)}
+            />
+
+            <ConfirmDialog
+                isOpen={deleteSeanceId !== null}
+                title="Supprimer cette séance ?"
+                message="Cette séance sera définitivement retirée du planning. Les heures planifiées seront libérées."
+                confirmLabel="Oui, supprimer"
+                isDanger={true}
+                onConfirm={() => {
+                    if (deleteSeanceId) {
+                        router.delete(route('modules.seances.destroy', deleteSeanceId), {
+                            preserveScroll: true,
+                            onSuccess: () => setDeleteSeanceId(null),
+                        });
+                    }
+                }}
+                onCancel={() => setDeleteSeanceId(null)}
+            />
         </AuthenticatedLayout>
     );
 }

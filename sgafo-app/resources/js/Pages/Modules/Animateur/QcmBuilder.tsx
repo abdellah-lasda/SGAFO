@@ -2,6 +2,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 import QcmSimulatorModal from './QcmSimulatorModal';
+import ConfirmDialog from '@/Components/ConfirmDialog';
+import { validateQcmStructure } from '@/utils/validators';
 
 export default function QcmBuilder({ seance, qcm }: any) {
     // State pour les paramètres
@@ -13,6 +15,8 @@ export default function QcmBuilder({ seance, qcm }: any) {
     });
 
     const [showSimulator, setShowSimulator] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState<number | null>(null); // index de la question à supprimer
+    const [validationErrors, setValidationErrors] = useState<{ qIndex: number; message: string }[]>([]);
 
     // State pour la structure complexe des questions
     const [questions, setQuestions] = useState<any[]>(
@@ -56,9 +60,14 @@ export default function QcmBuilder({ seance, qcm }: any) {
     };
 
     const removeQuestion = (index: number) => {
-        if(confirm("Supprimer cette question ?")) {
-            setQuestions(questions.filter((_, i) => i !== index));
-        }
+        setConfirmDelete(index);
+    };
+
+    const confirmRemoveQuestion = () => {
+        if (confirmDelete === null) return;
+        setQuestions(questions.filter((_, i) => i !== confirmDelete));
+        setValidationErrors(prev => prev.filter(e => e.qIndex !== confirmDelete));
+        setConfirmDelete(null);
     };
 
     const addOption = (qIndex: number) => {
@@ -84,21 +93,26 @@ export default function QcmBuilder({ seance, qcm }: any) {
         if (newQs[qIndex].options.length > 2) {
             newQs[qIndex].options.splice(oIndex, 1);
             setQuestions(newQs);
-        } else {
-            alert("Une question doit avoir au moins 2 options.");
         }
+        // Si moins de 2 options : on ne fait rien (le bouton sera désactivé dans l'UI)
     };
 
     const saveStructure = () => {
+        // Validation côté client avant envoi
+        const errors = validateQcmStructure(questions);
+        if (errors.length > 0) {
+            setValidationErrors(errors);
+            // Scroll vers la première erreur
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+        setValidationErrors([]);
         setIsSaving(true);
-        // Recalculer l'ordre
         const cleanQuestions = questions.map((q, idx) => ({ ...q, ordre: idx + 1 }));
-        
         router.post(route('modules.animateur.qcms.structure.save', qcm.id), { questions: cleanQuestions }, {
             preserveScroll: true,
             onFinish: () => setIsSaving(false),
-            onSuccess: () => alert("QCM sauvegardé avec succès !"),
-            onError: (err) => alert("Erreur lors de la sauvegarde : vérifiez que tous les champs sont remplis.")
+            onError: (err) => setValidationErrors([{ qIndex: -1, message: 'Erreur lors de la sauvegarde. Vérifiez que tous les champs sont remplis.' }])
         });
     };
 
@@ -113,6 +127,30 @@ export default function QcmBuilder({ seance, qcm }: any) {
             <Head title={`Éditer QCM : ${qcm.titre}`} />
 
             <div className="max-w-5xl mx-auto space-y-8 pb-32">
+                {/* Bandeau d'erreurs de validation */}
+                {validationErrors.length > 0 && (
+                    <div className="bg-red-50 border-2 border-red-200 rounded-[2rem] p-6 animate-in slide-in-from-top duration-300">
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 bg-red-100 rounded-2xl flex items-center justify-center shrink-0">
+                                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-sm font-black text-red-700 mb-2">{validationErrors.length} erreur(s) à corriger avant de sauvegarder :</p>
+                                <ul className="space-y-1">
+                                    {validationErrors.map((err, i) => (
+                                        <li key={i} className="text-xs font-bold text-red-600 flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0"></span>
+                                            {err.message}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <button onClick={() => setValidationErrors([])} className="p-2 text-red-300 hover:text-red-600 transition-colors">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                )}
                 {/* Header Actions */}
                 <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
                     <div>
@@ -193,7 +231,11 @@ export default function QcmBuilder({ seance, qcm }: any) {
                                 </div>
                                 
                                 <div className="flex justify-end absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => removeQuestion(qIndex)} className="w-8 h-8 bg-red-50 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors">
+                                    <button 
+                                        onClick={() => removeQuestion(qIndex)} 
+                                        className="w-8 h-8 bg-red-50 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
+                                        title="Supprimer cette question"
+                                    >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                     </button>
                                 </div>
@@ -255,7 +297,13 @@ export default function QcmBuilder({ seance, qcm }: any) {
                                                 className="flex-1 bg-transparent border-none p-0 text-sm font-medium focus:ring-0"
                                                 value={opt.texte} onChange={e => updateOption(qIndex, oIndex, 'texte', e.target.value)}
                                             />
-                                            <button type="button" onClick={() => removeOption(qIndex, oIndex)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                                            <button 
+                                                type="button" 
+                                                onClick={() => removeOption(qIndex, oIndex)} 
+                                                disabled={q.options.length <= 2}
+                                                className="p-2 text-slate-300 hover:text-red-500 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+                                                title={q.options.length <= 2 ? 'Minimum 2 options requises' : 'Supprimer cette option'}
+                                            >
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                             </button>
                                         </div>
@@ -285,6 +333,17 @@ export default function QcmBuilder({ seance, qcm }: any) {
                 onClose={() => setShowSimulator(false)} 
                 titre={metaData.titre || 'QCM Sans Titre'} 
                 questions={questions} 
+            />
+
+            {/* Dialog de confirmation suppression question */}
+            <ConfirmDialog
+                isOpen={confirmDelete !== null}
+                title="Supprimer cette question ?"
+                message="Cette action est irréversible. La question et toutes ses options seront définitivement supprimées."
+                confirmLabel="Oui, supprimer"
+                isDanger={true}
+                onConfirm={confirmRemoveQuestion}
+                onCancel={() => setConfirmDelete(null)}
             />
         </AuthenticatedLayout>
     );
