@@ -143,6 +143,7 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
     Route::get('/seances/{seance}/preparation', [SeancePedagogiqueController::class, 'edit'])->name('seances.preparation');
     Route::post('/seances/{seance}/description', [SeancePedagogiqueController::class, 'updateDescription'])->name('seances.update-description');
     Route::post('/seances/{seance}/ressources', [SeancePedagogiqueController::class, 'addResource'])->name('seances.add-resource');
+    Route::put('/ressources/{ressource}', [SeancePedagogiqueController::class, 'updateResource'])->name('ressources.update');
     Route::delete('/ressources/{ressource}', [SeancePedagogiqueController::class, 'deleteResource'])->name('ressources.delete');
 
     // QCM (Animateur)

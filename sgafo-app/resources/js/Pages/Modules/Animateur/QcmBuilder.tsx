@@ -1,11 +1,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import QcmSimulatorModal from './QcmSimulatorModal';
 import ConfirmDialog from '@/Components/ConfirmDialog';
 import { validateQcmStructure } from '@/utils/validators';
 
 export default function QcmBuilder({ seance, qcm }: any) {
+    const { props } = usePage<any>();
+    const flashSuccess = props.flash?.success ?? null;
+    const [showFlash, setShowFlash] = useState(true);
     // State pour les paramètres
     const { data: metaData, setData: setMetaData, put: updateMeta, processing: metaProcessing } = useForm({
         titre: qcm.titre,
@@ -127,6 +130,22 @@ export default function QcmBuilder({ seance, qcm }: any) {
             <Head title={`Éditer QCM : ${qcm.titre}`} />
 
             <div className="max-w-5xl mx-auto space-y-8 pb-32">
+                {/* Flash Banner (Création/Redirection) */}
+                {flashSuccess && showFlash && (
+                    <div className="bg-emerald-50 border-2 border-emerald-200 rounded-[2rem] p-6 animate-in slide-in-from-top duration-300 relative">
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 bg-emerald-100 rounded-2xl flex items-center justify-center shrink-0">
+                                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-sm font-black text-emerald-700">{flashSuccess}</p>
+                            </div>
+                            <button onClick={() => setShowFlash(false)} className="text-emerald-400 hover:text-emerald-700 transition-colors">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                )}
                 {/* Bandeau d'erreurs de validation */}
                 {validationErrors.length > 0 && (
                     <div className="bg-red-50 border-2 border-red-200 rounded-[2rem] p-6 animate-in slide-in-from-top duration-300">

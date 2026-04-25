@@ -237,6 +237,12 @@ export default function Formations({ plans, allSeances, stats }: Props) {
                                                         }`}>
                                                             {seance.statut}
                                                         </span>
+                                                        <Link 
+                                                            href={route('modules.animateur.seances.preparation', seance.id)}
+                                                            className="px-4 py-2 text-slate-900 text-[9px] font-black uppercase tracking-widest rounded-lg bg-slate-50 hover:bg-slate-100 transition-all border border-slate-200"
+                                                        >
+                                                            Préparer
+                                                        </Link>
 
                                                         {(!isFuture && seance.statut !== 'terminée') ? (
                                                             <div className="flex gap-2">

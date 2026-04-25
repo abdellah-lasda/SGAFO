@@ -54,7 +54,7 @@ export default function FormationDetails({ plan }: Props) {
                             <div className="lg:col-span-2 space-y-8">
                                 <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Objectifs de la formation</h3>
-                                    <p className="text-slate-600 font-medium leading-relaxed whitespace-pre-wrap">
+                                    <p className="text-slate-600 font-medium leading-relaxed whitespace-pre-wrap break-words overflow-hidden">
                                         {plan.entite?.objectifs || "Aucun objectif spécifique défini."}
                                     </p>
                                 </div>

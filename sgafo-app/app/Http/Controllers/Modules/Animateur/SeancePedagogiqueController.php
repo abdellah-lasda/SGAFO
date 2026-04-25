@@ -83,6 +83,27 @@ class SeancePedagogiqueController extends Controller
         return back()->with('success', 'Ressource ajoutée.');
     }
 
+    public function updateResource(Request $request, SeanceRessource $ressource)
+    {
+        $user = Auth::user();
+        $isAssigned = $ressource->seance->themes()->where('seance_themes.formateur_id', $user->id)->exists();
+        if (!$isAssigned) abort(403);
+
+        $request->validate([
+            'titre' => 'required|string|max:255',
+            'url'   => 'nullable|url|required_if:type,link',
+        ]);
+
+        $ressource->update(['titre' => $request->titre]);
+
+        // Si c'est un lien, on met à jour le path
+        if ($ressource->type === 'link') {
+            $ressource->update(['path' => $request->url]);
+        }
+
+        return back()->with('success', 'Ressource mise à jour.');
+    }
+
     public function deleteResource(SeanceRessource $ressource)
     {
         $user = Auth::user();
