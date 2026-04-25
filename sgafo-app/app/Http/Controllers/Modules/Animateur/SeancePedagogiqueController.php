@@ -23,6 +23,7 @@ class SeancePedagogiqueController extends Controller
             abort(403, "Vous n'êtes pas assigné à cette séance.");
         }
 
+        $seance->refresh(); // Forcer la lecture de la DB
         $seance->load(['plan.entite', 'site', 'themes', 'ressources']);
 
         return Inertia::render('Modules/Animateur/SeancePreparation', [
@@ -35,6 +36,8 @@ class SeancePedagogiqueController extends Controller
         $user = Auth::user();
         $isAssigned = $seance->themes()->where('seance_themes.formateur_id', $user->id)->exists();
         if (!$isAssigned) abort(403);
+
+        \Log::info("Mise à jour description séance {$seance->id}", $request->all());
 
         $request->validate([
             'description' => 'nullable|string'
@@ -52,6 +55,8 @@ class SeancePedagogiqueController extends Controller
         $user = Auth::user();
         $isAssigned = $seance->themes()->where('seance_themes.formateur_id', $user->id)->exists();
         if (!$isAssigned) abort(403);
+
+        \Log::info("Ajout ressource séance {$seance->id}", $request->all());
 
         $request->validate([
             'titre' => 'required|string|max:255',

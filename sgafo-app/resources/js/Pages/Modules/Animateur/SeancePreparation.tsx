@@ -1,9 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { Editor } from '@tinymce/tinymce-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface Seance {
     id: number;
@@ -21,9 +21,15 @@ interface Seance {
 }
 
 export default function SeancePreparation({ seance }: { seance: Seance }) {
+    const editorRef = useRef<any>(null);
     const { data, setData, post, processing, errors } = useForm({
         description: seance.description || '',
     });
+
+    // Synchroniser les données si la prop `seance` change (lors d'un retour Inertia)
+    useEffect(() => {
+        setData('description', seance.description || '');
+    }, [seance.description]);
 
     const { data: resData, setData: setResData, post: postRes, processing: resProcessing, reset: resetRes } = useForm({
         titre: '',
@@ -34,7 +40,16 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
 
     const handleSaveDescription = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('modules.animateur.seances.update-description', seance.id));
+
+        // S'assurer qu'on a le contenu le plus récent depuis l'éditeur
+        const currentContent = editorRef.current ? editorRef.current.getContent() : data.description;
+
+        // On envoie le contenu forcé via le router d'Inertia
+        router.post(route('modules.animateur.seances.update-description', seance.id), {
+            description: currentContent
+        }, {
+            preserveScroll: true
+        });
     };
 
     const handleAddResource = (e: React.FormEvent) => {
@@ -76,7 +91,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                             {seance.debut} - {seance.fin} · {seance.site?.nom || 'Visio'}
                         </p>
                     </div>
-                    <Link 
+                    <Link
                         href={route('modules.animateur.formations.show', seance.plan.id)} // Correction : ID du plan
                         className="px-6 py-3 bg-slate-50 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all"
                     >
@@ -95,10 +110,12 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                             <div className="p-6">
                                 <form onSubmit={handleSaveDescription}>
                                     <Editor
+                                        key={seance.id}
+                                        onInit={(evt, editor) => editorRef.current = editor}
                                         tinymceScriptSrc="/tinymce/tinymce.min.js"
                                         licenseKey="gpl"
                                         onEditorChange={(content) => setData('description', content)}
-                                        value={data.description}
+                                        initialValue={seance.description || ''}
                                         init={{
                                             height: 500,
                                             menubar: false,
@@ -118,13 +135,18 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                                             branding: false,
                                         }}
                                     />
-                                    <div className="mt-6 flex justify-end">
-                                        <button 
+                                    <div className="mt-6 flex flex-col items-end gap-2">
+                                        {Object.keys(errors).length > 0 && (
+                                            <div className="text-red-500 text-xs font-bold bg-red-50 px-3 py-2 rounded-lg w-full">
+                                                Une erreur est survenue : {Object.values(errors).join(', ')}
+                                            </div>
+                                        )}
+                                        <button
                                             type="submit"
                                             disabled={processing}
                                             className="px-8 py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg active:scale-95 disabled:opacity-50"
                                         >
-                                            💾 Enregistrer le contenu
+                                            {processing ? 'Enregistrement...' : '💾 Enregistrer le contenu'}
                                         </button>
                                     </div>
                                 </form>
@@ -137,7 +159,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                         <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
                             <div className="flex items-center justify-between mb-8">
                                 <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Documents & Liens</h3>
-                                <button 
+                                <button
                                     onClick={() => setShowAddModal(true)}
                                     className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:bg-blue-700 transition-all"
                                 >
@@ -163,8 +185,8 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                                                 </p>
                                             </div>
                                         </div>
-                                        <Link 
-                                            href={route('modules.animateur.ressources.delete', res.id)} 
+                                        <Link
+                                            href={route('modules.animateur.ressources.delete', res.id)}
                                             method="delete"
                                             as="button"
                                             className="p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
@@ -199,7 +221,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                         <form onSubmit={handleAddResource} className="space-y-4">
                             <div>
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Titre de la ressource</label>
-                                <input 
+                                <input
                                     type="text"
                                     required
                                     className="w-full bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500"
@@ -209,7 +231,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                             </div>
                             <div>
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Type</label>
-                                <select 
+                                <select
                                     className="w-full bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500"
                                     value={resData.type}
                                     onChange={e => setResData('type', e.target.value)}
@@ -222,7 +244,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                             {resData.type === 'file' ? (
                                 <div>
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Fichier (Max 10Mo)</label>
-                                    <input 
+                                    <input
                                         type="file"
                                         className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                         onChange={e => setResData('file', e.target.files?.[0] || null)}
@@ -231,7 +253,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                             ) : (
                                 <div>
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Lien URL</label>
-                                    <input 
+                                    <input
                                         type="url"
                                         placeholder="https://..."
                                         className="w-full bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500"
@@ -242,14 +264,14 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                             )}
 
                             <div className="flex gap-3 pt-6">
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => setShowAddModal(false)}
                                     className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl text-[11px] font-black uppercase tracking-widest"
                                 >
                                     Annuler
                                 </button>
-                                <button 
+                                <button
                                     type="submit"
                                     disabled={resProcessing}
                                     className="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20"
