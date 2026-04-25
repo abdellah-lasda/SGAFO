@@ -121,6 +121,12 @@ export default function Dashboard({ auth, seances, stats, nextSession }: Props) 
                                     </div>
 
                                     <div className="flex flex-col sm:flex-row gap-4">
+                                        <Link 
+                                            href={route('modules.animateur.seances.preparation', nextSession.id)}
+                                            className="px-8 py-4 bg-emerald-500 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all text-center shadow-lg active:scale-95 border border-emerald-400"
+                                        >
+                                            ✏️ Préparer la séance
+                                        </Link>
                                         {!isFuture ? (
                                             <Link 
                                                 href={route('modules.animateur.seances.attendance', nextSession.id)}
@@ -130,7 +136,7 @@ export default function Dashboard({ auth, seances, stats, nextSession }: Props) 
                                             </Link>
                                         ) : (
                                             <div className="px-8 py-4 bg-white/10 text-white/50 border border-white/10 rounded-2xl text-[11px] font-black uppercase tracking-widest text-center italic">
-                                                🔒 Appel bientôt disponible
+                                                🔒 Appel bientôt dispo
                                             </div>
                                         )}
                                         <a 
@@ -138,7 +144,7 @@ export default function Dashboard({ auth, seances, stats, nextSession }: Props) 
                                             target="_blank"
                                             className="px-8 py-4 bg-white/10 text-white border border-white/10 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-white/20 transition-all text-center active:scale-95"
                                         >
-                                            🖨️ Imprimer l'émargement
+                                            🖨️ Imprimer
                                         </a>
                                     </div>
                                 </div>
@@ -176,13 +182,21 @@ export default function Dashboard({ auth, seances, stats, nextSession }: Props) 
                                                     </p>
                                                 </div>
                                             </div>
-                                            <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full border ${
-                                                s.statut === 'terminée' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                s.statut === 'confirmée' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                                                'bg-slate-100 text-slate-500 border-slate-200'
-                                            }`}>
-                                                {s.statut}
-                                            </span>
+                                            <div className="flex items-center gap-3">
+                                                <Link 
+                                                    href={route('modules.animateur.seances.preparation', s.id)}
+                                                    className="px-4 py-2 bg-slate-100 text-slate-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors opacity-0 group-hover:opacity-100"
+                                                >
+                                                    Préparer
+                                                </Link>
+                                                <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full border ${
+                                                    s.statut === 'terminée' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                    s.statut === 'confirmée' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                                    'bg-slate-100 text-slate-500 border-slate-200'
+                                                }`}>
+                                                    {s.statut}
+                                                </span>
+                                            </div>
                                         </div>
                                     ))
                                 ) : (

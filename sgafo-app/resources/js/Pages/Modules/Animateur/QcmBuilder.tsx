@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
+import QcmSimulatorModal from './QcmSimulatorModal';
 
 export default function QcmBuilder({ seance, qcm }: any) {
     // State pour les paramètres
@@ -10,6 +11,8 @@ export default function QcmBuilder({ seance, qcm }: any) {
         duree_minutes: qcm.duree_minutes || '',
         est_publie: qcm.est_publie,
     });
+
+    const [showSimulator, setShowSimulator] = useState(false);
 
     // State pour la structure complexe des questions
     const [questions, setQuestions] = useState<any[]>(
@@ -119,10 +122,17 @@ export default function QcmBuilder({ seance, qcm }: any) {
                     <div className="flex gap-4">
                         <Link 
                             href={route('modules.animateur.seances.preparation', seance.id)}
-                            className="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
+                            className="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center gap-2"
                         >
-                            Quitter
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                            Retour à la séance
                         </Link>
+                        <button 
+                            onClick={() => setShowSimulator(true)}
+                            className="px-6 py-3 bg-blue-50 text-blue-600 border border-blue-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-100 transition-all flex items-center gap-2"
+                        >
+                            ▶️ Tester l'aperçu
+                        </button>
                         <button 
                             onClick={saveStructure}
                             disabled={isSaving}
@@ -268,6 +278,14 @@ export default function QcmBuilder({ seance, qcm }: any) {
                     </div>
                 </div>
             </div>
+
+            {/* Modal de Simulation */}
+            <QcmSimulatorModal 
+                isOpen={showSimulator} 
+                onClose={() => setShowSimulator(false)} 
+                titre={metaData.titre || 'QCM Sans Titre'} 
+                questions={questions} 
+            />
         </AuthenticatedLayout>
     );
 }
