@@ -45,7 +45,7 @@ class PlanRessourceController extends Controller
 
         if ($request->type === 'file' && $request->hasFile('file')) {
             $file = $request->file('file');
-            $path = $file->store('formations/ressources', 'public');
+            $path = $file->store('formations/ressources');
             
             $data['path'] = $path;
             $data['extension'] = $file->getClientOriginalExtension();
@@ -82,7 +82,7 @@ class PlanRessourceController extends Controller
         $this->checkAssignment($ressource->plan);
 
         if ($ressource->type === 'file') {
-            Storage::disk('public')->delete($ressource->path);
+            Storage::delete($ressource->path);
         }
 
         $ressource->delete();

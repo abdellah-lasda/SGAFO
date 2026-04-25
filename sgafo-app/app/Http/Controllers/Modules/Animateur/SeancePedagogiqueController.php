@@ -69,7 +69,7 @@ class SeancePedagogiqueController extends Controller
 
         if ($request->type === 'file' && $request->hasFile('file')) {
             $file = $request->file('file');
-            $path = $file->store('seances/ressources', 'public');
+            $path = $file->store('seances/ressources');
             
             $data['path'] = $path;
             $data['extension'] = $file->getClientOriginalExtension();
@@ -112,7 +112,7 @@ class SeancePedagogiqueController extends Controller
         if (!$isAssigned) abort(403);
 
         if ($ressource->type === 'file') {
-            Storage::disk('public')->delete($ressource->path);
+            Storage::delete($ressource->path);
         }
 
         $ressource->delete();
