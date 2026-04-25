@@ -12,6 +12,8 @@ use App\Models\Institut;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 
 class UserController extends Controller
 {
@@ -35,22 +37,9 @@ class UserController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $validated = $request->validate([
-            'nom' => 'required|string|max:100',
-            'prenom' => 'required|string|max:100',
-            'email' => 'required|string|email|max:150|unique:users',
-            'password' => 'required|string|min:8',
-            'statut' => 'required|in:actif,inactif,suspendu',
-            'is_externe' => 'boolean',
-            'roles' => 'required|array',
-            'roles.*' => 'exists:roles,id',
-            'regions' => 'nullable|array', // pour DR
-            'cdcs' => 'nullable|array', // pour Responsable CDC
-            'secteurs' => 'nullable|array', // pour Formateur
-            'instituts' => 'nullable|array', // pour formateur interne
-        ]);
+        $validated = $request->validated();
 
         $user = User::create([
             'nom' => $validated['nom'],
@@ -89,22 +78,9 @@ class UserController extends Controller
         return redirect()->back()->with('message', 'Utilisateur créé avec succès.');
     }
 
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $validated = $request->validate([
-            'nom' => 'required|string|max:100',
-            'prenom' => 'required|string|max:100',
-            'email' => 'required|string|email|max:150|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8',
-            'statut' => 'required|in:actif,inactif,suspendu',
-            'is_externe' => 'boolean',
-            'roles' => 'required|array',
-            'roles.*' => 'exists:roles,id',
-            'regions' => 'nullable|array',
-            'cdcs' => 'nullable|array',
-            'secteurs' => 'nullable|array',
-            'instituts' => 'nullable|array',
-        ]);
+        $validated = $request->validated();
 
         $user->nom = $validated['nom'];
         $user->prenom = $validated['prenom'];

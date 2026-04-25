@@ -8,6 +8,8 @@ use App\Models\SiteFormation;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use App\Http\Requests\StoreSeanceRequest;
+use App\Http\Requests\UpdateSeanceRequest;
 
 class SeanceController extends Controller
 {
@@ -67,25 +69,9 @@ class SeanceController extends Controller
     /**
      * Enregistre une nouvelle séance.
      */
-    public function store(Request $request, PlanFormation $plan)
+    public function store(StoreSeanceRequest $request, PlanFormation $plan)
     {
-        $validated = $request->validate([
-            'date' => 'required|date',
-            'debut' => 'required',
-            'fin' => 'required',
-            'site_id' => 'nullable|exists:sites_formation,id',
-            'themes' => 'required|array|min:1',
-            'themes.*.plan_theme_id' => 'required|exists:plan_themes,id',
-            'themes.*.heures_planifiees' => 'required|numeric|min:0.5',
-            'themes.*.formateur_id' => 'required|exists:users,id',
-            // Récurrence
-            'recurrence' => 'nullable|array',
-            'recurrence.active' => 'boolean',
-            'recurrence.type' => 'required_if:recurrence.active,true|in:quotidien,hebdomadaire',
-            'recurrence.date_fin' => 'required_if:recurrence.active,true|date|after_or_equal:date',
-            'recurrence.skip_saturday' => 'boolean',
-            'recurrence.skip_sunday' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         if ($plan->statut === 'confirmé') {
             return redirect()->back()->with('error', 'Le planning est clôturé et ne peut plus être modifié.');

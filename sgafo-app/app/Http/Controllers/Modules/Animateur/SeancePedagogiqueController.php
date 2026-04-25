@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Seance;
 use App\Models\SeanceRessource;
 use Illuminate\Http\Request;
+use App\Http\Requests\Modules\Animateur\StoreRessourceRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -50,7 +51,7 @@ class SeancePedagogiqueController extends Controller
         return back()->with('success', 'Description mise à jour.');
     }
 
-    public function addResource(Request $request, Seance $seance)
+    public function addResource(StoreRessourceRequest $request, Seance $seance)
     {
         $user = Auth::user();
         $isAssigned = $seance->themes()->where('seance_themes.formateur_id', $user->id)->exists();
@@ -58,12 +59,7 @@ class SeancePedagogiqueController extends Controller
 
         \Log::info("Ajout ressource séance {$seance->id}", $request->all());
 
-        $request->validate([
-            'titre' => 'required|string|max:255',
-            'type' => 'required|in:file,link',
-            'file' => 'nullable|file|max:10240', // 10MB max
-            'url' => 'nullable|url',
-        ]);
+        $validated = $request->validated();
 
         $data = [
             'seance_id' => $seance->id,

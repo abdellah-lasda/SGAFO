@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use App\Http\Requests\Modules\Animateur\StoreQcmStructureRequest;
 
 class QcmAnimateurController extends Controller
 {
@@ -99,22 +100,11 @@ class QcmAnimateurController extends Controller
     /**
      * API: Save the full QCM structure (questions and options)
      */
-    public function saveStructure(Request $request, Qcm $qcm)
+    public function saveStructure(StoreQcmStructureRequest $request, Qcm $qcm)
     {
         $this->checkAssignment($qcm->seance);
 
-        $request->validate([
-            'questions' => 'present|array',
-            'questions.*.id' => 'nullable|integer',
-            'questions.*.texte' => 'required|string',
-            'questions.*.type' => 'required|in:unique,multiple',
-            'questions.*.points' => 'required|integer|min:1',
-            'questions.*.ordre' => 'required|integer',
-            'questions.*.options' => 'present|array|min:2',
-            'questions.*.options.*.id' => 'nullable|integer',
-            'questions.*.options.*.texte' => 'required|string',
-            'questions.*.options.*.est_correcte' => 'required|boolean',
-        ]);
+        $validated = $request->validated();
 
         DB::beginTransaction();
 
