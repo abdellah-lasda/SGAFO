@@ -139,6 +139,11 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
     Route::get('/formations', [AnimateurDashboardController::class, 'formations'])->name('formations');
     Route::get('/formations/{plan}', [AnimateurDashboardController::class, 'showFormation'])->name('formations.show');
 
+    // Ressources Globales (Formation)
+    Route::post('/formations/{plan}/ressources', [\App\Http\Controllers\Modules\Animateur\PlanRessourceController::class, 'store'])->name('formations.ressources.store');
+    Route::put('/ressources-formation/{ressource}', [\App\Http\Controllers\Modules\Animateur\PlanRessourceController::class, 'update'])->name('formations.ressources.update');
+    Route::delete('/ressources-formation/{ressource}', [\App\Http\Controllers\Modules\Animateur\PlanRessourceController::class, 'destroy'])->name('formations.ressources.destroy');
+
     // Préparation de Séance (TinyMCE & Documents)
     Route::get('/seances/{seance}/preparation', [SeancePedagogiqueController::class, 'edit'])->name('seances.preparation');
     Route::post('/seances/{seance}/description', [SeancePedagogiqueController::class, 'updateDescription'])->name('seances.update-description');

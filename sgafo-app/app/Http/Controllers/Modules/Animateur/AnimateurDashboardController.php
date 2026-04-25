@@ -115,7 +115,8 @@ class AnimateurDashboardController extends Controller
                     $t->where('seance_themes.formateur_id', $user->id);
                 })->with('site', 'themes');
             },
-            'participants'
+            'participants',
+            'ressources'
         ]);
 
         return Inertia::render('Modules/Animateur/FormationDetails', [

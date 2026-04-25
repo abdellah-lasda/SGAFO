@@ -85,6 +85,11 @@ class PlanFormation extends Model
         return $this->hasMany(Seance::class, 'plan_id')->orderBy('date')->orderBy('debut');
     }
 
+    public function ressources()
+    {
+        return $this->hasMany(PlanRessource::class, 'plan_formation_id');
+    }
+
     // ─── Helpers ────────────────────────────────────────────
 
     /**

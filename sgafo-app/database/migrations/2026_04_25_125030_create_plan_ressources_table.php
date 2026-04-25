@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('plan_ressources', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('plan_formation_id')->constrained('plans_formation')->onDelete('cascade');
+            $table->string('titre');
+            $table->enum('type', ['file', 'link']);
+            $table->string('path');
+            $table->string('extension')->nullable();
+            $table->integer('size')->nullable();
             $table->timestamps();
         });
     }

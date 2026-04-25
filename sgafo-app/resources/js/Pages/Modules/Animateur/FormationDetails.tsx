@@ -1,9 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import ConfirmDialog from '@/Components/ConfirmDialog';
+import { validateFile, validateUrl, validateRequiredString } from '@/utils/validators';
 
 interface Props extends PageProps {
     plan: any;
@@ -11,6 +13,74 @@ interface Props extends PageProps {
 
 export default function FormationDetails({ plan }: Props) {
     const [activeTab, setActiveTab] = useState<'aperçu' | 'planning' | 'documents' | 'qcm'>('aperçu');
+
+    // States for Documents
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+    const [editResTarget, setEditResTarget] = useState<any | null>(null);
+
+    const { data: resData, setData: setResData, post: postRes, processing: resProcessing, reset: resetRes } = useForm({
+        titre: '',
+        type: 'file',
+        file: null as File | null,
+        url: '',
+    });
+
+    const { data: editResData, setData: setEditResData, put: putRes, processing: editResProcessing, reset: resetEditRes } = useForm({
+        titre: '',
+        url: '',
+        type: 'file',
+    });
+
+    const handleAddResource = (e: React.FormEvent) => {
+        e.preventDefault();
+        const newErrors: Record<string, string> = {};
+
+        const titreError = validateRequiredString(resData.titre, 'Titre');
+        if (titreError) newErrors.titre = titreError;
+
+        if (resData.type === 'file') {
+            const fileError = validateFile(resData.file);
+            if (fileError) newErrors.file = fileError;
+        } else {
+            const urlError = validateUrl(resData.url);
+            if (urlError) newErrors.url = urlError;
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setClientErrors(newErrors);
+            return;
+        }
+
+        setClientErrors({});
+        postRes(route('modules.animateur.formations.ressources.store', plan.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                resetRes();
+                setShowAddModal(false);
+            },
+        });
+    };
+
+    const openEditRes = (res: any) => {
+        setEditResTarget(res);
+        setEditResData('titre', res.titre);
+        setEditResData('type', res.type);
+        setEditResData('url', res.type === 'link' ? res.path : '');
+    };
+
+    const handleUpdateResource = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editResTarget) return;
+        putRes(route('modules.animateur.formations.ressources.update', editResTarget.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setEditResTarget(null);
+                resetEditRes();
+            },
+        });
+    };
     return (
         <AuthenticatedLayout header={
             <div className="flex items-center gap-4">
@@ -187,15 +257,60 @@ export default function FormationDetails({ plan }: Props) {
                     )}
 
                     {activeTab === 'documents' && (
-                        <div className="bg-white p-12 rounded-[3rem] border border-dashed border-slate-200 text-center">
-                            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                        <div className="animate-in fade-in duration-300 space-y-6">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Documents & Liens Globaux</h3>
+                                <button 
+                                    onClick={() => setShowAddModal(true)}
+                                    className="px-4 py-2 bg-emerald-500 text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 transition-all text-[10px] font-black uppercase tracking-widest shadow-md"
+                                >
+                                    + Ajouter
+                                </button>
                             </div>
-                            <h3 className="text-xl font-black text-slate-900">Support de cours & Ressources</h3>
-                            <p className="text-slate-500 font-medium mt-2 mb-8">Uploadez vos PDF, présentations ou liens utiles pour cette formation.</p>
-                            <button className="px-8 py-4 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
-                                Ajouter un document
-                            </button>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {plan.ressources && plan.ressources.length > 0 ? plan.ressources.map((res: any) => (
+                                    <div key={res.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:border-emerald-200 transition-all">
+                                        <div className="flex items-center gap-4 overflow-hidden">
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${res.type === 'file' ? 'bg-white text-emerald-600 border border-slate-100' : 'bg-slate-900 text-white'}`}>
+                                                {res.type === 'file' ? (
+                                                    <span className="text-[10px] font-black uppercase">{res.extension}</span>
+                                                ) : (
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                                )}
+                                            </div>
+                                            <div className="truncate">
+                                                <p className="text-sm font-black text-slate-900 truncate">{res.titre}</p>
+                                                <p className="text-[10px] font-bold text-slate-400 mt-0.5">
+                                                    {res.type === 'file' ? `${res.extension} · ${(res.size / 1024).toFixed(0)} Ko` : 'Lien externe'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                            <button
+                                                type="button"
+                                                onClick={() => openEditRes(res)}
+                                                className="p-2.5 bg-white text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors shadow-sm"
+                                                title="Modifier"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setDeleteTarget(res.id)}
+                                                className="p-2.5 bg-white text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors shadow-sm"
+                                                title="Supprimer"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="col-span-2 py-12 text-center border-2 border-dashed border-slate-100 rounded-3xl">
+                                        <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">Aucun document global pour cette formation</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
@@ -213,6 +328,151 @@ export default function FormationDetails({ plan }: Props) {
                     )}
                 </div>
             </div>
+
+            {/* Modal : Ajouter Ressource */}
+            {showAddModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+                        <h2 className="text-xl font-black text-slate-900 mb-6">Ajouter un document</h2>
+                        <form onSubmit={handleAddResource} className="space-y-4">
+                            <div className="flex gap-2 p-1 bg-slate-50 rounded-xl mb-6">
+                                <button
+                                    type="button"
+                                    className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${resData.type === 'file' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    onClick={() => setResData('type', 'file')}
+                                >
+                                    Fichier
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${resData.type === 'link' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    onClick={() => setResData('type', 'link')}
+                                >
+                                    Lien Web
+                                </button>
+                            </div>
+
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Titre</label>
+                                <input 
+                                    type="text"
+                                    className={`w-full bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 ${clientErrors.titre ? 'ring-2 ring-red-400' : ''}`}
+                                    value={resData.titre}
+                                    onChange={e => { setResData('titre', e.target.value); setClientErrors(prev => ({...prev, titre: ''})); }}
+                                />
+                                {clientErrors.titre && <p className="text-[10px] text-red-500 font-bold mt-1">{clientErrors.titre}</p>}
+                            </div>
+
+                            {resData.type === 'file' ? (
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Fichier (Max 5Mo)</label>
+                                    <input 
+                                        type="file"
+                                        className={`w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all ${clientErrors.file ? 'ring-2 ring-red-400 rounded-xl' : ''}`}
+                                        onChange={e => { setResData('file', e.target.files ? e.target.files[0] : null); setClientErrors(prev => ({...prev, file: ''})); }}
+                                    />
+                                    {clientErrors.file && <p className="text-[10px] text-red-500 font-bold mt-1">{clientErrors.file}</p>}
+                                </div>
+                            ) : (
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">URL</label>
+                                    <input 
+                                        type="url"
+                                        placeholder="https://"
+                                        className={`w-full bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 ${clientErrors.url ? 'ring-2 ring-red-400' : ''}`}
+                                        value={resData.url}
+                                        onChange={e => { setResData('url', e.target.value); setClientErrors(prev => ({...prev, url: ''})); }}
+                                    />
+                                    {clientErrors.url && <p className="text-[10px] text-red-500 font-bold mt-1">{clientErrors.url}</p>}
+                                </div>
+                            )}
+
+                            <div className="flex gap-3 pt-4">
+                                <button 
+                                    type="button"
+                                    onClick={() => { setShowAddModal(false); resetRes(); setClientErrors({}); }}
+                                    className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl text-[11px] font-black uppercase tracking-widest"
+                                >
+                                    Annuler
+                                </button>
+                                <button 
+                                    type="submit"
+                                    disabled={resProcessing}
+                                    className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20"
+                                >
+                                    {resProcessing ? 'Ajout...' : '✓ Ajouter'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal : Modifier Ressource */}
+            {editResTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+                        <h2 className="text-xl font-black text-slate-900 mb-6">Modifier la ressource</h2>
+                        <form onSubmit={handleUpdateResource} className="space-y-4">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Titre</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500"
+                                    value={editResData.titre}
+                                    onChange={e => setEditResData('titre', e.target.value)}
+                                />
+                            </div>
+                            {editResTarget.type === 'link' && (
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Lien URL</label>
+                                    <input
+                                        type="url"
+                                        required
+                                        className="w-full bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500"
+                                        value={editResData.url}
+                                        onChange={e => setEditResData('url', e.target.value)}
+                                    />
+                                </div>
+                            )}
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => { setEditResTarget(null); resetEditRes(); }}
+                                    className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl text-[11px] font-black uppercase tracking-widest"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={editResProcessing}
+                                    className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg disabled:opacity-50"
+                                >
+                                    {editResProcessing ? 'Enregistrement...' : '✓ Enregistrer'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            <ConfirmDialog
+                isOpen={deleteTarget !== null}
+                title="Supprimer cette ressource ?"
+                message="Ce document global sera supprimé pour tous les participants."
+                confirmLabel="Oui, supprimer"
+                isDanger={true}
+                onConfirm={() => {
+                    if (deleteTarget) {
+                        router.delete(route('modules.animateur.formations.ressources.destroy', deleteTarget), {
+                            preserveScroll: true,
+                            onSuccess: () => setDeleteTarget(null),
+                        });
+                    }
+                }}
+                onCancel={() => setDeleteTarget(null)}
+            />
         </AuthenticatedLayout>
     );
 }
