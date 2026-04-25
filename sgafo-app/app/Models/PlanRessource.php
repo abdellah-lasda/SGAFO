@@ -15,6 +15,17 @@ class PlanRessource extends Model
         'size',
     ];
 
+    protected $appends = ['url'];
+
+    public function getUrlAttribute()
+    {
+        if ($this->type === 'link') {
+            return $this->path;
+        }
+        
+        return \Illuminate\Support\Facades\Storage::url($this->path);
+    }
+
     public function plan()
     {
         return $this->belongsTo(PlanFormation::class, 'plan_formation_id');

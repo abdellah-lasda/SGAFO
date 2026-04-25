@@ -15,6 +15,17 @@ class SeanceRessource extends Model
         'size',
     ];
 
+    protected $appends = ['url'];
+
+    public function getUrlAttribute()
+    {
+        if ($this->type === 'link') {
+            return $this->path;
+        }
+        
+        return \Illuminate\Support\Facades\Storage::url($this->path);
+    }
+
     public function seance()
     {
         return $this->belongsTo(Seance::class);
