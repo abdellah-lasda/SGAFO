@@ -8,11 +8,6 @@ use App\Models\PlanFormation;
 use App\Models\Seance;
 use App\Models\Qcm;
 use App\Models\User;
-use App\Models\SiteFormation;
-use App\Models\Hotel;
-use App\Models\Institut;
-use App\Models\Secteur;
-use App\Models\Metier;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -48,7 +43,6 @@ class PilotageController extends Controller
             'filters' => $request->only(['search']),
         ];
 
-        // Chargement des données selon l'onglet avec filtrage
         switch ($tab) {
             case 'entites':
                 $data['entites'] = EntiteFormation::with(['secteur', 'createur'])
@@ -71,33 +65,9 @@ class PilotageController extends Controller
                     ->paginate(10)
                     ->withQueryString();
                 break;
-            case 'logistique':
-                $data['sites'] = SiteFormation::when($search, fn($q) => $q->where('nom', 'like', "%{$search}%")->orWhere('ville', 'like', "%{$search}%"))
-                    ->latest()
-                    ->paginate(10)
-                    ->withQueryString();
-                $data['hotels'] = Hotel::when($search, fn($q) => $q->where('nom', 'like', "%{$search}%")->orWhere('ville', 'like', "%{$search}%"))
-                    ->latest()
-                    ->paginate(10)
-                    ->withQueryString();
-                break;
-            case 'users':
-                $data['users'] = User::with('roles')
-                    ->when($search, fn($q) => $q->where('nom', 'like', "%{$search}%")->orWhere('prenom', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"))
-                    ->latest()
-                    ->paginate(10)
-                    ->withQueryString();
-                break;
-            case 'instituts':
-                $data['instituts'] = Institut::with('region')
-                    ->when($search, fn($q) => $q->where('nom', 'like', "%{$search}%"))
-                    ->latest()
-                    ->paginate(10)
-                    ->withQueryString();
-                break;
-            case 'specialites':
-                $data['secteurs'] = Secteur::with('metiers')
-                    ->when($search, fn($q) => $q->where('nom', 'like', "%{$search}%"))
+            case 'qcms':
+                $data['qcms'] = Qcm::with(['seance.plan.entite'])
+                    ->when($search, fn($q) => $q->where('titre', 'like', "%{$search}%"))
                     ->latest()
                     ->paginate(10)
                     ->withQueryString();
@@ -152,26 +122,5 @@ class PilotageController extends Controller
     {
         $seance->delete();
         return redirect()->back()->with('success', 'Séance supprimée.');
-    }
-
-    public function destroyUser(User $user)
-    {
-        if ($user->id === auth()->id()) {
-            return redirect()->back()->with('error', 'Vous ne pouvez pas supprimer votre propre compte.');
-        }
-        $user->delete();
-        return redirect()->back()->with('success', 'Utilisateur supprimé.');
-    }
-
-    public function destroySite(SiteFormation $site)
-    {
-        $site->delete();
-        return redirect()->back()->with('success', 'Site supprimé.');
-    }
-
-    public function destroyInstitut(Institut $institut)
-    {
-        $institut->delete();
-        return redirect()->back()->with('success', 'Établissement supprimé.');
     }
 }

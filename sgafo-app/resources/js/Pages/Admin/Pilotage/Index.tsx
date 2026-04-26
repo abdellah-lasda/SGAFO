@@ -1,445 +1,313 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { PageProps } from '@/types';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Pagination from '@/Components/Pagination';
-import ConfirmDialog from '@/Components/ConfirmDialog';
 
-interface PaginationData {
-    data: any[];
-    links: any[];
-    current_page: number;
-    total: number;
-}
-
-interface Props extends PageProps {
+interface Props {
     stats: any;
     currentTab: string;
-    filters: { search?: string };
-    entites?: PaginationData;
-    plans?: PaginationData;
-    sessions?: PaginationData;
-    qcms?: PaginationData;
-    users?: PaginationData;
-    sites?: PaginationData;
-    hotels?: PaginationData;
-    instituts?: PaginationData;
-    secteurs?: PaginationData;
     recent_plans?: any[];
+    entites?: any;
+    plans?: any;
+    sessions?: any;
+    qcms?: any;
+    filters: { search?: string };
 }
 
-export default function Index({ auth, stats, currentTab, filters, entites, plans, sessions, qcms, users, sites, hotels, instituts, secteurs, recent_plans }: Props) {
-    const [activeTab, setActiveTab] = useState(currentTab || 'dashboard');
+export default function Index({ stats, currentTab, recent_plans, entites, plans, sessions, qcms, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
-    const [confirmDelete, setConfirmDelete] = useState<{ id: number, type: string, title: string } | null>(null);
-    const [confirmArchive, setConfirmArchive] = useState<number | null>(null);
-
-    const tabs = [
-        { id: 'dashboard', label: 'Dashboard', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z', color: 'text-slate-600', bg: 'bg-slate-50' },
-        { id: 'entites', label: 'Bibliothèque', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002 2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10', color: 'text-emerald-500', bg: 'bg-emerald-50' },
-        { id: 'plans', label: 'Plans', icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2', color: 'text-blue-500', bg: 'bg-blue-50' },
-        { id: 'sessions', label: 'Sessions', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', color: 'text-purple-500', bg: 'bg-purple-50' },
-        { id: 'logistique', label: 'Logistique', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z', color: 'text-rose-500', bg: 'bg-rose-50' },
-        { id: 'users', label: 'Utilisateurs', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', color: 'text-indigo-500', bg: 'bg-indigo-50' },
-        { id: 'instituts', label: 'Établissements', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', color: 'text-cyan-500', bg: 'bg-cyan-50' },
-        { id: 'specialites', label: 'Spécialités', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z', color: 'text-amber-500', bg: 'bg-amber-50' },
-    ];
-
-    const handleTabChange = (tabId: string) => {
-        setActiveTab(tabId);
-        router.get(route('admin.pilotage.index'), { tab: tabId, search: '' }, { preserveState: true, preserveScroll: true });
-    };
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get(route('admin.pilotage.index'), { tab: activeTab, search }, { preserveState: true, preserveScroll: true });
+        router.get(route('admin.pilotage.index'), { tab: currentTab, search }, { preserveState: true });
     };
 
-    const handleDelete = () => {
-        if (!confirmDelete) return;
-        const routes: any = {
-            plan: 'admin.pilotage.plans.destroy',
-            entite: 'admin.pilotage.entites.destroy',
-            session: 'admin.pilotage.sessions.destroy',
-            user: 'admin.pilotage.users.destroy',
-            site: 'admin.pilotage.sites.destroy',
-            institut: 'admin.pilotage.instituts.destroy',
-        };
-        router.delete(route(routes[confirmDelete.type], confirmDelete.id), {
-            onSuccess: () => setConfirmDelete(null)
-        });
-    };
-
-    const handleArchive = () => {
-        if (!confirmArchive) return;
-        router.patch(route('admin.pilotage.plans.archive', confirmArchive), {}, {
-            onSuccess: () => setConfirmArchive(null)
-        });
-    };
+    const tabs = [
+        { id: 'dashboard', label: 'Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
+        { id: 'entites', label: 'Bibliothèque', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
+        { id: 'plans', label: 'Plans de Formation', icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2' },
+        { id: 'sessions', label: 'Sessions', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z' },
+        { id: 'qcms', label: 'QCMs', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+    ];
 
     return (
-        <AuthenticatedLayout
-            header={<span className="font-bold text-slate-900">Pilotage Global Administratif</span>}
-        >
+        <AuthenticatedLayout header={<span className="font-bold text-slate-900 uppercase tracking-tight">Pilotage Global</span>}>
             <Head title="Pilotage Global" />
 
-            <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-700">
+            <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500">
                 
-                {/* Header & Navigation Section */}
-                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
-                    <div className="flex-1">
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none">Centre de Commandement</h1>
-                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-2">Pilotage Intégré • Supervision des Ressources</p>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <StatCard label="Formations" value={stats.entites.total} color="blue" icon="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" />
+                    <StatCard label="Plans Actifs" value={stats.plans.by_status.confirmé + stats.plans.by_status.validé} value2={`Total: ${stats.plans.total}`} color="emerald" icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                    <StatCard label="Sessions" value={stats.sessions.total} color="purple" icon="M8 7V3m8 4V3m-9 8h10" />
+                    <StatCard label="QCMs" value={stats.qcms.total} color="amber" icon="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <StatCard label="Utilisateurs" value={stats.users.total} color="slate" icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857" />
+                </div>
+
+                {/* Tabs Navigation */}
+                <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex gap-1 overflow-x-auto scrollbar-hide p-1">
+                        {tabs.map(tab => (
+                            <Link
+                                key={tab.id}
+                                href={route('admin.pilotage.index', { tab: tab.id })}
+                                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all uppercase tracking-widest ${
+                                    currentTab === tab.id 
+                                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' 
+                                    : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'
+                                }`}
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={tab.icon} />
+                                </svg>
+                                {tab.label}
+                            </Link>
+                        ))}
                     </div>
 
-                    <div className="w-full xl:w-auto flex flex-col md:flex-row items-center gap-4">
-                        {/* Search Bar */}
-                        <form onSubmit={handleSearch} className="relative w-full md:w-80 group">
+                    {currentTab !== 'dashboard' && (
+                        <form onSubmit={handleSearch} className="relative w-full md:w-64 group">
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Rechercher..."
-                                className="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-medium focus:border-blue-500 focus:bg-white transition-all outline-none"
+                                className="w-full pl-10 pr-4 py-2 bg-slate-50 border-2 border-slate-100 rounded-xl text-xs font-bold focus:border-blue-500 focus:bg-white transition-all outline-none"
                             />
-                            <svg className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </form>
-
-                        <div className="flex flex-wrap justify-center items-center gap-1.5 p-1 bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => handleTabChange(tab.id)}
-                                    className={`px-4 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center gap-2 whitespace-nowrap uppercase tracking-widest ${
-                                        activeTab === tab.id 
-                                        ? `${tab.bg} ${tab.color} shadow-sm border border-current border-opacity-10` 
-                                        : 'text-slate-400 hover:text-slate-600 hover:bg-white'
-                                    }`}
-                                >
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={tab.icon} />
-                                    </svg>
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                    )}
                 </div>
 
-                {/* Main Content Area */}
-                <div className="bg-white rounded-[3rem] p-10 border border-slate-200 shadow-2xl shadow-slate-200/50 min-h-[700px]">
-                    
-                    {/* DASHBOARD TAB */}
-                    {activeTab === 'dashboard' && (
-                        <div className="space-y-12">
-                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                <StatCard label="Formations" value={stats.entites.total} color="text-emerald-600" bg="bg-emerald-50" icon="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002 2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                <StatCard label="Utilisateurs" value={stats.users.total} color="text-indigo-600" bg="bg-indigo-50" icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                <StatCard label="Plans Actifs" value={stats.plans.total} color="text-blue-600" bg="bg-blue-50" icon="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                                <StatCard label="QCMs" value={stats.qcms.total} color="text-amber-600" bg="bg-amber-50" icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                            </div>
-
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                                <StatusPill label="Brouillon" value={stats.plans.by_status.brouillon} color="bg-slate-100 text-slate-600" />
-                                <StatusPill label="Soumis" value={stats.plans.by_status.soumis} color="bg-amber-100 text-amber-600" />
-                                <StatusPill label="Validé" value={stats.plans.by_status.validé} color="bg-emerald-100 text-emerald-600" />
-                                <StatusPill label="Confirmé" value={stats.plans.by_status.confirmé} color="bg-blue-100 text-blue-600" />
-                                <StatusPill label="Rejeté" value={stats.plans.by_status.rejeté} color="bg-red-100 text-red-600" />
-                                <StatusPill label="Annulé" value={stats.plans.by_status.annulé} color="bg-gray-100 text-gray-500" />
-                            </div>
-
-                            <div className="space-y-6">
-                                <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                                    <div className="w-2 h-8 bg-blue-600 rounded-full" />
-                                    Dernières activités
-                                </h3>
-                                <div className="grid grid-cols-1 gap-4">
-                                    {recent_plans?.map(plan => (
-                                        <div key={plan.id} className="flex items-center gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-blue-200 hover:bg-white transition-all shadow-sm group">
-                                            <div className="flex-1">
-                                                <h4 className="text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors">{plan.titre}</h4>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                                                    CDC: {plan.createur?.prenom} {plan.createur?.nom} • Statut: {plan.statut}
-                                                </p>
-                                            </div>
-                                            <Link href={route('admin.pilotage.plans.show', plan.id)} className="px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
-                                                Détails
-                                            </Link>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* USERS TAB */}
-                    {activeTab === 'users' && users && (
-                        <TableContainer title="Gestion des Utilisateurs" count={users.total}>
-                            <table className="w-full text-left border-collapse">
-                                <thead className="bg-slate-50 border-b border-slate-100">
-                                    <tr>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Nom & Prénom</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Email</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Rôles</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Statut</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {users.data.map(user => (
-                                        <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-[10px] font-black">
-                                                        {user.prenom[0]}{user.nom[0]}
-                                                    </div>
-                                                    <span className="text-sm font-black text-slate-900">{user.prenom} {user.nom}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-xs font-medium text-slate-500">{user.email}</td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex flex-wrap gap-1">
-                                                    {user.roles?.map((r:any) => (
-                                                        <span key={r.id} className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[9px] font-black uppercase">
-                                                            {r.nom}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${user.statut === 'actif' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                                                    {user.statut || 'actif'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <button 
-                                                    onClick={() => setConfirmDelete({ id: user.id, type: 'user', title: `${user.prenom} ${user.nom}` })}
-                                                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <Pagination links={users.links} />
-                        </TableContainer>
-                    )}
-
-                    {/* LOGISTIQUE TAB */}
-                    {activeTab === 'logistique' && sites && (
-                        <div className="space-y-12">
-                            <TableContainer title="Sites de Formation" count={sites.total}>
-                                <table className="w-full text-left border-collapse">
-                                    <thead className="bg-slate-50 border-b border-slate-100">
-                                        <tr>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Nom du Site</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Ville</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Capacité</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {sites.data.map(site => (
-                                            <tr key={site.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="px-6 py-4 font-black text-slate-900 text-sm">{site.nom}</td>
-                                                <td className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">{site.ville}</td>
-                                                <td className="px-6 py-4">
-                                                    <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black border border-rose-100">
-                                                        {site.capacite} PLACES
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <button 
-                                                        onClick={() => setConfirmDelete({ id: site.id, type: 'site', title: site.nom })}
-                                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                                                    >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                                <Pagination links={sites.links} />
-                            </TableContainer>
-                        </div>
-                    )}
-
-                    {/* INSTITUTS TAB */}
-                    {activeTab === 'instituts' && instituts && (
-                        <TableContainer title="Gestion des Établissements" count={instituts.total}>
-                            <table className="w-full text-left border-collapse">
-                                <thead className="bg-slate-50 border-b border-slate-100">
-                                    <tr>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Nom de l'Établissement</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Région</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {instituts.data.map(inst => (
-                                        <tr key={inst.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4 font-black text-slate-900 text-sm">{inst.nom}</td>
-                                            <td className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">{inst.region?.nom}</td>
-                                            <td className="px-6 py-4">
-                                                <button 
-                                                    onClick={() => setConfirmDelete({ id: inst.id, type: 'institut', title: inst.nom })}
-                                                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <Pagination links={instituts.links} />
-                        </TableContainer>
-                    )}
-
-                    {/* SPECIALITES TAB */}
-                    {activeTab === 'specialites' && secteurs && (
-                        <TableContainer title="Secteurs & Métiers" count={secteurs.total}>
-                            <table className="w-full text-left border-collapse">
-                                <thead className="bg-slate-50 border-b border-slate-100">
-                                    <tr>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Secteur</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Métiers associés</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {secteurs.data.map(sect => (
-                                        <tr key={sect.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4 font-black text-slate-900 text-sm">{sect.nom}</td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex flex-wrap gap-2">
-                                                    {sect.metiers?.map((m:any) => (
-                                                        <span key={m.id} className="px-3 py-1 bg-amber-50 text-amber-700 rounded-lg text-[9px] font-black border border-amber-100">
-                                                            {m.nom}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <Pagination links={secteurs.links} />
-                        </TableContainer>
-                    )}
-
-                    {/* EXISTING TABS (PLANS, ENTITES, SESSIONS, QCMS) - Simplifed representation */}
-                    {['entites', 'plans', 'sessions', 'qcms'].includes(activeTab) && (
-                        <div className="space-y-6">
-                            <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                                <div className="w-2 h-8 bg-blue-600 rounded-full" />
-                                {tabs.find(t => t.id === activeTab)?.label}
-                            </h3>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Utilisez la recherche pour filtrer les {activeTab}.</p>
-                            
-                            {activeTab === 'entites' && entites && (
-                                <TableContainer title="" count={entites.total}>
-                                    <table className="w-full text-left border-collapse">
-                                        <tbody className="divide-y divide-slate-100">
-                                            {entites.data.map(item => (
-                                                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                                    <td className="px-6 py-4 font-black text-slate-900 text-sm">{item.titre}</td>
-                                                    <td className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">{item.secteur?.nom}</td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        <Link href={route('admin.pilotage.entites.show', item.id)} className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white transition-all">Détails</Link>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                    <Pagination links={entites.links} />
-                                </TableContainer>
-                            )}
-
-                            {activeTab === 'plans' && plans && (
-                                <TableContainer title="" count={plans.total}>
-                                    <table className="w-full text-left border-collapse">
-                                        <tbody className="divide-y divide-slate-100">
-                                            {plans.data.map(item => (
-                                                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                                    <td className="px-6 py-4 font-black text-slate-900 text-sm">{item.titre}</td>
-                                                    <td className="px-6 py-4">
-                                                        <span className="px-2 py-1 rounded-lg text-[9px] font-black uppercase bg-blue-50 text-blue-600">{item.statut}</span>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        <Link href={route('admin.pilotage.plans.show', item.id)} className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-900 hover:text-white transition-all">Détails</Link>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                    <Pagination links={plans.links} />
-                                </TableContainer>
-                            )}
-                        </div>
-                    )}
-
+                {/* Tab Content */}
+                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+                    {currentTab === 'dashboard' && <DashboardView recentPlans={recent_plans} stats={stats} />}
+                    {currentTab === 'entites' && <EntitesTable data={entites} />}
+                    {currentTab === 'plans' && <PlansTable data={plans} />}
+                    {currentTab === 'sessions' && <SessionsTable data={sessions} />}
+                    {currentTab === 'qcms' && <QcmsTable data={qcms} />}
                 </div>
             </div>
-
-            {/* CONFIRM DIALOGS */}
-            <ConfirmDialog
-                isOpen={!!confirmDelete}
-                title={`Supprimer cette ressource ?`}
-                message={`Êtes-vous sûr de vouloir supprimer définitivement "${confirmDelete?.title}" ? Cette action est irréversible.`}
-                confirmLabel="Supprimer définitivement"
-                isDanger={true}
-                onConfirm={handleDelete}
-                onCancel={() => setConfirmDelete(null)}
-            />
         </AuthenticatedLayout>
     );
 }
 
-function StatCard({ label, value, color, bg, icon }: { label: string; value: number; color: string; bg: string; icon: string }) {
+function StatCard({ label, value, value2, color, icon }: any) {
+    const colors: any = {
+        blue: 'text-blue-600 bg-blue-50 border-blue-100',
+        emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+        purple: 'text-purple-600 bg-purple-50 border-purple-100',
+        amber: 'text-amber-600 bg-amber-50 border-amber-100',
+        slate: 'text-slate-600 bg-slate-50 border-slate-100'
+    };
     return (
-        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
-            <div className={`absolute top-0 right-0 w-24 h-24 ${bg} rounded-bl-full opacity-30 -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-500`}></div>
-            <div className="relative z-10 flex flex-col justify-between h-full">
-                <div className={`w-12 h-12 rounded-2xl ${bg} ${color} flex items-center justify-center shadow-inner mb-6`}>
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={icon} />
-                    </svg>
+        <div className={`p-6 rounded-[2rem] border bg-white shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow`}>
+            <div className={`p-3 rounded-2xl ${colors[color]} border`}>
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={icon} />
+                </svg>
+            </div>
+            <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{label}</p>
+                <p className="text-2xl font-black text-slate-900 leading-none mt-1">{value}</p>
+                {value2 && <p className="text-[10px] font-bold text-slate-400 mt-1">{value2}</p>}
+            </div>
+        </div>
+    );
+}
+
+function DashboardView({ recentPlans, stats }: any) {
+    return (
+        <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                    <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+                    Dernières Activités
+                </h3>
+                <div className="space-y-4">
+                    {recentPlans?.map((plan: any) => (
+                        <div key={plan.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center font-black text-blue-600">
+                                    {plan.id}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-slate-900 leading-none">{plan.entite?.titre}</p>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Par {plan.createur?.prenom} {plan.createur?.nom}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <StatusBadge status={plan.statut} />
+                                <Link href={route('admin.pilotage.plans.show', plan.id)} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                </Link>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-                <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-                    <h3 className="text-3xl font-black text-slate-900 tracking-tighter">{value}</h3>
+            </div>
+            
+            <div className="space-y-6">
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Répartition Plans</h3>
+                <div className="space-y-3">
+                    {Object.entries(stats.plans.by_status).map(([status, count]: any) => (
+                        <div key={status} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
+                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">{status}</span>
+                            <span className="text-sm font-black text-slate-900">{count}</span>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
     );
 }
 
-function StatusPill({ label, value, color }: { label: string; value: number; color: string }) {
+function EntitesTable({ data }: any) {
     return (
-        <div className={`px-6 py-4 rounded-2xl ${color} flex flex-col items-center justify-center border border-current border-opacity-10 min-w-[120px]`}>
-            <span className="text-xl font-black">{value}</span>
-            <span className="text-[9px] font-black uppercase tracking-widest opacity-70 text-center">{label}</span>
-        </div>
+        <TableContainer data={data}>
+            <thead className="bg-slate-50/50">
+                <tr>
+                    <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Formation</th>
+                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Secteur</th>
+                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Créateur</th>
+                    <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+                {data.data.map((item: any) => (
+                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-8 py-5 font-black text-slate-900 text-sm">{item.titre}</td>
+                        <td className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">{item.secteur?.nom}</td>
+                        <td className="px-6 py-5 text-xs text-slate-400">{item.createur?.prenom} {item.createur?.nom}</td>
+                        <td className="px-8 py-5 text-right space-x-2">
+                            <Link href={route('admin.pilotage.entites.show', item.id)} className="px-3 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded-lg">Détails</Link>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </TableContainer>
     );
 }
 
-function TableContainer({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
+function PlansTable({ data }: any) {
     return (
-        <div className="space-y-6">
-            {title && (
-                <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight">{title}</h3>
-                    <span className="text-[10px] font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">{count} TOTAL</span>
+        <TableContainer data={data}>
+            <thead className="bg-slate-50/50">
+                <tr>
+                    <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">ID</th>
+                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Formation</th>
+                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Statut</th>
+                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Site</th>
+                    <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+                {data.data.map((item: any) => (
+                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-8 py-5 font-black text-slate-400 text-sm">#{item.id}</td>
+                        <td className="px-6 py-5 font-black text-slate-900 text-sm">{item.entite?.titre}</td>
+                        <td className="px-6 py-5"><StatusBadge status={item.statut} /></td>
+                        <td className="px-6 py-5 text-xs font-bold text-slate-500 uppercase">{item.site_formation?.nom || 'Non défini'}</td>
+                        <td className="px-8 py-5 text-right">
+                            <Link href={route('admin.pilotage.plans.show', item.id)} className="px-3 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded-lg">Consulter</Link>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </TableContainer>
+    );
+}
+
+function SessionsTable({ data }: any) {
+    return (
+        <TableContainer data={data}>
+            <thead className="bg-slate-50/50">
+                <tr>
+                    <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Date & Heure</th>
+                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Formation</th>
+                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Site</th>
+                    <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+                {data.data.map((item: any) => (
+                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-8 py-5">
+                            <div className="text-sm font-black text-slate-900">{new Date(item.date_debut).toLocaleDateString()}</div>
+                            <div className="text-[10px] font-bold text-slate-400 uppercase">{item.heure_debut} - {item.heure_fin}</div>
+                        </td>
+                        <td className="px-6 py-5 font-black text-slate-900 text-sm">{item.plan?.entite?.titre}</td>
+                        <td className="px-6 py-5 text-xs font-bold text-slate-500 uppercase">{item.site?.nom || 'N/A'}</td>
+                        <td className="px-8 py-5 text-right">
+                            <button onClick={() => router.delete(route('admin.pilotage.sessions.destroy', item.id))} className="text-red-500 hover:text-red-700 p-2"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </TableContainer>
+    );
+}
+
+function QcmsTable({ data }: any) {
+    return (
+        <TableContainer data={data}>
+            <thead className="bg-slate-50/50">
+                <tr>
+                    <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Titre du QCM</th>
+                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Session Associée</th>
+                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Questions</th>
+                    <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+                {data.data.map((item: any) => (
+                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-8 py-5 font-black text-slate-900 text-sm">{item.titre}</td>
+                        <td className="px-6 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-tight">{item.seance?.plan?.entite?.titre}</td>
+                        <td className="px-6 py-5"><span className="px-2.5 py-1 bg-amber-50 text-amber-600 border border-amber-100 rounded-lg font-black text-[10px]">{item.questions?.length || 0} QUESTIONS</span></td>
+                        <td className="px-8 py-5 text-right">
+                            <span className="text-slate-300 text-[10px] italic">Lecture seule</span>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </TableContainer>
+    );
+}
+
+function TableContainer({ children, data }: any) {
+    return (
+        <div>
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-100">
+                    {children}
+                </table>
+            </div>
+            {data?.links && (
+                <div className="px-8 py-4 bg-slate-50/50 border-t border-slate-100">
+                    <Pagination links={data.links} />
                 </div>
             )}
-            <div className="overflow-x-auto rounded-[2rem] border border-slate-100 shadow-sm">
-                {children}
-            </div>
         </div>
+    );
+}
+
+function StatusBadge({ status }: { status: string }) {
+    const styles: any = {
+        brouillon: 'bg-slate-100 text-slate-600 border-slate-200',
+        soumis: 'bg-blue-50 text-blue-600 border-blue-100',
+        validé: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+        confirmé: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+        rejeté: 'bg-rose-50 text-rose-600 border-rose-100',
+        annulé: 'bg-red-50 text-red-600 border-red-100',
+        archivé: 'bg-gray-100 text-gray-500 border-gray-200'
+    };
+    return (
+        <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${styles[status] || styles.brouillon}`}>
+            {status}
+        </span>
     );
 }
