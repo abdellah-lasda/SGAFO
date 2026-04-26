@@ -64,6 +64,7 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->name('admin.')->grou
     Route::patch('domaines/secteurs/{secteur}', [AdminDomaineController::class, 'updateSecteur'])->name('domaines.secteurs.update');
     Route::delete('domaines/secteurs/{secteur}', [AdminDomaineController::class, 'destroySecteur'])->name('domaines.secteurs.destroy');
     Route::post('domaines/metiers', [AdminDomaineController::class, 'storeMetier'])->name('domaines.metiers.store');
+    Route::patch('domaines/metiers/{metier}', [AdminDomaineController::class, 'updateMetier'])->name('domaines.metiers.update');
     Route::delete('domaines/metiers/{metier}', [AdminDomaineController::class, 'destroyMetier'])->name('domaines.metiers.destroy');
 
     // Logistique Admin
@@ -72,6 +73,7 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->name('admin.')->grou
     Route::patch('logistique/sites/{site}', [AdminLogistiqueController::class, 'updateSite'])->name('logistique.sites.update');
     Route::delete('logistique/sites/{site}', [AdminLogistiqueController::class, 'destroySite'])->name('logistique.sites.destroy');
     Route::post('logistique/hotels', [AdminLogistiqueController::class, 'storeHotel'])->name('logistique.hotels.store');
+    Route::patch('logistique/hotels/{hotel}', [AdminLogistiqueController::class, 'updateHotel'])->name('logistique.hotels.update');
     Route::delete('logistique/hotels/{hotel}', [AdminLogistiqueController::class, 'destroyHotel'])->name('logistique.hotels.destroy');
 });
 

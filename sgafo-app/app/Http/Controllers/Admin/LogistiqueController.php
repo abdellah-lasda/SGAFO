@@ -88,6 +88,19 @@ class LogistiqueController extends Controller
         return redirect()->back()->with('success', 'Hôtel ajouté.');
     }
 
+    public function updateHotel(Request $request, Hotel $hotel)
+    {
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'ville' => 'required|string|max:255',
+            'prix_nuitee' => 'required|numeric|min:0',
+            'region_id' => 'required|exists:regions,id',
+        ]);
+
+        $hotel->update($validated);
+        return redirect()->back()->with('success', 'Hôtel mis à jour.');
+    }
+
     public function destroyHotel(Hotel $hotel)
     {
         $hotel->delete();

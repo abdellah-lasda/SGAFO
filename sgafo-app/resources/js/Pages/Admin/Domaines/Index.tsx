@@ -1,26 +1,25 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import Pagination from '@/Components/Pagination';
 import ConfirmDialog from '@/Components/ConfirmDialog';
+import Modal from '@/Components/Modal';
 
 interface Props {
     cdcs: any[];
-    secteurs: {
-        data: any[];
-        links: any[];
-        total: number;
-    };
+    secteurs: { data: any[]; links: any[]; total: number; };
     filters: { search?: string };
 }
 
 export default function Index({ cdcs, secteurs, filters }: Props) {
+    const [activeTab, setActiveTab] = useState<'cdc' | 'secteurs' | 'metiers'>('cdc');
     const [search, setSearch] = useState(filters.search || '');
     const [confirmDelete, setConfirmDelete] = useState<{ id: number, type: 'cdc' | 'secteur' | 'metier', title: string } | null>(null);
+    const [editingItem, setEditingItem] = useState<{ type: 'cdc' | 'secteur' | 'metier', data: any } | null>(null);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get(route('admin.domaines.index'), { search }, { preserveState: true, preserveScroll: true });
+        router.get(route('admin.domaines.index'), { search, tab: activeTab }, { preserveState: true });
     };
 
     const handleDelete = () => {
@@ -30,108 +29,232 @@ export default function Index({ cdcs, secteurs, filters }: Props) {
             secteur: 'admin.domaines.secteurs.destroy',
             metier: 'admin.domaines.metiers.destroy',
         };
-        router.delete(route(routes[confirmDelete.type], confirmDelete.id), {
-            onSuccess: () => setConfirmDelete(null)
-        });
+        router.delete(route(routes[confirmDelete.type], confirmDelete.id), { onSuccess: () => setConfirmDelete(null) });
     };
 
     return (
-        <AuthenticatedLayout
-            header={<span className="font-bold text-slate-900">Référentiel des Spécialités</span>}
-        >
+        <AuthenticatedLayout header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Gestion des Spécialités</h2>}>
             <Head title="Spécialités" />
 
-            <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
-                
-                {/* Action Bar */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
-                    <div>
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none">Domaines & Secteurs</h1>
-                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-2">Architecture pédagogique et métiers</p>
+            <div className="py-12">
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                    
+                    {/* Tabs Navigation */}
+                    <div className="flex border-b border-gray-200 bg-white px-4 rounded-t-lg shadow-sm">
+                        {(['cdc', 'secteurs', 'metiers'] as const).map(tab => (
+                            <button 
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`px-6 py-4 text-xs font-black uppercase tracking-[0.2em] transition-all border-b-2 ${
+                                    activeTab === tab ? 'border-ofppt-600 text-ofppt-600' : 'border-transparent text-gray-400 hover:text-gray-600'
+                                }`}
+                            >
+                                {tab === 'cdc' ? 'Domaines (CDC)' : tab === 'secteurs' ? 'Secteurs' : 'Métiers'}
+                            </button>
+                        ))}
                     </div>
 
-                    <form onSubmit={handleSearch} className="relative w-full md:w-80 group">
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Rechercher un secteur..."
-                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-medium focus:border-amber-500 focus:bg-white transition-all outline-none"
-                        />
-                        <svg className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-amber-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </form>
-                </div>
+                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-b-lg border border-gray-200">
+                        {/* Search Bar */}
+                        <div className="p-6 border-b border-gray-200">
+                            <form onSubmit={handleSearch} className="relative w-full md:w-80">
+                                <input
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Rechercher..."
+                                    className="w-full pl-10 pr-4 py-2 border-gray-300 rounded-md text-sm shadow-sm"
+                                />
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center"><svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></div>
+                            </form>
+                        </div>
 
-                {/* Content */}
-                <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-slate-100">
-                            <thead className="bg-slate-50/50">
-                                <tr>
-                                    <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Secteur</th>
-                                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Domaine (CDC)</th>
-                                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Métiers Rattachés</th>
-                                    <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 bg-white">
-                                {secteurs.data.map(sect => (
-                                    <tr key={sect.id} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="px-8 py-5">
-                                            <div className="text-sm font-black text-slate-900 group-hover:text-amber-600 transition-colors">{sect.nom}</div>
-                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{sect.code}</div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-black border border-slate-200 uppercase tracking-widest">
-                                                {sect.cdc?.nom || 'N/A'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {sect.metiers?.map((m: any) => (
-                                                    <div key={m.id} className="flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-md border border-amber-100/50 text-[9px] font-black uppercase">
-                                                        {m.nom}
-                                                        <button 
-                                                            onClick={() => setConfirmDelete({ id: m.id, type: 'metier', title: m.nom })}
-                                                            className="ml-1 text-amber-300 hover:text-amber-600 transition-colors"
-                                                        >
-                                                            ×
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                                {sect.metiers?.length === 0 && <span className="text-[10px] text-slate-300 italic">Aucun métier</span>}
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-5 text-right">
-                                            <button 
-                                                onClick={() => setConfirmDelete({ id: sect.id, type: 'secteur', title: sect.nom })}
-                                                className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="px-8 py-6 bg-slate-50/50 border-t border-slate-100">
-                        <Pagination links={secteurs.links} />
+                        {/* Table Content */}
+                        <div className="overflow-x-auto">
+                            {activeTab === 'cdc' && (
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom du Domaine</th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {cdcs.map(cdc => (
+                                            <tr key={cdc.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{cdc.code}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{cdc.nom}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                                    <button onClick={() => setEditingItem({ type: 'cdc', data: cdc })} className="text-ofppt-600 hover:text-ofppt-900 font-bold uppercase text-[10px]">Modifier</button>
+                                                    <button onClick={() => setConfirmDelete({ id: cdc.id, type: 'cdc', title: cdc.nom })} className="text-red-600 hover:text-red-900 font-bold uppercase text-[10px]">Supprimer</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+
+                            {activeTab === 'secteurs' && (
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom du Secteur</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Domaine</th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {secteurs.data.map(sect => (
+                                            <tr key={sect.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{sect.code}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{sect.nom}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sect.cdc?.nom}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                                    <button onClick={() => setEditingItem({ type: 'secteur', data: sect })} className="text-ofppt-600 hover:text-ofppt-900 font-bold uppercase text-[10px]">Modifier</button>
+                                                    <button onClick={() => setConfirmDelete({ id: sect.id, type: 'secteur', title: sect.nom })} className="text-red-600 hover:text-red-900 font-bold uppercase text-[10px]">Supprimer</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+
+                            {activeTab === 'metiers' && (
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom du Métier</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Secteur</th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {secteurs.data.flatMap(s => s.metiers).map((m: any) => m && (
+                                            <tr key={m.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{m.nom}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {secteurs.data.find(s => s.id === m.secteur_id)?.nom}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                                    <button onClick={() => setEditingItem({ type: 'metier', data: m })} className="text-ofppt-600 hover:text-ofppt-900 font-bold uppercase text-[10px]">Modifier</button>
+                                                    <button onClick={() => setConfirmDelete({ id: m.id, type: 'metier', title: m.nom })} className="text-red-600 hover:text-red-900 font-bold uppercase text-[10px]">Supprimer</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+
+                        {/* Pagination for secteurs/metiers */}
+                        {activeTab !== 'cdc' && (
+                            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                                <Pagination links={secteurs.links} />
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
+            {/* Edit Modal */}
+            {editingItem && (
+                <EditSpecialiteModal 
+                    isOpen={!!editingItem} 
+                    onClose={() => setEditingItem(null)} 
+                    item={editingItem.data} 
+                    type={editingItem.type} 
+                    cdcs={cdcs}
+                    secteurs={secteurs.data}
+                />
+            )}
+
             <ConfirmDialog 
                 isOpen={!!confirmDelete}
-                title={`Supprimer ${confirmDelete?.type === 'metier' ? 'le métier' : confirmDelete?.type === 'secteur' ? 'le secteur' : 'le domaine'} ?`}
-                message={`Êtes-vous sûr de vouloir supprimer "${confirmDelete?.title}" ?`}
+                title="Confirmer la suppression"
+                message={`Voulez-vous supprimer "${confirmDelete?.title}" ?`}
                 confirmLabel="Supprimer"
                 isDanger={true}
                 onConfirm={handleDelete}
                 onCancel={() => setConfirmDelete(null)}
             />
         </AuthenticatedLayout>
+    );
+}
+
+function EditSpecialiteModal({ isOpen, onClose, item, type, cdcs, secteurs }: any) {
+    const { data, setData, patch, processing, errors } = useForm({
+        nom: item.nom || '',
+        code: item.code || '',
+        description: item.description || '',
+        cdc_id: item.cdc_id || '',
+        secteur_id: item.secteur_id || '',
+    });
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const routes: any = {
+            cdc: 'admin.domaines.cdcs.update',
+            secteur: 'admin.domaines.secteurs.update',
+            metier: 'admin.domaines.metiers.update',
+        };
+        patch(route(routes[type], item.id), {
+            onSuccess: () => onClose(),
+        });
+    };
+
+    return (
+        <Modal show={isOpen} onClose={onClose}>
+            <form onSubmit={submit} className="p-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Modifier {type.toUpperCase()}</h2>
+                <div className="grid grid-cols-1 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Nom</label>
+                        <input type="text" value={data.nom} onChange={e => setData('nom', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        {errors.nom && <div className="text-red-500 text-xs mt-1">{errors.nom}</div>}
+                    </div>
+                    
+                    {type !== 'metier' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Code</label>
+                            <input type="text" value={data.code} onChange={e => setData('code', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                            {errors.code && <div className="text-red-500 text-xs mt-1">{errors.code}</div>}
+                        </div>
+                    )}
+
+                    {type === 'cdc' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea value={data.description} onChange={e => setData('description', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" rows={3} />
+                        </div>
+                    )}
+
+                    {type === 'secteur' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Domaine (CDC)</label>
+                            <select value={data.cdc_id} onChange={e => setData('cdc_id', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                <option value="">Choisir...</option>
+                                {cdcs.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
+                            </select>
+                        </div>
+                    )}
+
+                    {type === 'metier' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Secteur</label>
+                            <select value={data.secteur_id} onChange={e => setData('secteur_id', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                <option value="">Choisir...</option>
+                                {secteurs.map((s: any) => <option key={s.id} value={s.id}>{s.nom}</option>)}
+                            </select>
+                        </div>
+                    )}
+                </div>
+                <div className="mt-6 flex justify-end gap-3">
+                    <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 uppercase font-black tracking-widest">Annuler</button>
+                    <button type="submit" disabled={processing} className="px-6 py-2 bg-ofppt-600 text-white rounded-md font-black text-[10px] uppercase tracking-widest shadow-lg">Enregistrer</button>
+                </div>
+            </form>
+        </Modal>
     );
 }

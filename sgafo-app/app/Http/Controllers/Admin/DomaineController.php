@@ -114,6 +114,18 @@ class DomaineController extends Controller
         return redirect()->back()->with('success', 'Métier créé.');
     }
 
+    public function updateMetier(Request $request, Metier $metier)
+    {
+        $validated = $request->validate([
+            'nom' => 'required|string|max:150',
+            'code' => 'nullable|string|max:20|unique:metiers,code,' . $metier->id,
+            'secteur_id' => 'required|exists:secteurs,id',
+        ]);
+
+        $metier->update($validated);
+        return redirect()->back()->with('success', 'Métier mis à jour.');
+    }
+
     public function destroyMetier(Metier $metier)
     {
         $metier->delete();
