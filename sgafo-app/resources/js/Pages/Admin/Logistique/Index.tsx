@@ -16,8 +16,6 @@ export default function Index({ sites, hotels, regions, filters }: Props) {
     const [activeTab, setActiveTab] = useState<'sites' | 'hotels'>('sites');
     const [search, setSearch] = useState(filters.search || '');
     const [confirmDelete, setConfirmDelete] = useState<{ id: number, type: 'site' | 'hotel', title: string } | null>(null);
-    
-    // Modals states
     const [editingItem, setEditingItem] = useState<{ type: 'site' | 'hotel', data: any } | null>(null);
 
     const handleSearch = (e: React.FormEvent) => {
@@ -32,100 +30,148 @@ export default function Index({ sites, hotels, regions, filters }: Props) {
     };
 
     return (
-        <AuthenticatedLayout header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Gestion Logistique</h2>}>
+        <AuthenticatedLayout header={<span className="font-bold text-slate-900 uppercase tracking-tight">Logistique & Infrastructures</span>}>
             <Head title="Logistique" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                    
-                    {/* Tabs Navigation */}
-                    <div className="flex border-b border-gray-200">
+            <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500">
+                
+                {/* Stats / Overview Bar */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm flex items-center gap-6">
+                        <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sites de formation</p>
+                            <p className="text-3xl font-black text-slate-900 leading-none mt-1">{sites.total}</p>
+                        </div>
+                    </div>
+                    <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm flex items-center gap-6">
+                        <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002 2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hébergements (Hôtels)</p>
+                            <p className="text-3xl font-black text-slate-900 leading-none mt-1">{hotels.total}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Navigation & Search */}
+                <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex gap-1 p-1">
                         <button 
                             onClick={() => setActiveTab('sites')}
-                            className={`px-6 py-3 text-sm font-bold uppercase tracking-widest transition-colors ${activeTab === 'sites' ? 'border-b-2 border-ofppt-600 text-ofppt-600' : 'text-gray-400 hover:text-gray-600'}`}
+                            className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'sites' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'}`}
                         >
                             Sites de Formation
                         </button>
                         <button 
                             onClick={() => setActiveTab('hotels')}
-                            className={`px-6 py-3 text-sm font-bold uppercase tracking-widest transition-colors ${activeTab === 'hotels' ? 'border-b-2 border-ofppt-600 text-ofppt-600' : 'text-gray-400 hover:text-gray-600'}`}
+                            className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'hotels' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'}`}
                         >
                             Hébergements (Hôtels)
                         </button>
                     </div>
 
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
-                        {/* Search Bar */}
-                        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-                            <form onSubmit={handleSearch} className="relative w-full md:w-80">
-                                <input
-                                    type="text"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    placeholder={`Rechercher un ${activeTab === 'sites' ? 'site' : 'hôtel'}...`}
-                                    className="w-full pl-10 pr-4 py-2 border-gray-300 rounded-md text-sm"
-                                />
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center"><svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></div>
-                            </form>
-                        </div>
+                    <form onSubmit={handleSearch} className="relative w-full md:w-64 group">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Rechercher..."
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-xs font-bold focus:border-blue-500 focus:bg-white transition-all outline-none"
+                        />
+                        <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </form>
+                </div>
 
-                        {/* Table Content */}
-                        <div className="overflow-x-auto">
-                            {activeTab === 'sites' ? (
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom du Site</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ville</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Capacité</th>
-                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                {/* Table Container */}
+                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        {activeTab === 'sites' ? (
+                            <table className="min-w-full divide-y divide-slate-100">
+                                <thead className="bg-slate-50/50">
+                                    <tr>
+                                        <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Nom du Site</th>
+                                        <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Ville & Région</th>
+                                        <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Capacité</th>
+                                        <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {sites.data.map(site => (
+                                        <tr key={site.id} className="hover:bg-slate-50/50 transition-colors group">
+                                            <td className="px-8 py-5">
+                                                <div className="text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors">{site.nom}</div>
+                                                <div className="text-[10px] font-bold text-slate-400 uppercase mt-1">ID: #{site.id}</div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="text-xs font-bold text-slate-700">{site.ville}</div>
+                                                <div className="text-[9px] font-black text-blue-400 uppercase mt-1 tracking-wider">{site.region?.nom}</div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black uppercase border border-slate-200">
+                                                    {site.capacite} PLACES
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-5 text-right space-x-2">
+                                                <button onClick={() => setEditingItem({ type: 'site', data: site })} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                </button>
+                                                <button onClick={() => setConfirmDelete({ id: site.id, type: 'site', title: site.nom })} className="p-2 text-slate-400 hover:text-rose-600 transition-colors">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {sites.data.map(site => (
-                                            <tr key={site.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{site.nom}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{site.ville}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{site.capacite} places</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                                                    <button onClick={() => setEditingItem({ type: 'site', data: site })} className="text-ofppt-600 hover:text-ofppt-900">Modifier</button>
-                                                    <button onClick={() => setConfirmDelete({ id: site.id, type: 'site', title: site.nom })} className="text-red-600 hover:text-red-900">Supprimer</button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            ) : (
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hôtel</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ville</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tarif Nuitée</th>
-                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <table className="min-w-full divide-y divide-slate-100">
+                                <thead className="bg-slate-50/50">
+                                    <tr>
+                                        <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Hôtel</th>
+                                        <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Ville & Région</th>
+                                        <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Tarif</th>
+                                        <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {hotels.data.map(hotel => (
+                                        <tr key={hotel.id} className="hover:bg-slate-50/50 transition-colors group">
+                                            <td className="px-8 py-5">
+                                                <div className="text-sm font-black text-slate-900 group-hover:text-amber-600 transition-colors">{hotel.nom}</div>
+                                                <div className="text-[10px] font-bold text-slate-400 uppercase mt-1">Hébergement Certifié</div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="text-xs font-bold text-slate-700">{hotel.ville}</div>
+                                                <div className="text-[9px] font-black text-amber-500 uppercase mt-1 tracking-wider">{hotel.region?.nom}</div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase border border-amber-100">
+                                                    {hotel.prix_nuitee} MAD / NUIT
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-5 text-right space-x-2">
+                                                <button onClick={() => setEditingItem({ type: 'hotel', data: hotel })} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                </button>
+                                                <button onClick={() => setConfirmDelete({ id: hotel.id, type: 'hotel', title: hotel.nom })} className="p-2 text-slate-400 hover:text-rose-600 transition-colors">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {hotels.data.map(hotel => (
-                                            <tr key={hotel.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{hotel.nom}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hotel.ville}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hotel.prix_nuitee} MAD</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                                                    <button onClick={() => setEditingItem({ type: 'hotel', data: hotel })} className="text-ofppt-600 hover:text-ofppt-900">Modifier</button>
-                                                    <button onClick={() => setConfirmDelete({ id: hotel.id, type: 'hotel', title: hotel.nom })} className="text-red-600 hover:text-red-900">Supprimer</button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-
-                        {/* Pagination */}
-                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                            <Pagination links={activeTab === 'sites' ? sites.links : hotels.links} />
-                        </div>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                    {/* Pagination */}
+                    <div className="px-8 py-4 bg-slate-50/50 border-t border-slate-100">
+                        <Pagination links={activeTab === 'sites' ? sites.links : hotels.links} />
                     </div>
                 </div>
             </div>
@@ -167,8 +213,6 @@ function EditModal({ isOpen, onClose, item, type, regions }: any) {
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         const r = type === 'site' ? 'admin.logistique.sites.update' : 'admin.logistique.hotels.update';
-        // Note: For hotels, I might need to check if the route is correct. In web.php I defined update for site but maybe not hotel.
-        // Actually I'll check web.php after this.
         patch(route(r, item.id), {
             onSuccess: () => onClose(),
         });
@@ -176,40 +220,45 @@ function EditModal({ isOpen, onClose, item, type, regions }: any) {
 
     return (
         <Modal show={isOpen} onClose={onClose}>
-            <form onSubmit={submit} className="p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">Modifier {type === 'site' ? 'le site' : "l'hôtel"}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={submit} className="p-8 space-y-6">
+                <div>
+                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Modifier {type === 'site' ? 'le site' : "l'hôtel"}</h2>
+                    <p className="text-xs font-bold text-slate-400 uppercase mt-1">ID Unique: #{item.id}</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700">Nom</label>
-                        <input type="text" value={data.nom} onChange={e => setData('nom', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                        {errors.nom && <div className="text-red-500 text-xs mt-1">{errors.nom}</div>}
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nom</label>
+                        <input type="text" value={data.nom} onChange={e => setData('nom', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-blue-500 focus:bg-white transition-all outline-none" />
+                        {errors.nom && <div className="text-rose-500 text-[10px] font-black uppercase mt-1">{errors.nom}</div>}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Ville</label>
-                        <input type="text" value={data.ville} onChange={e => setData('ville', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ville</label>
+                        <input type="text" value={data.ville} onChange={e => setData('ville', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-blue-500 focus:bg-white transition-all outline-none" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Région</label>
-                        <select value={data.region_id} onChange={e => setData('region_id', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Région</label>
+                        <select value={data.region_id} onChange={e => setData('region_id', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-blue-500 focus:bg-white transition-all outline-none">
                             <option value="">Sélectionner...</option>
                             {regions.map((r: any) => <option key={r.id} value={r.id}>{r.nom}</option>)}
                         </select>
                     </div>
                     {type === 'site' ? (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Capacité</label>
-                            <input type="number" value={data.capacite} onChange={e => setData('capacite', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        <div className="col-span-2">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Capacité d'accueil</label>
+                            <input type="number" value={data.capacite} onChange={e => setData('capacite', parseInt(e.target.value))} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-blue-500 focus:bg-white transition-all outline-none" />
                         </div>
                     ) : (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Prix Nuitée (MAD)</label>
-                            <input type="number" value={data.prix_nuitee} onChange={e => setData('prix_nuitee', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        <div className="col-span-2">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tarif Nuitée (MAD)</label>
+                            <input type="number" value={data.prix_nuitee} onChange={e => setData('prix_nuitee', parseFloat(e.target.value))} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-blue-500 focus:bg-white transition-all outline-none" />
                         </div>
                     )}
                 </div>
-                <div className="mt-6 flex justify-end gap-3">
-                    <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">Annuler</button>
-                    <button type="submit" disabled={processing} className="px-4 py-2 bg-ofppt-600 text-white rounded-md font-bold text-sm disabled:opacity-50">Enregistrer</button>
+
+                <div className="flex justify-end gap-3 pt-4">
+                    <button type="button" onClick={onClose} className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors">Annuler</button>
+                    <button type="submit" disabled={processing} className="px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 disabled:opacity-50 transition-all active:scale-95">Enregistrer</button>
                 </div>
             </form>
         </Modal>

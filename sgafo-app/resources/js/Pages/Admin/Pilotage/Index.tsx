@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Pagination from '@/Components/Pagination';
+import ConfirmDialog from '@/Components/ConfirmDialog';
 
 interface Props {
     stats: any;
@@ -17,9 +18,24 @@ interface Props {
 export default function Index({ stats, currentTab, recent_plans, entites, plans, sessions, qcms, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
 
+    const [confirmDelete, setConfirmDelete] = useState<{ id: number, type: 'plan' | 'entite' | 'session', title: string } | null>(null);
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(route('admin.pilotage.index'), { tab: currentTab, search }, { preserveState: true });
+    };
+
+    const handleDelete = () => {
+        if (!confirmDelete) return;
+        const routes: any = {
+            plan: 'admin.pilotage.plans.destroy',
+            entite: 'admin.pilotage.entites.destroy',
+            session: 'admin.pilotage.sessions.destroy'
+        };
+        router.delete(route(routes[confirmDelete.type], confirmDelete.id), {
+            onSuccess: () => setConfirmDelete(null),
+            preserveScroll: true
+        });
     };
 
     const tabs = [
@@ -85,12 +101,22 @@ export default function Index({ stats, currentTab, recent_plans, entites, plans,
                 {/* Tab Content */}
                 <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
                     {currentTab === 'dashboard' && <DashboardView recentPlans={recent_plans} stats={stats} />}
-                    {currentTab === 'entites' && <EntitesTable data={entites} />}
-                    {currentTab === 'plans' && <PlansTable data={plans} />}
-                    {currentTab === 'sessions' && <SessionsTable data={sessions} />}
+                    {currentTab === 'entites' && <EntitesTable data={entites} onDelete={(id: number, title: string) => setConfirmDelete({id, type: 'entite', title})} />}
+                    {currentTab === 'plans' && <PlansTable data={plans} onDelete={(id: number, title: string) => setConfirmDelete({id, type: 'plan', title})} />}
+                    {currentTab === 'sessions' && <SessionsTable data={sessions} onDelete={(id: number, title: string) => setConfirmDelete({id, type: 'session', title})} />}
                     {currentTab === 'qcms' && <QcmsTable data={qcms} />}
                 </div>
             </div>
+
+            <ConfirmDialog 
+                isOpen={!!confirmDelete}
+                title="Confirmer la suppression"
+                message={`Êtes-vous sûr de vouloir supprimer définitivement "${confirmDelete?.title}" ? Cette action est irréversible.`}
+                confirmLabel="Supprimer"
+                isDanger={true}
+                onConfirm={handleDelete}
+                onCancel={() => setConfirmDelete(null)}
+            />
         </AuthenticatedLayout>
     );
 }
@@ -129,13 +155,13 @@ function DashboardView({ recentPlans, stats }: any) {
                 </h3>
                 <div className="space-y-4">
                     {recentPlans?.map((plan: any) => (
-                        <div key={plan.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                        <div key={plan.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:bg-white transition-colors">
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center font-black text-blue-600">
+                                <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center font-black text-blue-600 border border-slate-100 group-hover:border-blue-100 transition-colors">
                                     {plan.id}
                                 </div>
                                 <div>
-                                    <p className="text-sm font-black text-slate-900 leading-none">{plan.entite?.titre}</p>
+                                    <p className="text-sm font-black text-slate-900 leading-none group-hover:text-blue-600 transition-colors">{plan.entite?.titre}</p>
                                     <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Par {plan.createur?.prenom} {plan.createur?.nom}</p>
                                 </div>
                             </div>
@@ -165,7 +191,7 @@ function DashboardView({ recentPlans, stats }: any) {
     );
 }
 
-function EntitesTable({ data }: any) {
+function EntitesTable({ data, onDelete }: any) {
     return (
         <TableContainer data={data}>
             <thead className="bg-slate-50/50">
@@ -178,12 +204,19 @@ function EntitesTable({ data }: any) {
             </thead>
             <tbody className="divide-y divide-slate-100">
                 {data.data.map((item: any) => (
-                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-8 py-5 font-black text-slate-900 text-sm">{item.titre}</td>
-                        <td className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">{item.secteur?.nom}</td>
-                        <td className="px-6 py-5 text-xs text-slate-400">{item.createur?.prenom} {item.createur?.nom}</td>
-                        <td className="px-8 py-5 text-right space-x-2">
-                            <Link href={route('admin.pilotage.entites.show', item.id)} className="px-3 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded-lg">Détails</Link>
+                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
+                        <td className="px-8 py-5 font-black text-slate-900 text-sm group-hover:text-blue-600 transition-colors">{item.titre}</td>
+                        <td className="px-6 py-5">
+                            <span className="px-2.5 py-1 bg-slate-50 text-slate-500 rounded-lg font-black text-[9px] uppercase border border-slate-100">{item.secteur?.nom}</span>
+                        </td>
+                        <td className="px-6 py-5 text-xs text-slate-400 font-bold">{item.createur?.prenom} {item.createur?.nom}</td>
+                        <td className="px-8 py-5 text-right space-x-2 flex justify-end items-center">
+                            <Link href={route('admin.pilotage.entites.show', item.id)} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            </Link>
+                            <button onClick={() => onDelete(item.id, item.titre)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
                         </td>
                     </tr>
                 ))}
@@ -192,7 +225,7 @@ function EntitesTable({ data }: any) {
     );
 }
 
-function PlansTable({ data }: any) {
+function PlansTable({ data, onDelete }: any) {
     return (
         <TableContainer data={data}>
             <thead className="bg-slate-50/50">
@@ -206,13 +239,18 @@ function PlansTable({ data }: any) {
             </thead>
             <tbody className="divide-y divide-slate-100">
                 {data.data.map((item: any) => (
-                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
                         <td className="px-8 py-5 font-black text-slate-400 text-sm">#{item.id}</td>
-                        <td className="px-6 py-5 font-black text-slate-900 text-sm">{item.entite?.titre}</td>
+                        <td className="px-6 py-5 font-black text-slate-900 text-sm group-hover:text-blue-600 transition-colors">{item.entite?.titre}</td>
                         <td className="px-6 py-5"><StatusBadge status={item.statut} /></td>
-                        <td className="px-6 py-5 text-xs font-bold text-slate-500 uppercase">{item.site_formation?.nom || 'Non défini'}</td>
-                        <td className="px-8 py-5 text-right">
-                            <Link href={route('admin.pilotage.plans.show', item.id)} className="px-3 py-1 bg-slate-900 text-white text-[9px] font-black uppercase rounded-lg">Consulter</Link>
+                        <td className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-tight">{item.site_formation?.nom || 'Non défini'}</td>
+                        <td className="px-8 py-5 text-right space-x-2 flex justify-end items-center">
+                            <Link href={route('admin.pilotage.plans.show', item.id)} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            </Link>
+                            <button onClick={() => onDelete(item.id, item.entite?.titre || 'Plan #' + item.id)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
                         </td>
                     </tr>
                 ))}
@@ -221,7 +259,7 @@ function PlansTable({ data }: any) {
     );
 }
 
-function SessionsTable({ data }: any) {
+function SessionsTable({ data, onDelete }: any) {
     return (
         <TableContainer data={data}>
             <thead className="bg-slate-50/50">
@@ -234,15 +272,17 @@ function SessionsTable({ data }: any) {
             </thead>
             <tbody className="divide-y divide-slate-100">
                 {data.data.map((item: any) => (
-                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
                         <td className="px-8 py-5">
-                            <div className="text-sm font-black text-slate-900">{new Date(item.date_debut).toLocaleDateString()}</div>
-                            <div className="text-[10px] font-bold text-slate-400 uppercase">{item.heure_debut} - {item.heure_fin}</div>
+                            <div className="text-sm font-black text-slate-900">{new Date(item.date).toLocaleDateString()}</div>
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.heure_debut} - {item.heure_fin}</div>
                         </td>
-                        <td className="px-6 py-5 font-black text-slate-900 text-sm">{item.plan?.entite?.titre}</td>
-                        <td className="px-6 py-5 text-xs font-bold text-slate-500 uppercase">{item.site?.nom || 'N/A'}</td>
+                        <td className="px-6 py-5 font-black text-slate-900 text-sm group-hover:text-blue-600 transition-colors">{item.plan?.entite?.titre}</td>
+                        <td className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase">{item.site?.nom || 'N/A'}</td>
                         <td className="px-8 py-5 text-right">
-                            <button onClick={() => router.delete(route('admin.pilotage.sessions.destroy', item.id))} className="text-red-500 hover:text-red-700 p-2"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                            <button onClick={() => onDelete(item.id, `Séance du ${new Date(item.date).toLocaleDateString()}`)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
                         </td>
                     </tr>
                 ))}

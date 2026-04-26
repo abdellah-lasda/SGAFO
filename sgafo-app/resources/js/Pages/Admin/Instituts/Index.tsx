@@ -27,63 +27,78 @@ export default function Index({ instituts, regions, filters }: Props) {
     };
 
     return (
-        <AuthenticatedLayout header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Gestion des Établissements</h2>}>
+        <AuthenticatedLayout header={<span className="font-bold text-slate-900 uppercase tracking-tight">Réseau des Établissements</span>}>
             <Head title="Établissements" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
-                        
-                        <div className="p-6 bg-white border-b border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
-                            <div>
-                                <h3 className="text-lg font-medium text-gray-900">Instituts et Centres</h3>
-                                <p className="text-sm text-gray-500">Gérez les informations des établissements.</p>
-                            </div>
-                            <form onSubmit={handleSearch} className="relative w-full md:w-80">
-                                <input
-                                    type="text"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Rechercher..."
-                                    className="w-full pl-10 pr-4 py-2 border-gray-300 rounded-md text-sm shadow-sm"
-                                />
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center"><svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></div>
-                            </form>
+            <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500">
+                
+                {/* Header & Search */}
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 ml-2">
+                        <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                         </div>
+                        <div>
+                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Instituts</h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase">{instituts.total} Centres de formation</p>
+                        </div>
+                    </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Région</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ville</th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <form onSubmit={handleSearch} className="relative w-full md:w-64 group">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Rechercher un institut..."
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-xs font-bold focus:border-blue-500 focus:bg-white transition-all outline-none"
+                        />
+                        <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </form>
+                </div>
+
+                {/* Table Container */}
+                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-slate-100">
+                            <thead className="bg-slate-50/50">
+                                <tr>
+                                    <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Code & Nom</th>
+                                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Région de Rattachement</th>
+                                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Ville</th>
+                                    <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {instituts.data.map(inst => (
+                                    <tr key={inst.id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-8 py-5">
+                                            <div className="text-sm font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{inst.nom}</div>
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase mt-1">Code: {inst.code}</div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[9px] font-black uppercase border border-indigo-100">
+                                                {inst.region?.nom}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-5 text-xs font-bold text-slate-500 uppercase">{inst.ville}</td>
+                                        <td className="px-8 py-5 text-right space-x-2">
+                                            <button onClick={() => setEditingInstitut(inst)} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                            </button>
+                                            <button onClick={() => setConfirmDelete(inst)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors">
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {instituts.data.map(inst => (
-                                        <tr key={inst.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{inst.code}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{inst.nom}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-bold uppercase border border-blue-100">{inst.region?.nom}</span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{inst.ville}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                                                <button onClick={() => setEditingInstitut(inst)} className="text-ofppt-600 hover:text-ofppt-900">Modifier</button>
-                                                <button onClick={() => setConfirmDelete(inst)} className="text-red-600 hover:text-red-900">Supprimer</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                            <Pagination links={instituts.links} />
-                        </div>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    {/* Pagination */}
+                    <div className="px-8 py-4 bg-slate-50/50 border-t border-slate-100">
+                        <Pagination links={instituts.links} />
                     </div>
                 </div>
             </div>
@@ -129,38 +144,43 @@ function EditInstitutModal({ isOpen, onClose, institut, regions }: any) {
 
     return (
         <Modal show={isOpen} onClose={onClose}>
-            <form onSubmit={submit} className="p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">Modifier l'établissement</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={submit} className="p-8 space-y-6">
+                <div>
+                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Modifier l'Établissement</h2>
+                    <p className="text-xs font-bold text-slate-400 uppercase mt-1">Code Système: {institut.code}</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700">Nom de l'institut</label>
-                        <input type="text" value={data.nom} onChange={e => setData('nom', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                        {errors.nom && <div className="text-red-500 text-xs mt-1">{errors.nom}</div>}
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nom de l'institut</label>
+                        <input type="text" value={data.nom} onChange={e => setData('nom', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" />
+                        {errors.nom && <div className="text-rose-500 text-[10px] font-black uppercase mt-1">{errors.nom}</div>}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Code</label>
-                        <input type="text" value={data.code} onChange={e => setData('code', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                        {errors.code && <div className="text-red-500 text-xs mt-1">{errors.code}</div>}
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Code</label>
+                        <input type="text" value={data.code} onChange={e => setData('code', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" />
+                        {errors.code && <div className="text-rose-500 text-[10px] font-black uppercase mt-1">{errors.code}</div>}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Ville</label>
-                        <input type="text" value={data.ville} onChange={e => setData('ville', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ville</label>
+                        <input type="text" value={data.ville} onChange={e => setData('ville', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" />
                     </div>
                     <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700">Région</label>
-                        <select value={data.region_id} onChange={e => setData('region_id', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Région</label>
+                        <select value={data.region_id} onChange={e => setData('region_id', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none">
                             <option value="">Sélectionner une région...</option>
                             {regions.map((r: any) => <option key={r.id} value={r.id}>{r.nom}</option>)}
                         </select>
                     </div>
                     <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700">Adresse</label>
-                        <input type="text" value={data.adresse} onChange={e => setData('adresse', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Adresse</label>
+                        <input type="text" value={data.adresse} onChange={e => setData('adresse', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" />
                     </div>
                 </div>
-                <div className="mt-6 flex justify-end gap-3">
-                    <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 font-bold uppercase tracking-widest">Annuler</button>
-                    <button type="submit" disabled={processing} className="px-6 py-2 bg-ofppt-600 text-white rounded-md font-bold text-xs uppercase tracking-widest disabled:opacity-50 shadow-lg">Enregistrer</button>
+
+                <div className="flex justify-end gap-3 pt-4">
+                    <button type="button" onClick={onClose} className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors">Annuler</button>
+                    <button type="submit" disabled={processing} className="px-8 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20 disabled:opacity-50 transition-all active:scale-95">Mettre à jour</button>
                 </div>
             </form>
         </Modal>
