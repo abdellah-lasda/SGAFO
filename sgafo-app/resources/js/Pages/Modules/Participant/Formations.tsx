@@ -128,10 +128,32 @@ export default function Formations({ plans, allSeances, stats }: Props) {
 
                     <div className="flex flex-1 items-center justify-end gap-4 max-w-3xl">
                         {viewMode === 'calendar' && activeTab === 'timeline' ? (
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
+                                {/* Scale Selector */}
+                                <div className="flex bg-slate-100 p-1 rounded-xl">
+                                    <button 
+                                        onClick={() => setCalendarScale('week')}
+                                        className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${calendarScale === 'week' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    >
+                                        Semaine
+                                    </button>
+                                    <button 
+                                        onClick={() => setCalendarScale('month')}
+                                        className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${calendarScale === 'month' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    >
+                                        Mois
+                                    </button>
+                                </div>
+
                                 <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
                                     <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-1 hover:bg-white rounded-lg transition-all text-slate-400 hover:text-blue-600">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
+                                    </button>
+                                    <button 
+                                        onClick={() => setCurrentMonth(new Date())}
+                                        className="text-[10px] font-black uppercase tracking-widest px-2 hover:text-blue-600 transition-colors"
+                                    >
+                                        Aujourd'hui
                                     </button>
                                     <span className="text-[10px] font-black uppercase tracking-widest min-w-[120px] text-center text-slate-700">
                                         {format(currentMonth, 'MMMM yyyy', { locale: fr })}
@@ -244,27 +266,53 @@ export default function Formations({ plans, allSeances, stats }: Props) {
                                             return (
                                                 <div 
                                                     key={idx} 
-                                                    className={`min-h-[160px] p-3 border-r border-b border-slate-100 last:border-r-0 transition-all hover:bg-slate-50/50 ${!isCurrentMonth ? 'bg-slate-50/30 opacity-40' : ''}`}
+                                                    className={`${calendarScale === 'week' ? 'min-h-[400px]' : 'min-h-[160px]'} p-3 border-r border-b border-slate-100 last:border-r-0 transition-all hover:bg-slate-50/50 ${!isCurrentMonth && calendarScale === 'month' ? 'bg-slate-50/30 opacity-40' : ''}`}
                                                 >
-                                                    <div className="mb-2">
+                                                    <div className="flex justify-between items-center mb-4">
                                                         <span className={`w-8 h-8 flex items-center justify-center text-[12px] font-black rounded-xl ${isToday ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-slate-400'}`}>
                                                             {format(day, 'd')}
                                                         </span>
+                                                        {calendarScale === 'week' && (
+                                                            <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
+                                                                {format(day, 'EEEE', { locale: fr })}
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    <div className="space-y-2">
-                                                        {daySeances.map(s => (
+                                                    <div className="space-y-3">
+                                                        {daySeances.length > 0 ? daySeances.map(s => (
                                                             <Link 
                                                                 key={s.id}
                                                                 href={route('participant.seance.show', s.id)}
-                                                                className={`block p-2 rounded-xl border text-[9px] font-bold leading-tight transition-all hover:scale-105 hover:shadow-lg ${
-                                                                    s.statut === 'terminée' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-blue-50 border-blue-100 text-blue-700'
+                                                                className={`block p-3 rounded-2xl border text-[9px] font-bold leading-tight transition-all hover:scale-[1.03] hover:shadow-xl group ${
+                                                                    s.statut === 'terminée' ? 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100' : 
+                                                                    s.statut === 'confirmée' ? 'bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100' :
+                                                                    'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'
                                                                 }`}
                                                             >
-                                                                <div className="line-clamp-2 uppercase tracking-tighter">
-                                                                    {s.plan.titre}
+                                                                <div className="flex justify-between items-start gap-2 mb-2">
+                                                                    <span className="uppercase tracking-widest text-[8px] font-black opacity-60">
+                                                                        {s.debut} - {s.fin}
+                                                                    </span>
+                                                                    <div className={`w-1.5 h-1.5 rounded-full ${
+                                                                        s.statut === 'terminée' ? 'bg-emerald-500' : 
+                                                                        s.statut === 'confirmée' ? 'bg-blue-500' : 'bg-slate-300'
+                                                                    }`}></div>
+                                                                </div>
+                                                                <div className="line-clamp-2 uppercase tracking-tight mb-1 group-hover:text-blue-900">
+                                                                    {s.plan.entite?.titre || 'Formation'}
+                                                                </div>
+                                                                <div className="text-[8px] opacity-50 flex items-center gap-1">
+                                                                    <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                                    {s.site?.nom || 'Lieu non spécifié'}
                                                                 </div>
                                                             </Link>
-                                                        ))}
+                                                        )) : (
+                                                            calendarScale === 'week' && (
+                                                                <div className="h-full flex items-center justify-center py-10 opacity-20">
+                                                                    <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                                </div>
+                                                            )
+                                                        )}
                                                     </div>
                                                 </div>
                                             );
