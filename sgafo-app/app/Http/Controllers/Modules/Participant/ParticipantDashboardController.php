@@ -17,8 +17,11 @@ class ParticipantDashboardController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Récupérer les plans auxquels le participant est inscrit
-        $planIds = $user->plans()->pluck('plans_formation.id')->toArray();
+        // 1. Récupérer les plans auxquels le participant est inscrit (accessibles)
+        $planIds = $user->plans()
+            ->whereIn('plans_formation.statut', ['validé', 'confirmé', 'terminée'])
+            ->pluck('plans_formation.id')
+            ->toArray();
 
         // 2. Récupérer toutes les séances de ces plans
         $seances = Seance::whereIn('plan_id', $planIds)
