@@ -81,7 +81,7 @@ class SeanceController extends Controller
         // Vérifier l'accessibilité des QCMs
         // Un QCM est passable si la séance a commencé (date et heure de début)
         $now = Carbon::now();
-        $dateStr = is_string($seance->date) ? $seance->date : $seance->date->format('Y-m-d');
+        $dateStr = $seance->date instanceof Carbon ? $seance->date->format('Y-m-d') : Carbon::parse($seance->date)->format('Y-m-d');
         $seanceStart = Carbon::parse($dateStr . ' ' . $seance->debut);
         
         $canPassQcm = $now->greaterThanOrEqualTo($seanceStart);

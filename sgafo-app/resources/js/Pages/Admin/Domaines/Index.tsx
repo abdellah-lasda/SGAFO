@@ -194,12 +194,13 @@ function EditSpecialiteModal({ isOpen, onClose, item, type, cdcs, secteurs }: an
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        const routes: any = {
+        const routeNameMap: Record<string, string> = {
             cdc: 'admin.domaines.cdcs.update',
             secteur: 'admin.domaines.secteurs.update',
             metier: 'admin.domaines.metiers.update',
         };
-        patch(route(routes[type], item.id), {
+        const routeName = routeNameMap[type];
+        patch(route(routeName, item.id), {
             onSuccess: () => onClose(),
         });
     };
@@ -235,7 +236,7 @@ function EditSpecialiteModal({ isOpen, onClose, item, type, cdcs, secteurs }: an
                             <label className="block text-sm font-medium text-gray-700">Domaine (CDC)</label>
                             <select value={data.cdc_id} onChange={e => setData('cdc_id', e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                 <option value="">Choisir...</option>
-                                {cdcs.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
+                                {cdcs.map((c: any) => <option key={c.id} value={c.id}>{c.nom}</option>)}
                             </select>
                         </div>
                     )}

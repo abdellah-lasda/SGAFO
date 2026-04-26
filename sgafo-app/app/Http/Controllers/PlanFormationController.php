@@ -512,7 +512,7 @@ class PlanFormationController extends Controller
     {
         \Illuminate\Support\Facades\Gate::authorize('delete', $plan);
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($plan) {
+        DB::transaction(function () use ($plan) {
             // Nettoyage manuel si non-cascade en DB
             $plan->seances()->delete();
             $plan->themes()->delete();
