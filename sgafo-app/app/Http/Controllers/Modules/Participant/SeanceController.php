@@ -19,7 +19,7 @@ class SeanceController extends Controller
 
         // 1. Récupérer les plans auxquels le participant est inscrit
         $plans = $user->plans()
-            ->whereIn('plans_formation.statut', ['validé', 'confirmé', 'terminée'])
+            ->whereIn('plans_formation.statut', ['confirmé', 'terminée'])
             ->with(['entite', 'seances.seanceThemes.theme', 'seances.site'])
             ->get();
 
@@ -114,7 +114,7 @@ class SeanceController extends Controller
 
         // Vérifier si le participant est bien inscrit à ce plan et qu'il est accessible
         $isEnrolled = $plan->participants()->where('users.id', $user->id)->exists();
-        $allowedStatuses = ['validé', 'confirmé', 'terminée'];
+        $allowedStatuses = ['confirmé', 'terminée'];
         
         if (!$isEnrolled || !in_array($plan->statut, $allowedStatuses)) {
             abort(403, "Vous n'avez pas accès à cette formation.");
