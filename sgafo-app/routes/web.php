@@ -77,6 +77,9 @@ Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->grou
     Route::post('domaines/metiers', [AdminDomaineController::class, 'storeMetier'])->name('metiers.store');
     Route::put('domaines/metiers/{metier}', [AdminDomaineController::class, 'updateMetier'])->name('metiers.update');
     Route::delete('domaines/metiers/{metier}', [AdminDomaineController::class, 'destroyMetier'])->name('metiers.destroy');
+
+    // Pilotage Global
+    Route::get('pilotage', [\App\Http\Controllers\Admin\PilotageController::class, 'index'])->name('pilotage.index');
 });
 
 
