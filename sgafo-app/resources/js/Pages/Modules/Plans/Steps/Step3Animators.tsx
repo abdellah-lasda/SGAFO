@@ -1,28 +1,36 @@
 import { PlanTheme, PlanFormateur } from '@/types/plan';
 import { useState, useMemo } from 'react';
+import axios from 'axios';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface Props {
     themes: PlanTheme[];
     setThemes: (v: PlanTheme[]) => void;
     formateurs: PlanFormateur[];
+    dateDebut?: string;
+    dateFin?: string;
+    planId?: number;
 }
 
-export default function Step3Animators({ themes, setThemes, formateurs }: Props) {
+export default function Step3Animators({ themes, setThemes, formateurs, dateDebut, dateFin, planId }: Props) {
     const [selectedThemeIndex, setSelectedThemeIndex] = useState(0);
     const [searchTitle, setSearchTitle] = useState('');
+    const [conflicts, setConflicts] = useState<Record<number, any[]>>({});
+    const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
     const [filterSecteur, setFilterSecteur] = useState('');
     const [filterEtablissement, setFilterEtablissement] = useState('');
     const [filterOrigine, setFilterOrigine] = useState('');
     const [selectedFormateurs, setSelectedFormateurs] = useState<number[]>([]);
 
     const secteursList = useMemo(() => {
-        const allSecteurs = formateurs.flatMap(f => f.secteurs || []);
-        return [...new Map(allSecteurs.map(s => [s.id, s])).values()];
+        const allSecteurs = formateurs.flatMap((f: any) => f.secteurs || []);
+        return [...new Map(allSecteurs.map((s: any) => [s.id, s])).values()];
     }, [formateurs]);
 
     const institutsList = useMemo(() => {
-        const allInstituts = formateurs.flatMap(f => f.instituts || []);
-        return [...new Map(allInstituts.map(i => [i.id, i])).values()];
+        const allInstituts = formateurs.flatMap((f: any) => f.instituts || []);
+        return [...new Map(allInstituts.map((i: any) => [i.id, i])).values()];
     }, [formateurs]);
 
     const activeTheme = themes[selectedThemeIndex];
@@ -43,20 +51,45 @@ export default function Step3Animators({ themes, setThemes, formateurs }: Props)
                 if (filterOrigine === 'externe' && !f.is_externe) return false;
             }
             if (filterSecteur) {
-                const sIds = (f.secteurs || []).map(s => s.id.toString());
+                const sIds = (f.secteurs || []).map((s: any) => s.id.toString());
                 if (!sIds.includes(filterSecteur)) return false;
             }
             if (filterEtablissement) {
-                const iIds = (f.instituts || []).map(i => i.id.toString());
+                const iIds = (f.instituts || []).map((i: any) => i.id.toString());
                 if (!iIds.includes(filterEtablissement)) return false;
             }
             return true;
         });
     }, [formateurs, searchTitle, filterOrigine, filterSecteur, filterEtablissement, assignedIdsInActiveTheme]);
 
+    // Check Availability
+    useMemo(() => {
+        if (!dateDebut || !dateFin || formateurs.length === 0) return;
+        
+        const checkAvailability = async () => {
+            setIsLoadingAvailability(true);
+            try {
+                const res = await axios.post(route('modules.plans.availability.check'), {
+                    user_ids: formateurs.map(f => f.id),
+                    start_date: dateDebut,
+                    end_date: dateFin,
+                    plan_id: planId
+                });
+                setConflicts(res.data.conflicts);
+            } catch (err) {
+                console.error("Erreur check disponibilité", err);
+            } finally {
+                setIsLoadingAvailability(false);
+            }
+        };
+
+        const timer = setTimeout(checkAvailability, 500);
+        return () => clearTimeout(timer);
+    }, [formateurs.length, dateDebut, dateFin]);
+
     const toggleFormateurSelection = (id: number) => {
-        setSelectedFormateurs(prev =>
-            prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+        setSelectedFormateurs((prev: number[]) =>
+            prev.includes(id) ? prev.filter((p: number) => p !== id) : [...prev, id]
         );
     };
 
@@ -87,19 +120,19 @@ export default function Step3Animators({ themes, setThemes, formateurs }: Props)
         const updated = [...themes];
         updated[selectedThemeIndex] = {
             ...updated[selectedThemeIndex],
-            animateur_ids: assignedIdsInActiveTheme.filter(cid => cid !== id)
+            animateur_ids: assignedIdsInActiveTheme.filter((cid: number) => cid !== id)
         };
         setThemes(updated);
     };
 
-    const allFilteredSelected = filteredFormateurs.length > 0 && filteredFormateurs.every(f => selectedFormateurs.includes(f.id));
+    const allFilteredSelected = filteredFormateurs.length > 0 && filteredFormateurs.every((f: any) => selectedFormateurs.includes(f.id));
 
     const toggleSelectAll = () => {
-        const filteredIds = filteredFormateurs.map(f => f.id);
+        const filteredIds = filteredFormateurs.map((f: any) => f.id);
         if (allFilteredSelected) {
-            setSelectedFormateurs(prev => prev.filter(id => !filteredIds.includes(id)));
+            setSelectedFormateurs((prev: number[]) => prev.filter((id: number) => !filteredIds.includes(id)));
         } else {
-            setSelectedFormateurs(prev => [...new Set([...prev, ...filteredIds])]);
+            setSelectedFormateurs((prev: number[]) => [...new Set([...prev, ...filteredIds])]);
         }
     };
 
@@ -189,10 +222,28 @@ export default function Step3Animators({ themes, setThemes, formateurs }: Props)
                                         </div>
                                         <div>
                                             <p className="text-sm font-black text-slate-800">{f.prenom} {f.nom}</p>
-                                            <p className="text-[11px] text-slate-500 font-medium">
-                                                {f.is_externe ? 'Prestataire Externe' : 'Formateur Interne'}
-                                                {f.instituts && f.instituts.length > 0 ? ` · ${f.instituts[0].nom}` : ''}
-                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-[11px] text-slate-500 font-medium">
+                                                    {f.is_externe ? 'Prestataire Externe' : 'Formateur Interne'}
+                                                    {f.instituts && f.instituts.length > 0 ? ` · ${f.instituts[0].nom}` : ''}
+                                                </p>
+                                                {conflicts[f.id] && (
+                                                    <div className="group relative">
+                                                        <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse cursor-help"></span>
+                                                        <div className="absolute bottom-full left-0 mb-2 w-64 p-3 bg-slate-900 text-white text-[10px] rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
+                                                            <p className="font-black uppercase tracking-widest text-red-400 mb-2">⚠️ Conflit de disponibilité</p>
+                                                            <div className="space-y-1">
+                                                                {conflicts[f.id].map((c: any, i: number) => (
+                                                                    <div key={i} className="flex justify-between border-b border-white/10 pb-1 last:border-0">
+                                                                        <span>{format(new Date(c.date), 'dd MMM', { locale: fr })}</span>
+                                                                        <span className="italic opacity-70 truncate ml-2">{c.plan_titre}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                     <button
@@ -349,14 +400,23 @@ export default function Step3Animators({ themes, setThemes, formateurs }: Props)
                                                     {isSelected && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-4 font-bold text-slate-800">{f.prenom} {f.nom}</td>
+                                            <td className="px-4 py-4 font-bold text-slate-800">
+                                                <div className="flex items-center gap-2">
+                                                    {f.prenom} {f.nom}
+                                                    {conflicts[f.id] && (
+                                                        <span className="px-2 py-0.5 bg-red-50 text-red-600 text-[8px] font-black uppercase rounded-md border border-red-100">
+                                                            Occupé
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td className="px-4 py-4 font-medium text-slate-500 text-xs">
                                                 {f.instituts && f.instituts.length > 0 ? f.instituts[0].nom : '-'}
                                             </td>
                                             <td className="px-4 py-4 text-xs font-medium text-slate-500">
                                                 {f.secteurs && f.secteurs.length > 0 ? (
                                                     <div className="flex gap-1 flex-wrap">
-                                                        {f.secteurs.map(s => <span key={s.id} className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">{s.nom}</span>)}
+                                                        {f.secteurs.map((s: any) => <span key={s.id} className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">{s.nom}</span>)}
                                                     </div>
                                                 ) : '-'}
                                             </td>

@@ -1,15 +1,23 @@
 import { PlanFormateur } from '@/types/plan';
 import { useState, useMemo } from 'react';
+import axios from 'axios';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface Props {
     formateurs: PlanFormateur[];
     participantIds: number[];
     setParticipantIds: (v: number[]) => void;
     excludeIds: number[]; // animateur IDs to exclude
+    dateDebut?: string;
+    dateFin?: string;
+    planId?: number;
 }
 
-export default function Step4Participants({ formateurs, participantIds, setParticipantIds, excludeIds }: Props) {
+export default function Step4Participants({ formateurs, participantIds, setParticipantIds, excludeIds, dateDebut, dateFin, planId }: Props) {
     const [search, setSearch] = useState('');
+    const [conflicts, setConflicts] = useState<Record<number, any[]>>({});
+    const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
     const [filterSecteur, setFilterSecteur] = useState('');
     const [filterEtablissement, setFilterEtablissement] = useState('');
     const [filterOrigine, setFilterOrigine] = useState('');
@@ -20,13 +28,13 @@ export default function Step4Participants({ formateurs, participantIds, setParti
     }, [formateurs, excludeIds]);
 
     const secteursList = useMemo(() => {
-        const all = available.flatMap(f => f.secteurs || []);
-        return [...new Map(all.map(s => [s.id, s])).values()];
+        const all = available.flatMap((f: any) => f.secteurs || []);
+        return [...new Map(all.map((s: any) => [s.id, s])).values()];
     }, [available]);
 
     const institutsList = useMemo(() => {
-        const all = available.flatMap(f => f.instituts || []);
-        return [...new Map(all.map(i => [i.id, i])).values()];
+        const all = available.flatMap((f: any) => f.instituts || []);
+        return [...new Map(all.map((i: any) => [i.id, i])).values()];
     }, [available]);
 
     const filtered = useMemo(() => {
@@ -40,32 +48,57 @@ export default function Step4Participants({ formateurs, participantIds, setParti
                 if (filterOrigine === 'externe' && !f.is_externe) return false;
             }
             if (filterSecteur) {
-                const sIds = (f.secteurs || []).map(s => s.id.toString());
+                const sIds = (f.secteurs || []).map((s: any) => s.id.toString());
                 if (!sIds.includes(filterSecteur)) return false;
             }
             if (filterEtablissement) {
-                const iIds = (f.instituts || []).map(i => i.id.toString());
+                const iIds = (f.instituts || []).map((i: any) => i.id.toString());
                 if (!iIds.includes(filterEtablissement)) return false;
             }
             return true;
         });
     }, [available, search, filterSecteur, filterEtablissement, filterOrigine]);
 
+    // Check Availability
+    useMemo(() => {
+        if (!dateDebut || !dateFin || available.length === 0) return;
+        
+        const checkAvailability = async () => {
+            setIsLoadingAvailability(true);
+            try {
+                const res = await axios.post(route('modules.plans.availability.check'), {
+                    user_ids: available.map(f => f.id),
+                    start_date: dateDebut,
+                    end_date: dateFin,
+                    plan_id: planId
+                });
+                setConflicts(res.data.conflicts);
+            } catch (err) {
+                console.error("Erreur check disponibilité", err);
+            } finally {
+                setIsLoadingAvailability(false);
+            }
+        };
+
+        const timer = setTimeout(checkAvailability, 500);
+        return () => clearTimeout(timer);
+    }, [available.length, dateDebut, dateFin]);
+
     // Pending selection (checkboxes before clicking "Ajouter")
     const [pendingIds, setPendingIds] = useState<number[]>([]);
 
     const togglePending = (id: number) => {
-        setPendingIds(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
+        setPendingIds((prev: number[]) => prev.includes(id) ? prev.filter((p: number) => p !== id) : [...prev, id]);
     };
 
-    const allFilteredPending = filtered.length > 0 && filtered.every(f => pendingIds.includes(f.id));
+    const allFilteredPending = filtered.length > 0 && filtered.every((f: any) => pendingIds.includes(f.id));
 
     const toggleSelectAll = () => {
-        const filteredIds = filtered.map(f => f.id);
+        const filteredIds = filtered.map((f: any) => f.id);
         if (allFilteredPending) {
-            setPendingIds(prev => prev.filter(id => !filteredIds.includes(id)));
+            setPendingIds((prev: number[]) => prev.filter((id: number) => !filteredIds.includes(id)));
         } else {
-            setPendingIds(prev => [...new Set([...prev, ...filteredIds])]);
+            setPendingIds((prev: number[]) => [...new Set([...prev, ...filteredIds])]);
         }
     };
 
@@ -139,10 +172,28 @@ export default function Step4Participants({ formateurs, participantIds, setParti
                                         </div>
                                         <div>
                                             <p className="text-sm font-black text-slate-800">{f.prenom} {f.nom}</p>
-                                            <p className="text-[11px] text-slate-500 font-medium">
-                                                {f.is_externe ? 'Externe' : 'Interne'}
-                                                {f.instituts && f.instituts.length > 0 ? ` · ${f.instituts[0].nom}` : ''}
-                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-[11px] text-slate-500 font-medium">
+                                                    {f.is_externe ? 'Externe' : 'Interne'}
+                                                    {f.instituts && f.instituts.length > 0 ? ` · ${f.instituts[0].nom}` : ''}
+                                                </p>
+                                                {conflicts[f.id] && (
+                                                    <div className="group relative">
+                                                        <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse cursor-help"></span>
+                                                        <div className="absolute bottom-full left-0 mb-2 w-64 p-3 bg-slate-900 text-white text-[10px] rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
+                                                            <p className="font-black uppercase tracking-widest text-red-400 mb-2">⚠️ Conflit de disponibilité</p>
+                                                            <div className="space-y-1">
+                                                                {conflicts[f.id].map((c: any, i: number) => (
+                                                                    <div key={i} className="flex justify-between border-b border-white/10 pb-1 last:border-0">
+                                                                        <span>{format(new Date(c.date), 'dd MMM', { locale: fr })}</span>
+                                                                        <span className="italic opacity-70 truncate ml-2">{c.plan_titre}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                     <button
@@ -283,8 +334,15 @@ export default function Step4Participants({ formateurs, participantIds, setParti
                                                 )}
                                             </td>
                                             <td className="px-4 py-4 font-bold text-slate-800">
-                                                {f.prenom} {f.nom}
-                                                {isAlreadyAdded && <span className="ml-2 text-[10px] font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">Ajouté</span>}
+                                                <div className="flex items-center gap-2">
+                                                    {f.prenom} {f.nom}
+                                                    {conflicts[f.id] && (
+                                                        <span className="px-2 py-0.5 bg-red-50 text-red-600 text-[8px] font-black uppercase rounded-md border border-red-100">
+                                                            Occupé
+                                                        </span>
+                                                    )}
+                                                    {isAlreadyAdded && <span className="text-[10px] font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">Ajouté</span>}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-4 font-medium text-slate-500 text-xs">
                                                 {f.instituts && f.instituts.length > 0 ? f.instituts[0].nom : '-'}
@@ -292,7 +350,7 @@ export default function Step4Participants({ formateurs, participantIds, setParti
                                             <td className="px-4 py-4 text-xs font-medium text-slate-500">
                                                 {f.secteurs && f.secteurs.length > 0 ? (
                                                     <div className="flex gap-1 flex-wrap">
-                                                        {f.secteurs.map(s => <span key={s.id} className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">{s.nom}</span>)}
+                                                        {f.secteurs.map((s: any) => <span key={s.id} className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">{s.nom}</span>)}
                                                     </div>
                                                 ) : '-'}
                                             </td>

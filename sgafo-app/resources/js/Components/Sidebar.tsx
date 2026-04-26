@@ -186,19 +186,21 @@ export default function Sidebar({ user }: SidebarProps) {
                                 Pilotage Global
                             </Link>
                             <Link
-                                href={route('modules.logistique.index')}className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('modules.logistique.*') ? activeClass : inactiveClass}`}>
+                                href={route('admin.logistique.index')}
+                                className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('admin.logistique.*') ? activeClass : inactiveClass}`}
+                            >
                                 <svg className="mr-3 h-5 w-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                                 Logistique
                             </Link>
-                            <Link href={route('admin.users.index')} className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-lg transition-colors ${route().current('admin.users.*') ? activeClass : inactiveClass}`}>
+                            <Link href={route('admin.users.index')} className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('admin.users.*') ? activeClass : inactiveClass}`}>
                                 <svg className="mr-3 h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                 Utilisateurs
                             </Link>
-                            <Link href={route('admin.instituts.index')} className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-lg transition-colors ${route().current('admin.instituts.*') ? activeClass : inactiveClass}`}>
+                            <Link href={route('admin.instituts.index')} className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('admin.instituts.*') ? activeClass : inactiveClass}`}>
                                 <svg className="mr-3 h-5 w-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                                 Établissements
                             </Link>
-                            <Link href={route('admin.domaines.index')} className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-lg transition-colors ${route().current('admin.domaines.*') || route().current('admin.cdcs.*') || route().current('admin.secteurs.*') || route().current('admin.metiers.*') ? activeClass : inactiveClass}`}>
+                            <Link href={route('admin.domaines.index')} className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('admin.domaines.*') ? activeClass : inactiveClass}`}>
                                 <svg className="mr-3 h-5 w-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" /></svg>
                                 Spécialités
                             </Link>

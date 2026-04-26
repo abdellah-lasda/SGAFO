@@ -138,7 +138,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
         });
     };
 
-    const isLocked = plan.statut === 'confirmé';
+    const isLocked = plan.statut === 'validé';
 
     const handleCloture = () => {
         setConfirmCloture(true);

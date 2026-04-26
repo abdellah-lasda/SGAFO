@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use App\Notifications\PlanFormationSoumis;
 use App\Notifications\PlanFormationDecision;
+use App\Notifications\PlanCancelledNotification;
 use Illuminate\Support\Facades\Notification;
 use Log;
 
@@ -285,6 +286,7 @@ class PlanFormationController extends Controller
             'siteFormation',
             'createur',
             'validateur',
+            'seances',
         ]);
 
         return Inertia::render('Modules/Plans/Show', [
@@ -359,7 +361,7 @@ class PlanFormationController extends Controller
         \Illuminate\Support\Facades\Gate::authorize('validate', $plan);
 
         if (!$plan->canBeValidated()) {
-            return redirect()->back()->with('error', 'Ce plan ne peut pas être validé.');
+            return redirect()->back()->with('error', 'Le plan doit avoir au moins une séance planifiée pour être validé.');
         }
 
         $plan->update([
@@ -371,14 +373,14 @@ class PlanFormationController extends Controller
         $plan->validationLogs()->create([
             'user_id' => auth()->id(),
             'action' => 'validé',
-            'commentaire' => 'Le plan a été validé par le responsable de secteur.',
+            'commentaire' => 'Validation technique finale : planning complet et prêt pour exécution.',
         ]);
 
         // Notifier le créateur
         $plan->createur->notify(new PlanFormationDecision($plan, 'validé'));
 
         return redirect()->route('modules.plans.show', $plan)
-                       ->with('success', 'Plan validé et confirmé.');
+                       ->with('success', 'Plan validé techniquement et publié au catalogue.');
     }
 
     /**
@@ -421,41 +423,38 @@ class PlanFormationController extends Controller
      */
     public function confirm(PlanFormation $plan)
     {
-        if ($plan->cree_par !== auth()->id()) {
-            return redirect()->back()->with('error', 'Vous ne pouvez confirmer que vos propres plans.');
-        }
-
-        if (!in_array($plan->statut, ['brouillon'])) {
-            return redirect()->back()->with('error', 'Ce plan ne peut pas être confirmé.');
+        $user = auth()->user();
+        
+        if (!$plan->canBeConfirmed()) {
+            return redirect()->back()->with('error', 'Ce plan ne peut pas être confirmé en l\'état.');
         }
 
         $plan->update([
             'statut' => 'confirmé',
-            'valide_par' => auth()->id(),
+            'valide_par' => $user->id,
             'date_validation' => now(),
         ]);
 
+        $plan->validationLogs()->create([
+            'user_id' => $user->id,
+            'action' => 'confirmé',
+            'commentaire' => 'Confirmation administrative du plan. Prêt pour la planification.',
+        ]);
+
         return redirect()->route('modules.plans.show', $plan)
-                       ->with('success', 'Plan confirmé.');
+                       ->with('success', 'Plan confirmé administrativement. Vous pouvez maintenant gérer le planning.');
     }
 
     /**
      * Archiver un plan (soft delete logique).
      */
-    public function destroy(PlanFormation $plan)
-    {
-        $plan->update(['statut' => 'archivé']);
-        return redirect()->route('modules.plans.index')
-                       ->with('success', 'Plan archivé.');
-    }
-
     /**
      * Clôture définitive du planning pour passer à l'exécution.
      */
     public function cloturerPlanning(PlanFormation $plan)
     {
         // On pourrait ajouter des validations ici (ex: 100% des heures planifiées)
-        $plan->update(['statut' => 'clôturé']);
+        $plan->update(['statut' => 'validé']);
 
         $plan->validationLogs()->create([
             'user_id' => auth()->id(),
@@ -471,7 +470,7 @@ class PlanFormationController extends Controller
      */
     public function reouvrirPlanning(PlanFormation $plan)
     {
-        $plan->update(['statut' => 'en_cours']);
+        $plan->update(['statut' => 'confirmé']);
 
         $plan->validationLogs()->create([
             'user_id' => auth()->id(),
@@ -504,5 +503,80 @@ class PlanFormationController extends Controller
         $filename = 'Plan_Formation_' . $plan->id . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Supprimer un plan de formation et toutes ses données associées.
+     */
+    public function destroy(PlanFormation $plan)
+    {
+        \Illuminate\Support\Facades\Gate::authorize('delete', $plan);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($plan) {
+            // Nettoyage manuel si non-cascade en DB
+            $plan->seances()->delete();
+            $plan->themes()->delete();
+            $plan->participants()->detach();
+            $plan->hebergements()->delete();
+            $plan->validationLogs()->delete();
+            $plan->ressources()->delete();
+            
+            $plan->delete();
+        });
+
+        return redirect()->route('modules.plans.index')
+                       ->with('success', 'Le plan de formation a été supprimé définitivement.');
+    }
+
+    /**
+     * Annuler une formation officiellement.
+     */
+    public function cancel(PlanFormation $plan, Request $request)
+    {
+        if (!auth()->user()->hasRole('RF')) abort(403);
+
+        if (!$plan->canBeCancelled()) {
+            return redirect()->back()->with('error', 'Ce plan ne peut pas être annulé.');
+        }
+
+        $request->validate([
+            'motif_annulation' => 'required|string|min:10',
+        ]);
+
+        $motif = $request->motif_annulation;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($plan, $motif) {
+            $plan->update([
+                'statut' => 'annulé',
+                'motif_rejet' => $motif, // On réutilise ce champ ou un nouveau si besoin
+            ]);
+
+            $plan->validationLogs()->create([
+                'user_id' => auth()->id(),
+                'action' => 'annulé',
+                'commentaire' => 'Annulation de la formation : ' . $motif,
+            ]);
+        });
+
+        // NOTIFICATIONS
+        $notifiables = collect();
+        
+        // 1. Créateur
+        $notifiables->push($plan->createur);
+        
+        // 2. Animateurs
+        $animateurIds = $plan->getAnimateurIds();
+        $animateurs = \App\Models\User::whereIn('id', $animateurIds)->get();
+        $notifiables = $notifiables->merge($animateurs);
+        
+        // 3. Participants
+        $notifiables = $notifiables->merge($plan->participants);
+
+        // Envoyer à tout le monde (sauf l'annulateur lui-même si présent dans la liste)
+        $notifiables = $notifiables->unique('id')->reject(fn($u) => $u->id === auth()->id());
+        
+        \Illuminate\Support\Facades\Notification::send($notifiables, new PlanCancelledNotification($plan, $motif));
+
+        return redirect()->back()->with('success', 'La formation a été annulée et les équipes ont été informées.');
     }
 }

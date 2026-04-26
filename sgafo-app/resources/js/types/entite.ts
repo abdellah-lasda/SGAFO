@@ -11,6 +11,11 @@ export interface Theme {
     objectifs: string;
 }
 
+export interface Metier {
+    id: number;
+    nom: string;
+}
+
 export interface Entite {
     id: number;
     titre: string;
@@ -22,6 +27,7 @@ export interface Entite {
     secteur_id: number;
     secteur?: { id: number; nom: string };
     themes: Theme[];
+    metiers?: Metier[];
     createur?: { id: number; prenom: string; nom: string };
     cree_par_id?: number;
     updated_at: string;

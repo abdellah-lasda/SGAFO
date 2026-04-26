@@ -3,6 +3,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { PlanFormation, STATUT_CONFIG, PlanStatut } from '@/types/plan';
 import { PageProps } from '@/types';
 import { useState } from 'react';
+import ConfirmDialog from '@/Components/ConfirmDialog';
 
 interface Props extends PageProps {
     plan: PlanFormation;
@@ -29,10 +30,33 @@ export default function Show({ plan, isValidationContext }: Props) {
         router.post(route('modules.plans.validate', plan.id));
     };
 
+    const handleConfirm = () => {
+        router.post(route('modules.plans.confirm', plan.id));
+    };
+
     const handleReject = () => {
         if (motifRejet.trim().length < 10) return;
         router.post(route('modules.plans.reject', plan.id), { motif_rejet: motifRejet });
     };
+
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [motifAnnulation, setMotifAnnulation] = useState('');
+    
+    const handleDelete = () => {
+        router.delete(route('modules.plans.destroy', plan.id));
+    };
+
+    const handleCancel = () => {
+        if (motifAnnulation.trim().length < 10) return;
+        router.post(route('modules.plans.cancel', plan.id), { motif_annulation: motifAnnulation });
+    };
+
+    // Permissions
+    const canDelete = (auth.user.id === plan.cree_par && ['brouillon', 'rejeté'].includes(plan.statut)) || 
+                     (isRF && plan.statut !== 'validé');
+    
+    const canCancel = isRF && ['confirmé', 'validé'].includes(plan.statut);
 
     return (
         <AuthenticatedLayout header={
@@ -81,7 +105,7 @@ export default function Show({ plan, isValidationContext }: Props) {
                             </Link>
                         )}
 
-                        {isRF && (plan.statut === 'validé' || plan.statut === 'confirmé') && (
+                        {isRF && plan.statut === 'confirmé' && (
                             <Link
                                 href={route('modules.validations.planning.index', plan.id)}
                                 className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20"
@@ -89,17 +113,48 @@ export default function Show({ plan, isValidationContext }: Props) {
                                 🗓️ Gérer le Planning
                             </Link>
                         )}
+
+                        {canCancel && (
+                            <button
+                                onClick={() => setShowCancelModal(true)}
+                                className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100 rounded-xl hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                            >
+                                🚫 Annuler la formation
+                            </button>
+                        )}
+
+                        {canDelete && (
+                            <button
+                                onClick={() => setShowDeleteConfirm(true)}
+                                className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-red-50 text-red-600 border border-red-100 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                            >
+                                🗑️ Supprimer
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                {/* Rejection reason */}
-                {plan.statut === 'rejeté' && plan.motif_rejet && (
-                    <div className="p-5 bg-red-50 rounded-2xl border border-red-200">
-                        <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">Motif de rejet</p>
-                        <p className="text-sm text-red-600 font-medium">{plan.motif_rejet}</p>
-                        {plan.validateur && (
-                            <p className="text-[10px] text-red-400 font-bold mt-2">Par {plan.validateur.prenom} {plan.validateur.nom} · {plan.date_validation ? new Date(plan.date_validation).toLocaleDateString() : ''}</p>
-                        )}
+                {/* Cancellation/Rejection reason */}
+                {['rejeté', 'annulé'].includes(plan.statut) && plan.motif_rejet && (
+                    <div className={`p-6 rounded-2xl border-2 flex items-start gap-4 ${plan.statut === 'rejeté' ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${plan.statut === 'rejeté' ? 'bg-red-100 text-red-600' : 'bg-slate-200 text-slate-600'}`}>
+                            {plan.statut === 'rejeté' ? (
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                            ) : (
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                            )}
+                        </div>
+                        <div className="flex-1">
+                            <h3 className={`text-[10px] font-black uppercase tracking-widest mb-1 ${plan.statut === 'rejeté' ? 'text-red-700' : 'text-slate-700'}`}>
+                                {plan.statut === 'rejeté' ? 'Motif du rejet' : 'Motif de l\'annulation'}
+                            </h3>
+                            <p className={`text-sm font-medium ${plan.statut === 'rejeté' ? 'text-red-600' : 'text-slate-600'}`}>
+                                {plan.motif_rejet}
+                            </p>
+                            {plan.statut === 'rejeté' && plan.validateur && (
+                                <p className="text-[10px] text-red-400 font-bold mt-2">Par {plan.validateur.prenom} {plan.validateur.nom} · {plan.date_validation ? new Date(plan.date_validation).toLocaleDateString() : ''}</p>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -269,10 +324,10 @@ export default function Show({ plan, isValidationContext }: Props) {
 
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={handleValidate}
-                                className="flex-1 py-4 text-xs font-black uppercase tracking-widest text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                                onClick={handleConfirm}
+                                className="flex-1 py-4 text-xs font-black uppercase tracking-widest text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]"
                             >
-                                ✅ Valider ce plan
+                                🤝 Confirmer ce plan
                             </button>
                             <button
                                 onClick={() => setShowRejectModal(!showRejectModal)}
@@ -308,20 +363,111 @@ export default function Show({ plan, isValidationContext }: Props) {
                     </div>
                 )}
 
-                {/* RF Direct Confirmation (Self-Created) */}
-                {isRF && plan.cree_par === auth.user.id && plan.statut === 'brouillon' && (
+                {/* RF Technical Validation (Final step after planning) */}
+                {isRF && plan.statut === 'confirmé' && (
                     <div className="p-6 bg-white rounded-2xl border-2 border-emerald-300 shadow-sm">
-                        <h3 className="text-sm font-black text-emerald-700 uppercase tracking-widest mb-1">Confirmation directe</h3>
-                        <p className="text-xs text-emerald-500 font-medium mb-6">En tant que RF, vous pouvez confirmer directement votre propre plan.</p>
+                        <h3 className="text-sm font-black text-emerald-700 uppercase tracking-widest mb-1">Validation Technique Finale</h3>
+                        <p className="text-xs text-emerald-500 font-medium mb-4">Une fois le planning complété, validez définitivement le plan pour le rendre visible au catalogue national.</p>
+                        
+                        {(plan.seances?.length || 0) === 0 ? (
+                            <div className="p-4 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-xs font-bold mb-4 flex items-center gap-3">
+                                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+                                Attention : Vous devez planifier au moins une séance avant de pouvoir valider définitivement ce plan.
+                            </div>
+                        ) : (
+                             <div className="p-4 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold mb-4 flex items-center gap-3">
+                                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Planning détecté ({plan.seances?.length} séance(s)). Vous pouvez valider le plan.
+                            </div>
+                        )}
+
                         <button
-                            onClick={() => router.post(route('modules.plans.confirm', plan.id))}
-                            className="w-full py-4 text-xs font-black uppercase tracking-widest text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                            onClick={handleValidate}
+                            disabled={(plan.seances?.length || 0) === 0}
+                            className={`w-full py-4 text-xs font-black uppercase tracking-widest text-white rounded-xl transition-all shadow-lg active:scale-[0.98] ${
+                                (plan.seances?.length || 0) > 0 
+                                    ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20' 
+                                    : 'bg-slate-300 cursor-not-allowed'
+                            }`}
                         >
-                            ✅ Confirmer le plan
+                            🚀 Valider définitivement et publier
+                        </button>
+                    </div>
+                )}
+
+                {/* RF Direct Confirmation (Self-Created) - Handled by the generic confirm button above if we adjust its logic */}
+                {isRF && plan.cree_par === auth.user.id && plan.statut === 'brouillon' && (
+                    <div className="p-6 bg-white rounded-2xl border-2 border-blue-300 shadow-sm">
+                        <h3 className="text-sm font-black text-blue-700 uppercase tracking-widest mb-1">Confirmation directe</h3>
+                        <p className="text-xs text-blue-500 font-medium mb-6">En tant que RF, vous pouvez confirmer directement votre propre plan pour démarrer la planification.</p>
+                        <button
+                            onClick={handleConfirm}
+                            className="w-full py-4 text-xs font-black uppercase tracking-widest text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]"
+                        >
+                            🤝 Confirmer le plan
                         </button>
                     </div>
                 )}
             </div>
+
+            <ConfirmDialog
+                isOpen={showDeleteConfirm}
+                title="Supprimer définitivement ce plan ?"
+                message="Cette action est irréversible. Toutes les thématiques, séances, participants et logs associés seront définitivement supprimés."
+                confirmLabel="Oui, supprimer définitivement"
+                isDanger={true}
+                onConfirm={handleDelete}
+                onCancel={() => setShowDeleteConfirm(false)}
+            />
+
+            {/* Cancel Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowCancelModal(false)} />
+                    <div className="relative w-full max-w-lg bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-slate-900 tracking-tight">Annuler la formation</h3>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Veuillez justifier l'annulation</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 mb-8">
+                            <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                                Les équipes (créateur, animateurs et participants) seront immédiatement informées par notification.
+                            </p>
+                            <textarea
+                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-6 text-sm font-medium focus:border-amber-500 focus:bg-white transition-all min-h-[150px]"
+                                placeholder="Expliquez pourquoi cette formation est annulée..."
+                                value={motifAnnulation}
+                                onChange={(e) => setMotifAnnulation(e.target.value)}
+                            />
+                            {motifAnnulation.length > 0 && motifAnnulation.length < 10 && (
+                                <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest ml-2">Le motif doit faire au moins 10 caractères</p>
+                            )}
+                        </div>
+
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => setShowCancelModal(false)}
+                                className="flex-1 py-4 text-xs font-black uppercase tracking-widest text-slate-400 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all"
+                            >
+                                Retour
+                            </button>
+                            <button
+                                onClick={handleCancel}
+                                disabled={motifAnnulation.trim().length < 10}
+                                className="flex-[2] py-4 text-xs font-black uppercase tracking-widest text-white bg-amber-600 rounded-xl hover:bg-amber-500 transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Confirmer l'annulation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

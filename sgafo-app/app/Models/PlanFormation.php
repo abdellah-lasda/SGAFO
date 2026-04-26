@@ -109,11 +109,36 @@ class PlanFormation extends Model
     }
 
     /**
-     * Le plan peut-il être validé/rejeté par le RF ?
+     * Le plan peut-il être validé techniquement ?
+     * (Uniquement après confirmation et avec planning)
      */
     public function canBeValidated(): bool
     {
-        return $this->statut === 'soumis';
+        return $this->statut === 'confirmé' && $this->seances()->count() > 0;
+    }
+
+    /**
+     * Le plan peut-il être confirmé administrativement ?
+     */
+    public function canBeConfirmed(): bool
+    {
+        return $this->statut === 'soumis' || ($this->statut === 'brouillon' && auth()->user()->hasRole('RF'));
+    }
+
+    /**
+     * Vérifie si le planning est géré.
+     */
+    public function hasPlanning(): bool
+    {
+        return $this->seances()->count() > 0;
+    }
+
+    /**
+     * Le plan peut-il être annulé ?
+     */
+    public function canBeCancelled(): bool
+    {
+        return in_array($this->statut, ['confirmé', 'validé']);
     }
 
     /**

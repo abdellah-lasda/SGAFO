@@ -88,7 +88,7 @@ export const ValidationTable: FC<TableProps> = ({ plans }) => {
                                         </div>
                                     </td>
                                     <td className="px-6 py-5 text-right flex items-center justify-end gap-2">
-                                        {(plan.statut === 'validé' || plan.statut === 'confirmé') && (
+                                        {plan.statut === 'confirmé' && (
                                             <Link
                                                 href={route('modules.validations.planning.index', plan.id)}
                                                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-500 transition-all shadow-sm active:scale-95"

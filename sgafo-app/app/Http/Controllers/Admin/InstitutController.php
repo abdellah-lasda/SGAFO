@@ -10,14 +10,26 @@ use Inertia\Inertia;
 
 class InstitutController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $instituts = Institut::with('region')->orderBy('nom')->get();
+        $search = $request->input('search');
+
+        $instituts = Institut::with('region')
+            ->when($search, function($q) use ($search) {
+                $q->where('nom', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
+                  ->orWhere('ville', 'like', "%{$search}%");
+            })
+            ->orderBy('nom')
+            ->paginate(12)
+            ->withQueryString();
+
         $regions = Region::orderBy('nom')->get();
 
         return Inertia::render('Admin/Instituts/Index', [
             'instituts' => $instituts,
             'regions' => $regions,
+            'filters' => $request->only(['search']),
         ]);
     }
 
@@ -32,8 +44,7 @@ class InstitutController extends Controller
         ]);
 
         Institut::create($validated);
-
-        return redirect()->back()->with('success', 'Établissement créé avec succès.');
+        return redirect()->back()->with('success', 'Établissement créé.');
     }
 
     public function update(Request $request, Institut $institut)
@@ -47,17 +58,16 @@ class InstitutController extends Controller
         ]);
 
         $institut->update($validated);
-
-        return redirect()->back()->with('success', 'Établissement mis à jour avec succès.');
+        return redirect()->back()->with('success', 'Établissement mis à jour.');
     }
 
     public function destroy(Institut $institut)
     {
         try {
             $institut->delete();
-            return redirect()->back()->with('success', 'Établissement supprimé avec succès.');
+            return redirect()->back()->with('success', 'Établissement supprimé.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Impossible de supprimer cet établissement car il est lié à d\'autres enregistrements.');
+            return redirect()->back()->with('error', 'Impossible de supprimer cet établissement (données liées).');
         }
     }
 }

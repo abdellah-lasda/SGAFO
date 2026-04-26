@@ -15,7 +15,7 @@ class CatalogueController extends Controller
     public function index(Request $request)
     {
         $query = PlanFormation::with(['entite.secteur', 'createur', 'siteFormation', 'themes'])
-            ->where('statut', 'confirmé'); // Uniquement les plans officiels et publics
+            ->where('statut', 'validé'); // Uniquement les plans officiels et publics
 
         // Filtre par secteur
         if ($request->filled('secteur')) {
@@ -44,7 +44,7 @@ class CatalogueController extends Controller
      */
     public function show(PlanFormation $plan)
     {
-        if ($plan->statut !== 'confirmé') {
+        if ($plan->statut !== 'validé') {
             abort(404);
         }
 

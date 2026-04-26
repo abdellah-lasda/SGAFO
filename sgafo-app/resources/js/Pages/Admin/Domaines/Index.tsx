@@ -1,176 +1,137 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import CdcModal from './CdcModal';
-import SecteurModal from './SecteurModal';
-import MetierModal from './MetierModal';
+import Pagination from '@/Components/Pagination';
+import ConfirmDialog from '@/Components/ConfirmDialog';
 
-export default function Index({ cdcs, secteurs, metiers }: any) {
-    const [activeTab, setActiveTab] = useState('cdc'); // cdc, secteur, metier
-    
-    // Modals state
-    const [isCdcModalOpen, setIsCdcModalOpen] = useState(false);
-    const [editingCdc, setEditingCdc] = useState(null);
+interface Props {
+    cdcs: any[];
+    secteurs: {
+        data: any[];
+        links: any[];
+        total: number;
+    };
+    filters: { search?: string };
+}
 
-    const [isSecteurModalOpen, setIsSecteurModalOpen] = useState(false);
-    const [editingSecteur, setEditingSecteur] = useState(null);
+export default function Index({ cdcs, secteurs, filters }: Props) {
+    const [search, setSearch] = useState(filters.search || '');
+    const [confirmDelete, setConfirmDelete] = useState<{ id: number, type: 'cdc' | 'secteur' | 'metier', title: string } | null>(null);
 
-    const [isMetierModalOpen, setIsMetierModalOpen] = useState(false);
-    const [editingMetier, setEditingMetier] = useState(null);
-
-    const handleCreate = () => {
-        if (activeTab === 'cdc') {
-            setEditingCdc(null);
-            setIsCdcModalOpen(true);
-        } else if (activeTab === 'secteur') {
-            setEditingSecteur(null);
-            setIsSecteurModalOpen(true);
-        } else {
-            setEditingMetier(null);
-            setIsMetierModalOpen(true);
-        }
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.get(route('admin.domaines.index'), { search }, { preserveState: true, preserveScroll: true });
     };
 
-    const handleEditCdc = (cdc: any) => {
-        setEditingCdc(cdc);
-        setIsCdcModalOpen(true);
-    };
-
-    const handleEditSecteur = (secteur: any) => {
-        setEditingSecteur(secteur);
-        setIsSecteurModalOpen(true);
-    };
-
-    const handleEditMetier = (metier: any) => {
-        setEditingMetier(metier);
-        setIsMetierModalOpen(true);
+    const handleDelete = () => {
+        if (!confirmDelete) return;
+        const routes: any = {
+            cdc: 'admin.domaines.cdcs.destroy',
+            secteur: 'admin.domaines.secteurs.destroy',
+            metier: 'admin.domaines.metiers.destroy',
+        };
+        router.delete(route(routes[confirmDelete.type], confirmDelete.id), {
+            onSuccess: () => setConfirmDelete(null)
+        });
     };
 
     return (
-        <AuthenticatedLayout header={<span>Domaines & Spécialités</span>}>
-            <Head title="Domaines & Spécialités" />
+        <AuthenticatedLayout
+            header={<span className="font-bold text-slate-900">Référentiel des Spécialités</span>}
+        >
+            <Head title="Spécialités" />
 
-            <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
-                <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                    <div>
-                        <h3 className="text-lg font-medium text-gray-900">Domaines (CDC), Secteurs et Métiers</h3>
-                        <p className="mt-1 text-sm text-gray-500">Structuration hiérarchique : CDC &gt; Secteur &gt; Métier</p>
-                    </div>
-                    <button
-                        onClick={handleCreate}
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150"
-                    >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                        Nouveau {activeTab === 'cdc' ? 'CDC' : activeTab === 'secteur' ? 'Secteur' : 'Métier'}
-                    </button>
-                </div>
+            <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
                 
-                {/* Tabs */}
-                <div className="border-b border-gray-200">
-                    <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
-                        <button
-                            onClick={() => setActiveTab('cdc')}
-                            className={`${activeTab === 'cdc' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                        >
-                            1. Centres (CDCs)
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('secteur')}
-                            className={`${activeTab === 'secteur' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                        >
-                            2. Secteurs
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('metier')}
-                            className={`${activeTab === 'metier' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                        >
-                            3. Métiers
-                        </button>
-                    </nav>
+                {/* Action Bar */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
+                    <div>
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none">Domaines & Secteurs</h1>
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-2">Architecture pédagogique et métiers</p>
+                    </div>
+
+                    <form onSubmit={handleSearch} className="relative w-full md:w-80 group">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Rechercher un secteur..."
+                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-medium focus:border-amber-500 focus:bg-white transition-all outline-none"
+                        />
+                        <svg className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-amber-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </form>
                 </div>
 
-                <div className="overflow-x-auto">
-                    {activeTab === 'cdc' && (
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                {/* Content */}
+                <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-slate-100">
+                            <thead className="bg-slate-50/50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Centre (CDC)</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                    <th className="relative px-6 py-3"></th>
+                                    <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Secteur</th>
+                                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Domaine (CDC)</th>
+                                    <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Métiers Rattachés</th>
+                                    <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {cdcs.map((cdc: any) => (
-                                    <tr key={cdc.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{cdc.nom}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cdc.code}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cdc.description || '-'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button onClick={() => handleEditCdc(cdc)} className="text-blue-600 hover:text-blue-900">Modifier</button>
+                            <tbody className="divide-y divide-slate-100 bg-white">
+                                {secteurs.data.map(sect => (
+                                    <tr key={sect.id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-8 py-5">
+                                            <div className="text-sm font-black text-slate-900 group-hover:text-amber-600 transition-colors">{sect.nom}</div>
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{sect.code}</div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-black border border-slate-200 uppercase tracking-widest">
+                                                {sect.cdc?.nom || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {sect.metiers?.map((m: any) => (
+                                                    <div key={m.id} className="flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-md border border-amber-100/50 text-[9px] font-black uppercase">
+                                                        {m.nom}
+                                                        <button 
+                                                            onClick={() => setConfirmDelete({ id: m.id, type: 'metier', title: m.nom })}
+                                                            className="ml-1 text-amber-300 hover:text-amber-600 transition-colors"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                {sect.metiers?.length === 0 && <span className="text-[10px] text-slate-300 italic">Aucun métier</span>}
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-5 text-right">
+                                            <button 
+                                                onClick={() => setConfirmDelete({ id: sect.id, type: 'secteur', title: sect.nom })}
+                                                className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-                    )}
-
-                    {activeTab === 'secteur' && (
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Secteur</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CDC Rattaché</th>
-                                    <th className="relative px-6 py-3"></th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {secteurs.map((secteur: any) => (
-                                    <tr key={secteur.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{secteur.nom}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{secteur.code}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{secteur.cdc?.nom || '-'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button onClick={() => handleEditSecteur(secteur)} className="text-blue-600 hover:text-blue-900">Modifier</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-
-                    {activeTab === 'metier' && (
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Métier</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Secteur</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CDC Parent</th>
-                                    <th className="relative px-6 py-3"></th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {metiers.map((metier: any) => (
-                                    <tr key={metier.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{metier.nom}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{metier.secteur?.nom || '-'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{metier.secteur?.cdc?.nom || '-'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button onClick={() => handleEditMetier(metier)} className="text-blue-600 hover:text-blue-900">Modifier</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+                    </div>
+                    <div className="px-8 py-6 bg-slate-50/50 border-t border-slate-100">
+                        <Pagination links={secteurs.links} />
+                    </div>
                 </div>
             </div>
 
-            <CdcModal isOpen={isCdcModalOpen} onClose={() => setIsCdcModalOpen(false)} cdc={editingCdc} />
-            <SecteurModal isOpen={isSecteurModalOpen} onClose={() => setIsSecteurModalOpen(false)} secteur={editingSecteur} cdcs={cdcs} />
-            <MetierModal isOpen={isMetierModalOpen} onClose={() => setIsMetierModalOpen(false)} metier={editingMetier} secteurs={secteurs} />
-
+            <ConfirmDialog 
+                isOpen={!!confirmDelete}
+                title={`Supprimer ${confirmDelete?.type === 'metier' ? 'le métier' : confirmDelete?.type === 'secteur' ? 'le secteur' : 'le domaine'} ?`}
+                message={`Êtes-vous sûr de vouloir supprimer "${confirmDelete?.title}" ?`}
+                confirmLabel="Supprimer"
+                isDanger={true}
+                onConfirm={handleDelete}
+                onCancel={() => setConfirmDelete(null)}
+            />
         </AuthenticatedLayout>
     );
 }

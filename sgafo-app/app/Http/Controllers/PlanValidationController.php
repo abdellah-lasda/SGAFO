@@ -32,9 +32,9 @@ class PlanValidationController extends Controller
         if ($statut === 'soumis') {
             $query->where('statut', 'soumis');
         } elseif ($statut === 'planning') {
-            $query->whereIn('statut', ['validé', 'confirmé']);
+            $query->where('statut', 'confirmé');
         } elseif ($statut === 'historique') {
-            $query->whereIn('statut', ['validé', 'rejeté', 'confirmé']);
+            $query->whereIn('statut', ['validé', 'rejeté']);
         }
 
         $plans = $query->latest('date_soumission')->get();
@@ -80,7 +80,8 @@ class PlanValidationController extends Controller
             'siteFormation',
             'createur',
             'validateur',
-            'validationLogs.user'
+            'validationLogs.user',
+            'seances'
         ]);
 
         return Inertia::render('Modules/Plans/Show', [

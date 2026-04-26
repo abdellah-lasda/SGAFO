@@ -23,10 +23,10 @@ class SeanceController extends Controller
             return redirect()->route('dashboard')->with('error', 'Accès réservé aux Responsables de Formation.');
         }
 
-        // On ne planifie que les plans validés/confirmés
-        if (!in_array($plan->statut, ['validé', 'confirmé'])) {
+        // On ne planifie que les plans confirmés (approbation administrative)
+        if (!in_array($plan->statut, ['confirmé', 'validé'])) {
             return redirect()->route('modules.validations.index')
-                ->with('error', 'Le plan doit être validé avant d\'être planifié.');
+                ->with('error', 'Le plan doit être confirmé administrativement avant d\'être planifié.');
         }
 
         $plan->load(['themes.animateurs', 'siteFormation', 'createur', 'participants']);
@@ -73,8 +73,8 @@ class SeanceController extends Controller
     {
         $validated = $request->validated();
 
-        if ($plan->statut === 'confirmé') {
-            return redirect()->back()->with('error', 'Le planning est clôturé et ne peut plus être modifié.');
+        if ($plan->statut === 'validé') {
+            return redirect()->back()->with('error', 'Le planning est validé définitivement et ne peut plus être modifié.');
         }
 
         return DB::transaction(function () use ($validated, $plan) {
@@ -145,8 +145,8 @@ class SeanceController extends Controller
     {
         $seance = Seance::with('plan')->findOrFail($id);
 
-        if ($seance->plan->statut === 'confirmé') {
-            return redirect()->back()->with('error', 'Le planning est clôturé et ne peut plus être modifié.');
+        if ($seance->plan->statut === 'validé') {
+            return redirect()->back()->with('error', 'Le planning est validé définitivement et ne peut plus être modifié.');
         }
 
         $planId = $seance->plan_id;
@@ -162,7 +162,7 @@ class SeanceController extends Controller
     {
         if (!auth()->user()->hasRole('RF')) abort(403);
 
-        $plan->update(['statut' => 'confirmé']);
+        $plan->update(['statut' => 'validé']);
         
         $plan->validationLogs()->create([
             'user_id' => auth()->id(),
@@ -180,7 +180,7 @@ class SeanceController extends Controller
     {
         if (!auth()->user()->hasRole('RF')) abort(403);
 
-        $plan->update(['statut' => 'validé']);
+        $plan->update(['statut' => 'confirmé']);
 
         $plan->validationLogs()->create([
             'user_id' => auth()->id(),

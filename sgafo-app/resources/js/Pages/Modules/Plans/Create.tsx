@@ -273,6 +273,9 @@ export default function Create({ plan, entites, secteurs, sites, hotels, formate
                             themes={themes}
                             setThemes={setThemes}
                             formateurs={formateurs}
+                            dateDebut={dateDebut}
+                            dateFin={dateFin}
+                            planId={plan?.id}
                         />
                     )}
                     {step === 4 && (
@@ -281,6 +284,9 @@ export default function Create({ plan, entites, secteurs, sites, hotels, formate
                             participantIds={participantIds}
                             setParticipantIds={setParticipantIds}
                             excludeIds={animateurIds}
+                            dateDebut={dateDebut}
+                            dateFin={dateFin}
+                            planId={plan?.id}
                         />
                     )}
                     {step === 5 && (

@@ -45,6 +45,21 @@ class PlanFormationPolicy
      */
     public function delete(User $user, PlanFormation $planFormation): bool
     {
+        if ($user->isAdmin()) return true;
+
+        // Le créateur peut supprimer s'il est en brouillon ou rejeté
+        if ($planFormation->cree_par === $user->id && in_array($planFormation->statut, ['brouillon', 'rejeté'])) {
+            return true;
+        }
+
+        // Le RF peut supprimer s'il a les droits sur le secteur et que le plan n'est pas validé
+        if ($user->hasRole('RF') && $planFormation->statut !== 'validé') {
+            $planSecteurId = $planFormation->entite->secteur_id ?? null;
+            if ($planSecteurId && $user->secteurs()->where('secteurs.id', $planSecteurId)->exists()) {
+                return true;
+            }
+        }
+
         return false;
     }
 

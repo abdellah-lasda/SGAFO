@@ -17,10 +17,23 @@ use App\Http\Requests\UpdateUserRequest;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // On récupère les utilisateurs avec leur rôles
-        $users = User::with('roles', 'regions', 'instituts', 'secteurs', 'cdcs')->orderBy('id', 'desc')->get();
+        $search = $request->input('search');
+
+        // Récupération paginée avec filtrage
+        $users = User::with('roles', 'regions', 'instituts', 'secteurs', 'cdcs')
+            ->when($search, function($q) use ($search) {
+                $q->where(function($sq) use ($search) {
+                    $sq->where('nom', 'like', "%{$search}%")
+                      ->orWhere('prenom', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
+
         $roles = Role::all();
         $regions = Region::all();
         $instituts = Institut::all();
@@ -34,6 +47,7 @@ class UserController extends Controller
             'instituts' => $instituts,
             'secteurs' => $secteurs,
             'cdcs' => $cdcs,
+            'filters' => $request->only(['search']),
         ]);
     }
 
@@ -50,32 +64,27 @@ class UserController extends Controller
             'is_externe' => $validated['is_externe'] ?? false,
         ]);
 
-        // Attach roles
         if (!empty($validated['roles'])) {
             $user->roles()->attach($validated['roles'], ['assigned_at' => now(), 'assigned_by' => auth()->id()]);
         }
 
-        // Attach regions if applicable (DR)
         if (!empty($validated['regions'])) {
             $user->regions()->attach($validated['regions']);
         }
 
-        // Attach CDCs if applicable (Responsable CDC)
         if (!empty($validated['cdcs'])) {
             $user->cdcs()->attach($validated['cdcs']);
         }
 
-        // Attach secteurs if applicable (Formateur)
         if (!empty($validated['secteurs'])) {
             $user->secteurs()->attach($validated['secteurs']);
         }
 
-        // Attach instituts if applicable
         if (!empty($validated['instituts']) && !($validated['is_externe'] ?? false)) {
             $user->instituts()->attach($validated['instituts']);
         }
 
-        return redirect()->back()->with('message', 'Utilisateur créé avec succès.');
+        return redirect()->back()->with('success', 'Utilisateur créé avec succès.');
     }
 
     public function update(UpdateUserRequest $request, User $user)
@@ -94,7 +103,6 @@ class UserController extends Controller
 
         $user->save();
 
-        // Sync relationships
         if (!empty($validated['roles'])) {
             $user->roles()->syncWithPivotValues($validated['roles'], ['assigned_at' => now(), 'assigned_by' => auth()->id()]);
         }
@@ -109,12 +117,15 @@ class UserController extends Controller
             $user->instituts()->sync($validated['instituts'] ?? []);
         }
 
-        return redirect()->back()->with('message', 'Utilisateur mis à jour avec succès.');
+        return redirect()->back()->with('success', 'Utilisateur mis à jour avec succès.');
     }
 
     public function destroy(User $user)
     {
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->with('error', 'Impossible de supprimer votre propre compte.');
+        }
         $user->delete();
-        return redirect()->back()->with('message', 'Utilisateur supprimé.');
+        return redirect()->back()->with('success', 'Utilisateur supprimé.');
     }
 }

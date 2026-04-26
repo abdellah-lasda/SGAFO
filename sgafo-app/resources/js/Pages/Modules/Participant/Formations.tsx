@@ -30,7 +30,7 @@ interface Props extends PageProps {
 }
 
 export default function Formations({ plans, allSeances, stats }: Props) {
-    // console.log(plans)
+    console.log(plans)
     const [activeTab, setActiveTab] = useState<'timeline' | 'projets'>('timeline');
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
