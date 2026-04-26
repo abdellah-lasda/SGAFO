@@ -96,10 +96,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('catalogue-national/{plan}', [\App\Http\Controllers\CatalogueController::class, 'show'])->name('modules.catalogue.show');
 });
 
-Route::middleware(['auth'])->prefix('modules')->name('modules.')->group(function () {
+Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')->group(function () {
     Route::resource('entites', EntiteFormationController::class);
     Route::get('entites/{entite}/export-pdf', [EntiteFormationController::class, 'exportPdf'])->name('entites.export-pdf');
-    
+});
+
+Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')->group(function () {
     Route::resource('plans', PlanFormationController::class);
     Route::get('plans/{plan}/export-pdf', [PlanFormationController::class, 'exportPdf'])->name('plans.export-pdf');
     Route::post('plans/{plan}/submit', [PlanFormationController::class, 'submit'])->name('plans.submit');
@@ -134,7 +136,7 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
 });
 
 // Espace Participant
-Route::middleware(['auth'])->prefix('participant')->name('participant.')->group(function () {
+Route::middleware(['auth', 'role:FORMATEUR'])->prefix('participant')->name('participant.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Modules\Participant\ParticipantDashboardController::class, 'index'])->name('dashboard');
     Route::get('/formations', [App\Http\Controllers\Modules\Participant\SeanceController::class, 'formations'])->name('formations');
     Route::get('/formation/{plan}', [App\Http\Controllers\Modules\Participant\SeanceController::class, 'planShow'])->name('plan.show');

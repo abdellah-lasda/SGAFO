@@ -58,7 +58,10 @@ export default function Dashboard({ stats: dataStats, latestFormations }: Props)
                         </div>
                         <div className="hidden lg:block">
                             <Link 
-                                href={route('modules.entites.index')}
+                                href={user.roles?.some((r: any) => r.code === 'ADMIN') 
+                                    ? route('admin.pilotage.index', { tab: 'entites' }) 
+                                    : route('modules.entites.index')
+                                }
                                 className="inline-flex items-center px-8 py-4 bg-slate-900 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-2xl active:scale-95"
                             >
                                 Explorer le Catalogue

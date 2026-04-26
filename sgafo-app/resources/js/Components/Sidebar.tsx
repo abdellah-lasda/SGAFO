@@ -33,22 +33,24 @@ export default function Sidebar({ user }: SidebarProps) {
                 </span>
             </div>
 
-            {/* Action Button Section (From Image) */}
-            <div className="px-4 mb-8">
-                <button className="w-full flex items-center justify-between px-5 py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-all shadow-xl shadow-blue-600/20 group">
-                    <span className="flex items-center gap-3">
-                        <div className="bg-white/20 p-1 rounded-lg">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
-                            </svg>
-                        </div>
-                        Nouveau
-                    </span>
-                    <svg className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-            </div>
+            {/* Action Button Section (Only for non-admins) */}
+            {!isAdmin && (
+                <div className="px-4 mb-8">
+                    <button className="w-full flex items-center justify-between px-5 py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-all shadow-xl shadow-blue-600/20 group">
+                        <span className="flex items-center gap-3">
+                            <div className="bg-white/20 p-1 rounded-lg">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                                </svg>
+                            </div>
+                            Nouveau
+                        </span>
+                        <svg className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                </div>
+            )}
 
             <nav className="flex-1 overflow-y-auto px-4 space-y-8 scrollbar-hide pb-10">
                 
