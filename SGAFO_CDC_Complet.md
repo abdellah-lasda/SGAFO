@@ -5,10 +5,10 @@
 
 | Champ | Valeur |
 |---|---|
-| **Référence** | SGAFO-CDC-v2.0 |
-| **Version** | 2.0 — Version définitive enrichie |
+| **Référence** | SGAFO-CDC-v2.1 |
+| **Version** | 2.1 — Version révisée conforme à l'implémentation réelle |
 | **Date** | Avril 2026 |
-| **Statut** | Validé pour soutenance |
+| **Statut** | Validé — Application déployée en Instance Production |
 | **Encadrant** | M. Zaher MECHBOUK |
 | **Année académique** | 2025 – 2026 |
 
@@ -98,7 +98,7 @@ Mettre en place une plateforme web intégrée permettant de **planifier, exécut
 | # | Module | Description |
 |---|---|---|
 | 1 | Gestion des utilisateurs et rôles | Comptes, habilitations RBAC, historique connexions |
-| 2 | Gestion des entités de formation | Idées de formation réutilisables (titre, objectifs, thèmes) |
+| 2 | Gestion des entités de formation ("Mes Modèles") | Idées de formation réutilisables (titre, objectifs, thèmes, mode) |
 | 3 | Gestion des plans de formation | Plans détaillés avec stepper guidé 6 étapes, statuts, workflow |
 | 4 | Workflow validation/publication | Soumission CDC → validation RF → confirmation et publication |
 | 5 | Gestion des sessions | Dates, sites, animateurs contextuels, capacité, statut |
@@ -273,7 +273,7 @@ Le système SGAFO utilise un contrôle d'accès basé sur les rôles à **deux n
 | Documents | C/R | C/R/U | R | C/R | R | R/D |
 | Logistique | C/R/U | C/R/U | R (région) | — | — | R |
 | Rapports | R limité | R complet | R (région) | — | — | R complet |
-| Administration | — | — | — | — | — | **Complet** |
+| Administration (Pilotage, Utilisateurs, Logistique, Établissements, Spécialités) | — | — | — | — | — | **Complet** |
 | Journal audit | — | — | — | — | — | R complet |
 
 *FA et FP sont des rôles contextuels : les permissions s'appliquent uniquement dans le périmètre des formations où le formateur a été affecté comme Animateur ou Participant.*
@@ -339,12 +339,14 @@ Le système SGAFO utilise un contrôle d'accès basé sur les rôles à **deux n
 
 | Statut | Description | Transition suivante possible |
 |---|---|---|
-| **Brouillon** | Plan en cours de rédaction, non soumis | → Soumis (CDC) ou → Confirmé (RF) |
-| **Soumis** | Envoyé au RF pour validation (CDC uniquement) | → Validé ou → Rejeté |
-| **Validé** | Approuvé par le RF | → Confirmé |
-| **Rejeté** | Refusé par le RF avec motif | → Brouillon (CDC modifie) |
-| **Confirmé** | Plan actif, sessions planifiables | → Archivé |
-| **Archivé** | Formation terminée et clôturée | — |
+| **brouillon** | Plan en cours de rédaction, non soumis | → soumis (CDC) ou → confirmé (RF direct) |
+| **soumis** | Envoyé au RF pour validation (CDC uniquement) | → confirmé ou → rejeté |
+| **rejeté** | Refusé par le RF avec motif obligatoire | → brouillon (CDC modifie et re-soumet) |
+| **confirmé** | Approuvé administrativement — planning des séances en cours | → validé ou → annulé |
+| **validé** | Planning 100% finalisé — plan publié dans la Bibliothèque Nationale | → annulé |
+| **annulé** | Formation annulée avec motif obligatoire — visible historique uniquement | — |
+
+> **Note d'implémentation :** La contrainte `CHECK` PostgreSQL sur la colonne `statut` autorise exactement ces 6 valeurs : `brouillon`, `soumis`, `confirmé`, `rejeté`, `validé`, `annulé`.
 
 ### 5.3 Processus de Convocation
 
@@ -747,18 +749,23 @@ DOMAINE 6 : Notifications & Audit
 | cree_par | BIGINT | FK → utilisateurs | CDC ou RF créateur |
 | created_at / updated_at | TIMESTAMP | NOT NULL | — |
 
-#### Table `plans_formation`
+#### Table `plans_formation` *(nom réel en base)*
 | Champ | Type | Contrainte | Description |
 |---|---|---|---|
 | id | BIGSERIAL | PK | — |
 | entite_id | BIGINT | FK → entites_formation | Entité de référence |
 | titre | VARCHAR(200) | NOT NULL | Titre du plan |
-| statut | ENUM | NOT NULL | `brouillon`/`soumis`/`validé`/`rejeté`/`confirmé`/`archivé` |
-| motif_rejet | TEXT | — | Obligatoire si statut=rejeté |
-| cree_par | BIGINT | FK → utilisateurs | CDC ou RF |
-| valide_par | BIGINT | FK → utilisateurs | RF validateur (NULL si créé par RF) |
+| statut | ENUM CHECK | NOT NULL | `brouillon`/`soumis`/`confirmé`/`rejeté`/`validé`/`annulé` |
+| motif_rejet | TEXT | — | Obligatoire si rejeté ou annulé |
+| cree_par | BIGINT | FK → users | CDC ou RF créateur |
+| valide_par | BIGINT | FK → users | RF validateur |
 | date_soumission | TIMESTAMP | — | — |
 | date_validation | TIMESTAMP | — | — |
+| date_debut | DATE | — | Début prévu de la formation |
+| date_fin | DATE | — | Fin prévue de la formation |
+| site_formation_id | BIGINT | FK → sites_formation, NULLABLE | NULL si formation à distance |
+| plateforme | VARCHAR | — | Ex: Microsoft Teams (distanciel/hybride) |
+| lien_visio | VARCHAR | — | URL de la réunion virtuelle |
 | created_at / updated_at | TIMESTAMP | NOT NULL | — |
 
 #### Table `plan_themes`
@@ -787,18 +794,19 @@ DOMAINE 6 : Notifications & Audit
 
 ### 10.4 Domaine 3 — Sessions & Présences
 
-#### Table `sessions_formation`
+#### Table `seances` *(nom réel en base — anciennement `sessions_formation`)*
 | Champ | Type | Contrainte | Description |
 |---|---|---|---|
 | id | BIGSERIAL | PK | — |
 | plan_id | BIGINT | FK → plans_formation | Plan confirmé associé |
-| date_debut | TIMESTAMP | NOT NULL | — |
-| date_fin | TIMESTAMP | NOT NULL | — |
-| site_id | BIGINT | FK → sites_formation | Lieu d'exécution |
-| capacite | INTEGER | NOT NULL | Nombre max de participants |
+| site_id | BIGINT | FK → sites_formation, **NULLABLE** | NULL pour les formations à distance |
+| date | DATE | NOT NULL | Date de la séance |
+| debut | TIME | NOT NULL | Heure de début |
+| fin | TIME | NOT NULL | Heure de fin |
 | statut | ENUM | NOT NULL | `planifiée`/`en_cours`/`terminée`/`annulée` |
-| created_by | BIGINT | FK → utilisateurs | RF planificateur |
 | created_at / updated_at | TIMESTAMP | NOT NULL | — |
+
+> **Important :** `site_id` est **nullable** depuis la migration `make_site_id_nullable_in_seances_table` pour permettre les séances en distanciel sans site physique.
 
 #### Table `presences`
 | Champ | Type | Contrainte | Description |
@@ -1132,5 +1140,79 @@ Ce système permettra à l'OFPPT de passer d'une gestion fragmentée et manuelle
 
 ---
 
-*SGAFO — Cahier des Charges v2.0 — OFPPT 2025–2026*
-*Document enrichi le 14 Avril 2026 suite à l'analyse et aux clarifications apportées*
+## 17. MODULES IMPLÉMENTÉS — ÉTAT RÉEL DU SYSTÈME
+
+### 17.1 Modules Opérationnels (Instance Production)
+
+| Module | Statut | Détails |
+|---|---|---|
+| Authentification & RBAC | ✅ Complet | Middleware `CheckRole`, rôles : ADMIN, RF, CDC, FORMATEUR, DR |
+| Gestion des Utilisateurs (Admin) | ✅ Complet | CRUD + filtrage par badge de rôle (RF, CDC, FORMATEUR, DR, ADMIN) |
+| Gestion des Établissements (Admin) | ✅ Complet | CRUD Instituts avec rattachement région |
+| Gestion des Spécialités/Domaines (Admin) | ✅ Complet | CRUD Domaines pédagogiques |
+| Gestion Logistique (Admin) | ✅ Complet | Sites de formation + Hôtels avec régions |
+| Pilotage Global (Admin) | ✅ Complet | KPIs temps réel : plans par statut, utilisateurs, entités par secteur |
+| Gestion des Entités "Mes Modèles" (CDC/RF) | ✅ Complet | Avec thèmes, animateurs, mode (présentiel/distance/hybride) |
+| Stepper Création Plan — 6 étapes (CDC/RF) | ✅ Complet | Entité → Thèmes → Animateurs → Participants → Logistique → Récap |
+| Workflow Validation (CDC→RF) | ✅ Complet | soumis → confirmé/rejeté avec logs d'audit et notifications |
+| Confirmation directe RF | ✅ Complet | RF confirme ses propres plans sans validation externe |
+| Annulation de formation | ✅ Complet | Statut `annulé` + motif obligatoire (min 10 caractères) |
+| Centre de Validation (RF uniquement) | ✅ Complet | Vue dédiée : plans soumis, en planning, historique par secteur |
+| Gestion des Séances / Planning | ✅ Complet | Création séances avec validation disponibilité temps réel |
+| Validation conflits de planning | ✅ Complet | Détection chevauchements : participant et animateur sur même créneau |
+| Clôture / Réouverture du planning | ✅ Complet | Statut `validé` → publication Bibliothèque Nationale |
+| Bibliothèque Nationale (Catalogue) | ✅ Complet | Plans `validé` filtrables par secteur, accessibles à tous les rôles |
+| Espace Animateur | ✅ Complet | Dashboard + Mes Formations (route `modules.animateur.*`) |
+| Espace Participant | ✅ Complet | Dashboard + Mes Formations (statuts `validé`+`terminée`, route `participant.*`) |
+| Export PDF du plan | ✅ Complet | Route `modules.plans.export-pdf` |
+| Notifications in-app | ✅ Complet | Laravel Notifications (canal : database) |
+| QCM par session | 🔄 Partiel | Structure BDD complète, interface passage QCM implémentée |
+| Présences / Absences | 🔄 Partiel | Modèle `Seance` en place, interface animateur en cours |
+| Feedback post-session | 📋 Planifié | Modèle prévu, non encore implémenté |
+
+### 17.2 Validations Métier Implémentées
+
+| Règle | Implémentation |
+|---|---|
+| Date début plan ≥ aujourd'hui | Frontend (`min={today}`) + backend (`after_or_equal:today`) |
+| Participant non disponible (autre séance) | Vérification lors de la création de séance avec message d'erreur précis |
+| Animateur non disponible (autre séance) | Idem |
+| Séance dans la plage du plan | Vérification dates début/fin du plan |
+| Annulation avec motif min 10 caractères | Validation frontend + backend |
+| Rejet RF avec motif obligatoire | `required|string|min:10` |
+| Plan CDC nécessite validation RF | Gate `validate` + Policy `PlanFormationPolicy` |
+
+### 17.3 Architecture des Routes (Nommage Réel)
+
+```
+modules.plans.*                   → PlanFormationController
+modules.validations.*             → PlanValidationController
+modules.validations.planning.*    → SeanceController (RF)
+modules.catalogue.*               → CatalogueController
+modules.entites.*                 → EntiteFormationController
+modules.animateur.*               → AnimateurDashboardController
+participant.*                     → Participant\SeanceController
+admin.pilotage.*                  → PilotageController
+admin.users.*                     → UserController
+admin.logistique.*                → LogistiqueController (Sites, Hôtels)
+admin.instituts.*                 → InstitutController
+admin.domaines.*                  → DomaineController
+```
+
+### 17.4 Stack Technique Réel
+
+| Élément | Valeur |
+|---|---|
+| Framework Backend | Laravel 12.56.0 |
+| PHP | 8.2.12 |
+| Base de données | PostgreSQL (connexion 127.0.0.1:5432, DB: sgafo) |
+| Frontend | React + TypeScript + Inertia.js |
+| Build tool | Vite + npm run dev |
+| Routing frontend | Ziggy (génération routes Laravel côté React) |
+| Notifications | Laravel Notifications (channel: database) |
+| PDF | Export via contrôleur dédié (`exportPdf`) |
+
+---
+
+*SGAFO — Cahier des Charges v2.1 — OFPPT 2025–2026*
+*Mis à jour le 27 Avril 2026 — Conforme à l'implémentation en Instance Production*

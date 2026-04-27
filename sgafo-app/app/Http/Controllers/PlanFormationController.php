@@ -124,7 +124,7 @@ class PlanFormationController extends Controller
                     })->value('formateur_id');
 
                 if ($busyFormateurId) {
-                    $f = \App\Models\User::find($busyFormateurId);
+                    $f = User::find($busyFormateurId);
                     return redirect()->back()->with('error', "Impossible d'enregistrer le plan : Le formateur {$f->nom} {$f->prenom} a déjà des engagements sur la période du {$dateDebut} au {$dateFin}.")->withInput();
                 }
             }
@@ -132,7 +132,7 @@ class PlanFormationController extends Controller
             // 2. Participants
             $participantIds = $validated['participant_ids'] ?? [];
             if (!empty($participantIds)) {
-                $busyParticipantId = \App\Models\User::whereIn('id', $participantIds)
+                $busyParticipantId = User::whereIn('id', $participantIds)
                     ->whereHas('plans', function($q) use ($dateDebut, $dateFin) {
                         $q->whereHas('seances', function($sq) use ($dateDebut, $dateFin) {
                             $sq->whereBetween('date', [$dateDebut, $dateFin]);
@@ -140,7 +140,7 @@ class PlanFormationController extends Controller
                     })->value('id');
 
                 if ($busyParticipantId) {
-                    $p = \App\Models\User::find($busyParticipantId);
+                    $p = User::find($busyParticipantId);
                     return redirect()->back()->with('error', "Impossible d'enregistrer le plan : Le participant {$p->nom} {$p->prenom} a déjà des séances prévues sur la période du {$dateDebut} au {$dateFin}.")->withInput();
                 }
             }
@@ -295,7 +295,7 @@ class PlanFormationController extends Controller
                     })->value('formateur_id');
 
                 if ($busyFormateurId) {
-                    $f = \App\Models\User::find($busyFormateurId);
+                    $f = User::find($busyFormateurId);
                     return redirect()->back()->with('error', "Impossible de mettre à jour le plan : Le formateur {$f->nom} {$f->prenom} a déjà des engagements sur la période du {$dateDebut} au {$dateFin}.")->withInput();
                 }
             }
@@ -303,7 +303,7 @@ class PlanFormationController extends Controller
             // 2. Participants
             $participantIds = $validated['participant_ids'] ?? [];
             if (!empty($participantIds)) {
-                $busyParticipantId = \App\Models\User::whereIn('id', $participantIds)
+                $busyParticipantId = User::whereIn('id', $participantIds)
                     ->whereHas('plans', function($q) use ($dateDebut, $dateFin, $planId) {
                         $q->where('plans_formation.id', '!=', $planId)
                           ->whereHas('seances', function($sq) use ($dateDebut, $dateFin) {
@@ -312,7 +312,7 @@ class PlanFormationController extends Controller
                     })->value('id');
 
                 if ($busyParticipantId) {
-                    $p = \App\Models\User::find($busyParticipantId);
+                    $p = User::find($busyParticipantId);
                     return redirect()->back()->with('error', "Impossible de mettre à jour le plan : Le participant {$p->nom} {$p->prenom} a déjà des séances prévues sur la période du {$dateDebut} au {$dateFin}.")->withInput();
                 }
             }
@@ -637,7 +637,7 @@ class PlanFormationController extends Controller
 
         $motif = $request->motif_annulation;
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($plan, $motif) {
+        DB::transaction(function () use ($plan, $motif) {
             $plan->update([
                 'statut' => 'annulé',
                 'motif_rejet' => $motif, // On réutilise ce champ ou un nouveau si besoin
@@ -658,7 +658,7 @@ class PlanFormationController extends Controller
         
         // 2. Animateurs
         $animateurIds = $plan->getAnimateurIds();
-        $animateurs = \App\Models\User::whereIn('id', $animateurIds)->get();
+        $animateurs = User::whereIn('id', $animateurIds)->get();
         $notifiables = $notifiables->merge($animateurs);
         
         // 3. Participants
@@ -667,7 +667,7 @@ class PlanFormationController extends Controller
         // Envoyer à tout le monde (sauf l'annulateur lui-même si présent dans la liste)
         $notifiables = $notifiables->unique('id')->reject(fn($u) => $u->id === auth()->id());
         
-        \Illuminate\Support\Facades\Notification::send($notifiables, new PlanCancelledNotification($plan, $motif));
+        Notification::send($notifiables, new PlanCancelledNotification($plan, $motif));
 
         return redirect()->back()->with('success', 'La formation a été annulée et les équipes ont été informées.');
     }
