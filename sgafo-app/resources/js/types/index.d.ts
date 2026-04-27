@@ -25,6 +25,7 @@ export interface User {
     primary_role?: string;
     email_verified_at?: string;
     notifications: AppNotification[];
+    regions?: any[];
 }
 
 export type PageProps<
