@@ -1,4 +1,3 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -97,66 +96,72 @@ const DOCS = {
 export default function Documentation() {
     const [activeSection, setActiveSection] = useState<keyof typeof DOCS>('introduction');
 
-    const Content = (
-        <div className="py-12 bg-slate-50 min-h-screen">
-            <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                {/* Guest Navigation Header */}
-                <div className="flex items-center justify-between mb-8 px-4">
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center p-2.5 shadow-xl shadow-slate-900/20 group-hover:bg-blue-600 transition-all">
+    return (
+        <div className="bg-slate-50 min-h-screen font-sans selection:bg-blue-600 selection:text-white">
+            <Head title="Documentation Intégrale SGAFO" />
+
+            <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 py-12">
+                {/* Header Navigation */}
+                <div className="flex flex-col sm:flex-row items-center justify-between mb-12 px-4 gap-6">
+                    <Link href="/" className="flex items-center gap-4 group">
+                        <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center p-3 shadow-2xl shadow-slate-900/20 group-hover:bg-blue-600 transition-all">
                                 <svg viewBox="0 0 100 100" className="w-full h-full text-white" fill="currentColor"><circle cx="50" cy="50" r="40" /></svg>
                         </div>
-                        <div className="flex flex-col leading-none">
-                            <span className="text-2xl font-black tracking-tighter text-slate-900 uppercase">SGAFO</span>
-                            <span className="text-[10px] font-black text-blue-600 tracking-widest uppercase">Portail Public</span>
+                        <div className="flex flex-col leading-none text-left">
+                            <span className="text-3xl font-black tracking-tighter text-slate-900 uppercase">SGAFO</span>
+                            <span className="text-[11px] font-black text-blue-600 tracking-widest uppercase">Espace Aide & Support</span>
                         </div>
                     </Link>
-                    <Link href={route('login')} className="px-8 py-3 bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all">Espace Sécurisé</Link>
+                    <div className="flex items-center gap-4">
+                        <a 
+                            href={route('documentation.download')} 
+                            className="px-8 py-4 bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-2xl shadow-slate-900/20 hover:bg-blue-600 transition-all flex items-center gap-3"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5m0 0l5-5m-5 5V3" /></svg>
+                            Télécharger Guide PDF
+                        </a>
+                        <Link href={route('login')} className="px-8 py-4 bg-white text-slate-900 text-[11px] font-black uppercase tracking-widest rounded-2xl border border-slate-200 shadow-xl hover:bg-slate-50 transition-all">Connexion</Link>
+                    </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow-2xl shadow-slate-200/50 sm:rounded-[40px] flex flex-col md:flex-row min-h-[75vh] border border-slate-100">
+                <div className="bg-white overflow-hidden shadow-2xl shadow-slate-200/50 sm:rounded-[48px] flex flex-col md:flex-row min-h-[75vh] border border-slate-100">
                     
                     {/* Sidebar */}
-                    <div className="w-full md:w-80 border-r border-slate-100 bg-slate-50/50 p-8">
-                        <div className="mb-10">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-8 border-b border-slate-200 pb-2">Sommaire Général</h3>
-                            <nav className="space-y-3">
-                                {Object.entries(DOCS).map(([key, section]) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => setActiveSection(key as keyof typeof DOCS)}
-                                        className={`w-full text-left px-6 py-4 rounded-2xl text-sm font-bold transition-all flex items-center justify-between group ${
-                                            activeSection === key 
-                                            ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/20' 
-                                            : 'text-slate-500 hover:bg-white hover:text-slate-900 border border-transparent hover:border-slate-200'
-                                        }`}
-                                    >
-                                        <span className="truncate">{section.title}</span>
-                                        <svg className={`w-4 h-4 shrink-0 transition-transform ${activeSection === key ? 'translate-x-1' : 'opacity-0 group-hover:opacity-100'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
-                                    </button>
-                                ))}
-                            </nav>
-                        </div>
-
-                        <div className="p-8 bg-blue-600 rounded-[32px] shadow-2xl shadow-blue-600/30 text-white relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 -mt-6 -mr-6 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform" />
-                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-100 mb-4 relative z-10">Centre d'Assistance</p>
-                            <p className="text-xs font-medium leading-relaxed relative z-10 mb-6 italic opacity-90">
-                                Une question métier ou technique ? Nos experts OFPPT vous accompagnent.
-                            </p>
-                            <a href="mailto:support.sgafo@ofppt.ma" className="block w-full py-4 bg-white text-blue-600 text-center font-black uppercase tracking-widest text-[9px] rounded-2xl hover:bg-blue-50 transition-all shadow-lg">support.sgafo@ofppt.ma</a>
+                    <div className="w-full md:w-80 border-r border-slate-100 bg-slate-50/50 p-10">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-10 border-b border-slate-200 pb-3">Sommaire du Manuel</h3>
+                        <nav className="space-y-3">
+                            {Object.entries(DOCS).map(([key, section]) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setActiveSection(key as keyof typeof DOCS)}
+                                    className={`w-full text-left px-6 py-5 rounded-[24px] text-sm font-bold transition-all flex items-center justify-between group ${
+                                        activeSection === key 
+                                        ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/20' 
+                                        : 'text-slate-500 hover:bg-white hover:text-slate-900 border border-transparent hover:border-slate-200'
+                                    }`}
+                                >
+                                    <span className="truncate">{section.title}</span>
+                                    <svg className={`w-4 h-4 shrink-0 transition-transform ${activeSection === key ? 'translate-x-1' : 'opacity-0 group-hover:opacity-100'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+                                </button>
+                            ))}
+                        </nav>
+                        
+                        <div className="mt-16 p-8 bg-blue-600 rounded-[32px] text-white shadow-2xl shadow-blue-600/30">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-100 mb-4">Assistance OFPPT</p>
+                            <p className="text-xs font-medium leading-relaxed mb-6 italic opacity-90">Une équipe dédiée pour vous accompagner sur SGAFO.</p>
+                            <a href="mailto:support.sgafo@ofppt.ma" className="text-[10px] font-black uppercase tracking-widest underline decoration-2 underline-offset-4">support.sgafo@ofppt.ma</a>
                         </div>
                     </div>
 
                     {/* Content Area */}
                     <div className="flex-1 p-8 md:p-20 bg-white">
-                        <div className="max-w-3xl">
+                        <div className="max-w-3xl text-left">
                             <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-slate-50 text-slate-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-12 border border-slate-100">
                                 <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                                Guide de Référence Certifié • OFPPT
+                                Guide de Référence Certifié • v1.0.5
                             </div>
                             
-                            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-10 leading-[0.95]">
+                            <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter mb-10 leading-[0.95]">
                                 {DOCS[activeSection].title}
                             </h1>
                             
@@ -167,8 +172,8 @@ export default function Documentation() {
                             {'steps' in DOCS[activeSection] && (
                                 <div className="grid gap-8">
                                     {(DOCS[activeSection] as any).steps.map((step: string, i: number) => (
-                                        <div key={i} className="flex items-start gap-8 p-8 bg-slate-50 rounded-[32px] border border-slate-100 hover:border-blue-200 hover:bg-white transition-all group shadow-sm hover:shadow-xl hover:shadow-slate-200/50">
-                                            <div className="shrink-0 w-14 h-14 rounded-2xl bg-white border border-slate-200 text-slate-900 flex items-center justify-center font-black text-xl shadow-md group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all">
+                                        <div key={i} className="flex items-start gap-8 p-10 bg-slate-50 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
+                                            <div className="shrink-0 w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-xl shadow-lg group-hover:bg-blue-600 transition-colors">
                                                 0{i + 1}
                                             </div>
                                             <span className="font-bold text-slate-700 text-xl leading-tight pt-3">{step}</span>
@@ -180,7 +185,7 @@ export default function Documentation() {
                             {'sections' in DOCS[activeSection] && (
                                 <div className="space-y-20">
                                     {(DOCS[activeSection] as any).sections.map((sec: any, i: number) => (
-                                        <div key={i} className="relative pl-14 border-l-2 border-slate-100 group">
+                                        <div key={i} className="relative pl-16 border-l-2 border-slate-100 group">
                                             <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-white border-4 border-slate-200 group-hover:border-blue-600 group-hover:scale-125 transition-all shadow-md" />
                                             <h4 className="text-3xl font-black text-slate-900 mb-6 tracking-tight group-hover:text-blue-600 transition-colors leading-none">{sec.subtitle}</h4>
                                             <p className="text-xl text-slate-500 leading-relaxed font-medium">{sec.text}</p>
@@ -188,33 +193,22 @@ export default function Documentation() {
                                     ))}
                                 </div>
                             )}
-
-                            <div className="mt-28 pt-14 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-10">
-                                <div className="flex items-center gap-8">
-                                    <button className="group flex items-center gap-4 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-all">
-                                        <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center group-hover:bg-slate-100 transition-colors border border-slate-200 shadow-sm">
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                                        </div>
-                                        Générer PDF
-                                    </button>
-                                </div>
-                                <div className="text-right border-r-4 border-slate-100 pr-6">
-                                    <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-1">Système SGAFO</p>
-                                    <p className="text-[12px] font-black text-slate-900 uppercase">OFPPT Maroc • v1.0.5</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
-
                 </div>
             </div>
-        </div>
-    );
-
-    return (
-        <div className="bg-slate-50 min-h-screen">
-            <Head title="Documentation Publique SGAFO" />
-            {Content}
+            
+            <footer className="py-20 px-6 border-t border-slate-200 mt-20">
+                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center p-2">
+                             <svg viewBox="0 0 100 100" className="w-full h-full text-white" fill="currentColor"><circle cx="50" cy="50" r="40" /></svg>
+                        </div>
+                        <span className="text-xl font-black text-slate-900">SGAFO</span>
+                    </div>
+                    <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.4em]">© 2026 Portail Institutionnel de la Formation Continue • OFPPT Maroc</p>
+                 </div>
+            </footer>
         </div>
     );
 }

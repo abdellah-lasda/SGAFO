@@ -59,6 +59,8 @@ Route::get('/documentation', function () {
     return Inertia::render('Support/Documentation');
 })->name('documentation');
 
+Route::get('/documentation/download', [App\Http\Controllers\Support\PdfGuideController::class, 'download'])->name('documentation.download');
+
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
