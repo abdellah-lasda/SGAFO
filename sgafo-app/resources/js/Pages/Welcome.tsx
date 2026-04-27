@@ -18,6 +18,25 @@ interface WelcomeProps extends PageProps {
     phpVersion: string;
 }
 
+const FAQ_DATA = [
+    {
+        question: "Comment créer un nouveau plan de formation ?",
+        answer: "Les Chefs de Complexe (CDC) peuvent initier un nouveau plan via le bouton 'Nouveau Plan' de leur dashboard. Le processus suit un stepper structuré : Identification, Thèmes, Participants et Logistique."
+    },
+    {
+        question: "Quel est le circuit de validation d'un plan ?",
+        answer: "Un plan est d'abord 'Soumis' par le CDC. Il est ensuite 'Confirmé' administrativement par la Direction Régionale (RF), puis 'Validé' techniquement une fois le planning et les ressources finalisés."
+    },
+    {
+        question: "Comment sont affectés les animateurs ?",
+        answer: "L'affectation se fait par thème. Un thème peut avoir un ou plusieurs animateurs (co-animation). Le système vérifie automatiquement la disponibilité des formateurs pour éviter les conflits de planning."
+    },
+    {
+        question: "Qui peut accéder au Catalogue National ?",
+        answer: "Le Catalogue National est une bibliothèque publique au sein de l'OFPPT. Tous les utilisateurs authentifiés peuvent consulter les plans ayant atteint le statut final 'Validé'."
+    }
+];
+
 export default function Welcome({
     auth,
     stats,
@@ -27,6 +46,7 @@ export default function Welcome({
 }: WelcomeProps) {
     const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [activeFaqIndex, setActiveFaqIndex] = useState<number | null>(null);
 
     // Auto-slide logic
     useEffect(() => {
@@ -297,18 +317,36 @@ export default function Welcome({
                         </div>
 
                         <div className="grid md:grid-cols-3 gap-10">
-                            {/* FAQ */}
-                            <div className="group bg-white p-12 rounded-[48px] border border-slate-200/60 shadow-xl shadow-slate-200/10 hover:border-blue-500/30 transition-all">
+                            {/* FAQ Interactive */}
+                            <div className="group bg-white p-10 md:p-12 rounded-[48px] border border-slate-200/60 shadow-xl shadow-slate-200/10 hover:border-blue-500/30 transition-all">
                                 <h4 className="text-2xl font-black mb-8 uppercase tracking-tighter">Questions Fréquentes</h4>
-                                <div className="space-y-6">
-                                    {['Processus de validation ?', 'Planification des séances ?', 'Attestations de présence ?'].map((q, i) => (
-                                        <div key={i} className="flex items-center justify-between group/item cursor-pointer">
-                                            <span className="text-sm font-bold text-slate-500 group-hover/item:text-blue-600 transition-colors">{q}</span>
-                                            <svg className="w-4 h-4 text-slate-300 group-hover/item:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+                                <div className="space-y-4">
+                                    {FAQ_DATA.map((faq, i) => (
+                                        <div key={i} className="border-b border-slate-100 last:border-0 pb-4">
+                                            <button 
+                                                onClick={() => setActiveFaqIndex(activeFaqIndex === i ? null : i)}
+                                                className="w-full flex items-center justify-between text-left group/item"
+                                            >
+                                                <span className={`text-sm font-bold transition-colors ${activeFaqIndex === i ? 'text-blue-600' : 'text-slate-600 group-hover/item:text-slate-900'}`}>
+                                                    {faq.question}
+                                                </span>
+                                                <svg 
+                                                    className={`w-4 h-4 text-slate-300 transition-transform duration-300 ${activeFaqIndex === i ? 'rotate-180 text-blue-500' : ''}`} 
+                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                            <div className={`overflow-hidden transition-all duration-300 ${activeFaqIndex === i ? 'max-h-40 mt-4' : 'max-h-0'}`}>
+                                                <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                                                    {faq.answer}
+                                                </p>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
+
 
                             {/* Guides */}
                             <div className="group bg-white p-12 rounded-[48px] border border-slate-200/60 shadow-xl shadow-slate-200/10 hover:border-blue-500/30 transition-all">
