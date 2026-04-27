@@ -1,25 +1,70 @@
 import { PageProps } from '@/types';
 import { Head, Link } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { PlanFormation } from '@/types/plan';
+
+interface WelcomeProps extends PageProps {
+    stats: {
+        formateurs: number;
+        plans: number;
+        secteurs: number;
+        totalHeures: number;
+    };
+    latestPlans: (PlanFormation & { 
+        participants_count: number, 
+        animateurs_count: number 
+    })[];
+    laravelVersion: string;
+    phpVersion: string;
+}
 
 export default function Welcome({
     auth,
+    stats,
+    latestPlans,
     laravelVersion,
     phpVersion,
-}: PageProps<{ laravelVersion: string; phpVersion: string }>) {
+}: WelcomeProps) {
+    const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
+    const [isAnimating, setIsAnimating] = useState(false);
+
+    // Auto-slide logic
+    useEffect(() => {
+        if (latestPlans.length <= 1) return;
+        const timer = setInterval(() => {
+            handleNext();
+        }, 5000);
+        return () => clearInterval(timer);
+    }, [latestPlans, currentPlanIndex]);
+
+    const handleNext = () => {
+        if (isAnimating) return;
+        setIsAnimating(true);
+        setTimeout(() => {
+            setCurrentPlanIndex((prev) => (prev + 1) % latestPlans.length);
+            setIsAnimating(false);
+        }, 500);
+    };
+
+    const handlePrev = () => {
+        if (isAnimating) return;
+        setIsAnimating(true);
+        setTimeout(() => {
+            setCurrentPlanIndex((prev) => (prev - 1 + latestPlans.length) % latestPlans.length);
+            setIsAnimating(false);
+        }, 500);
+    };
+
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-600 selection:text-white">
             <Head title="SGAFO • OFPPT - Portail Institutionnel" />
 
-            {/* Navigation - Institutional Style */}
-            <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+            {/* Navigation */}
+            <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/60">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center p-1 shadow-lg">
-                            <svg viewBox="0 0 100 100" className="w-full h-full text-white" fill="currentColor">
-                                <path d="M20 20h60v10H20zM20 45h60v10H20zM20 70h60v10H20z" className="opacity-20" />
-                                <path d="M10 10v80h80V10H10zm70 70H20V20h60v60z" />
-                                <circle cx="50" cy="50" r="15" />
-                            </svg>
+                        <div className="w-11 h-11 rounded-2xl bg-slate-900 flex items-center justify-center p-1.5 shadow-xl shadow-slate-900/10">
+                             <svg viewBox="0 0 100 100" className="w-full h-full text-white" fill="currentColor"><circle cx="50" cy="50" r="35" /><path d="M20 20h60v10H20zM20 70h60v10H20z" className="opacity-30"/></svg>
                         </div>
                         <div className="flex flex-col leading-none">
                             <span className="text-2xl font-black tracking-tighter text-slate-900">SGAFO</span>
@@ -27,171 +72,300 @@ export default function Welcome({
                         </div>
                     </div>
 
-                    <div className="hidden md:flex items-center gap-10">
-                        <a href="#vision" className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">Notre Vision</a>
-                        <a href="#workflow" className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">Processus Digital</a>
+                    <div className="hidden md:flex items-center gap-8">
+                        <div className="flex items-center gap-6">
+                            <a href="#stats" className="text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Performance</a>
+                            <a href="#carousel" className="text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Actualités</a>
+                            <a href="#support" className="text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Support</a>
+                        </div>
                         <div className="h-6 w-px bg-slate-200" />
                         {auth.user ? (
-                            <Link
-                                href={route('dashboard')}
-                                className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-slate-900/10"
-                            >
-                                Mon Espace de Travail
-                            </Link>
+                            <Link href={route('dashboard')} className="px-6 py-3 bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10">Tableau de bord</Link>
                         ) : (
-                            <Link
-                                href={route('login')}
-                                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-blue-600/20"
-                            >
-                                Connexion Intranet
-                            </Link>
+                            <Link href={route('login')} className="px-6 py-3 bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20">Espace Sécurisé</Link>
                         )}
                     </div>
                 </div>
             </nav>
 
             <main className="pt-20">
-                {/* Hero Section - Inspired by Catalogue National Hero */}
+                {/* Hero Institutional */}
                 <section className="py-20 px-6">
                     <div className="max-w-7xl mx-auto">
-                        <div className="relative overflow-hidden rounded-[40px] bg-slate-900 p-12 md:p-24 shadow-2xl">
-                            <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px]"></div>
-                            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-indigo-600/10 rounded-full blur-[100px]"></div>
+                        <div className="relative overflow-hidden rounded-[48px] bg-slate-900 p-12 md:p-24 shadow-2xl">
+                            <div className="absolute top-0 right-0 -mt-20 -mr-20 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
                             
-                            <div className="relative z-10 max-w-3xl">
-                                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-10">
+                            <div className="relative z-10 max-w-4xl">
+                                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-10 animate-fade-in">
                                     <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                                    <span className="text-[10px] font-black tracking-[0.2em] uppercase text-blue-400">Plateforme de Gestion Intégrée</span>
+                                    <span className="text-[11px] font-black tracking-[0.2em] uppercase text-blue-400">Digitalisation des Flux de Formation</span>
                                 </div>
                                 
-                                <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[1.1] mb-8">
-                                    La Digitalisation au <br />
-                                    <span className="text-blue-500">Service de la Formation.</span>
+                                <h1 className="text-6xl md:text-7xl font-black text-white tracking-tighter leading-[1] mb-8">
+                                    L'Excellence <br />
+                                    <span className="text-blue-500">Pédagogique Digitalisée.</span>
                                 </h1>
                                 
-                                <p className="text-lg md:text-xl text-slate-400 font-medium leading-relaxed mb-12 max-w-2xl">
-                                    SGAFO est le système centralisé de l'OFPPT pour la planification, le suivi et l'évaluation continue des programmes de formation des formateurs.
+                                <p className="text-xl md:text-2xl text-slate-400 font-medium leading-relaxed mb-14 max-w-3xl">
+                                    Plateforme centralisée pour la planification stratégique, la logistique et l'évaluation continue des formateurs de l'OFPPT.
                                 </p>
 
-                                <div className="flex flex-col sm:flex-row items-center gap-6">
-                                    {!auth.user ? (
-                                        <Link
-                                            href={route('login')}
-                                            className="w-full sm:w-auto px-10 py-5 bg-white text-slate-900 font-black uppercase tracking-widest text-sm rounded-2xl hover:bg-slate-100 transition-all shadow-2xl shadow-white/5 flex items-center justify-center gap-3 group"
-                                        >
-                                            Accéder à l'espace sécurisé
-                                            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7-7 7M5 12h16" />
-                                            </svg>
-                                        </Link>
-                                    ) : (
-                                        <Link
-                                            href={route('dashboard')}
-                                            className="w-full sm:w-auto px-10 py-5 bg-white text-slate-900 font-black uppercase tracking-widest text-sm rounded-2xl hover:bg-slate-100 transition-all shadow-2xl shadow-white/5"
-                                        >
-                                            Mon Tableau de bord
-                                        </Link>
-                                    )}
-                                    <a href="#workflow" className="w-full sm:w-auto text-white/60 hover:text-white font-black uppercase tracking-widest text-xs transition-colors">
-                                        Découvrir le workflow →
-                                    </a>
+                                <div className="flex flex-col sm:flex-row items-center gap-8">
+                                    <Link
+                                        href={route('login')}
+                                        className="w-full sm:w-auto px-12 py-5 bg-white text-slate-900 font-black uppercase tracking-widest text-sm rounded-2xl hover:scale-105 transition-all shadow-2xl flex items-center justify-center gap-4 group"
+                                    >
+                                        Connexion Intranet
+                                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7-7 7M5 12h16" /></svg>
+                                    </Link>
+                                    <a href="#carousel" className="text-white/40 hover:text-white font-black uppercase tracking-widest text-xs transition-colors border-b-2 border-white/10 pb-1">Voir les derniers plans</a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                {/* Institutional Roles Section - Clean Card Style */}
-                <section id="vision" className="py-24 px-6">
+                {/* Statistics Banner */}
+                <section id="stats" className="pb-24 px-6">
                     <div className="max-w-7xl mx-auto">
-                        <div className="mb-20">
-                            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 mb-6">
-                                Un Écosystème <span className="text-blue-600">Structuré.</span>
-                            </h2>
-                            <p className="text-slate-500 max-w-xl font-medium text-lg leading-relaxed">
-                                Le système SGAFO s'adapte à chaque niveau de responsabilité pour garantir une fluidité totale de l'information.
-                            </p>
-                        </div>
-
-                        <div className="grid md:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
                             {[
-                                { title: 'Direction Régionale', role: 'Responsable Formation', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', desc: 'Pilotage stratégique, validation des plans et suivi de la performance régionale.' },
-                                { title: 'Chef de Complexe', role: 'Planification Locale', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', desc: 'Gestion opérationnelle des instituts et planification hebdomadaire des sessions.' },
-                                { title: 'Espace Formateur', role: 'Parcours Hybride', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', desc: 'Gestion des séances, ressources pédagogiques et auto-évaluation continue.' }
-                            ].map((item, i) => (
-                                <div key={i} className="group bg-white p-8 rounded-[32px] border border-slate-200 hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300">
-                                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all mb-8">
-                                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
-                                        </svg>
+                                { label: 'Formateurs', value: stats.formateurs, icon: 'Users', color: 'bg-blue-50 text-blue-600' },
+                                { label: 'Plans Validés', value: stats.plans, icon: 'Clipboard', color: 'bg-indigo-50 text-indigo-600' },
+                                { label: 'Secteurs', value: stats.secteurs, icon: 'Layers', color: 'bg-emerald-50 text-emerald-600' },
+                                { label: 'Heures / An', value: `${stats.totalHeures}h`, icon: 'Clock', color: 'bg-orange-50 text-orange-600' },
+                            ].map((stat, i) => (
+                                <div key={i} className="bg-white p-10 rounded-[40px] border border-slate-200/60 shadow-xl shadow-slate-200/20 hover:scale-105 transition-all group">
+                                    <div className="text-5xl font-black text-slate-900 mb-3 tracking-tighter group-hover:scale-110 transition-transform">{stat.value}</div>
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full ${stat.color.replace('text-', 'bg-')}`} />
+                                        <div className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{stat.label}</div>
                                     </div>
-                                    <h3 className="text-2xl font-black text-slate-900 mb-2">{item.title}</h3>
-                                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-6">{item.role}</div>
-                                    <p className="text-slate-500 text-sm leading-relaxed font-medium">{item.desc}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
                 </section>
 
-                {/* Workflow Digital - Timeline Style */}
-                <section id="workflow" className="py-24 px-6 bg-white border-y border-slate-100">
+                {/* Enhanced Carousel Section */}
+                <section id="carousel" className="py-32 px-6 bg-white border-y border-slate-100 relative">
                     <div className="max-w-7xl mx-auto">
-                        <div className="text-center mb-24">
-                            <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900 mb-4">Le Workflow Digitalisé.</h2>
-                            <p className="text-slate-400 font-medium italic">Une traçabilité totale de l'expression du besoin à la clôture.</p>
+                        <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
+                            <div className="text-left max-w-2xl">
+                                <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-slate-900 mb-6">Dernières Validations.</h2>
+                                <p className="text-slate-400 text-lg font-medium italic">Zoom sur les nouveaux programmes de formation certifiés par la Direction Régionale.</p>
+                            </div>
+                            <div className="flex gap-4">
+                                <button onClick={handlePrev} className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
+                                </button>
+                                <button onClick={handleNext} className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="grid md:grid-cols-4 gap-12 relative">
-                            {/* Horizontal Line for Desktop */}
-                            <div className="hidden md:block absolute top-12 left-0 w-full h-px bg-slate-100" />
-                            
-                            {[
-                                { step: '01', title: 'Planification', desc: 'Saisie et configuration par les Chefs de Complexe.' },
-                                { step: '02', title: 'Logistique', desc: 'Affectation des sites, hôtels et ressources.' },
-                                { step: '03', title: 'Validation', desc: 'Validation technique et administrative par le RF.' },
-                                { step: '04', title: 'Exécution', desc: 'Déroulement des séances et suivi de présence.' }
-                            ].map((item, i) => (
-                                <div key={i} className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left">
-                                    <div className="w-24 h-24 rounded-full bg-white border-4 border-slate-50 shadow-xl flex items-center justify-center mb-8 hover:scale-110 transition-transform">
-                                        <span className="text-2xl font-black text-slate-900">{item.step}</span>
+                        {latestPlans.length > 0 ? (
+                            <div className="relative min-h-[500px]">
+                                {latestPlans.map((plan, index) => (
+                                    <div
+                                        key={plan.id}
+                                        className={`absolute inset-0 transition-all duration-700 ease-in-out transform ${
+                                            index === currentPlanIndex 
+                                                ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' 
+                                                : 'opacity-0 scale-95 translate-y-8 pointer-events-none'
+                                        }`}
+                                    >
+                                        <div className="grid lg:grid-cols-12 gap-0 overflow-hidden bg-white rounded-[48px] border border-slate-200 shadow-2xl h-full min-h-[500px]">
+                                            {/* Left Column: Main Info */}
+                                            <div className="lg:col-span-7 p-10 md:p-16 flex flex-col justify-center border-r border-slate-50">
+                                                <div className="flex items-center gap-3 mb-8">
+                                                    <span className="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[11px] font-black uppercase tracking-widest border border-blue-100">
+                                                        {plan.entite?.secteur?.nom}
+                                                    </span>
+                                                    <span className={`px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest border ${
+                                                        plan.plateforme ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-orange-50 text-orange-600 border-orange-100'
+                                                    }`}>
+                                                        {plan.plateforme ? `À distance (${plan.plateforme})` : 'Présentiel'}
+                                                    </span>
+                                                </div>
+                                                
+                                                <h3 className="text-4xl md:text-5xl font-black text-slate-900 leading-[1.1] mb-8 tracking-tighter">
+                                                    {plan.titre}
+                                                </h3>
+                                                
+                                                <div className="space-y-4 mb-10">
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="w-1 h-1 rounded-full bg-blue-600 mt-2" />
+                                                        <p className="text-slate-500 font-medium text-lg leading-relaxed line-clamp-2 italic">
+                                                            "{plan.themes?.[0]?.objectifs || 'Amélioration des compétences techniques et pédagogiques...'}"
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-3 gap-8 p-8 bg-slate-50 rounded-[32px] border border-slate-100">
+                                                    <div>
+                                                        <div className="text-3xl font-black text-slate-900 tracking-tighter">{plan.themes?.length || 0}</div>
+                                                        <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Modules</div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-3xl font-black text-slate-900 tracking-tighter">{plan.animateurs_count}</div>
+                                                        <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Animateurs</div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-3xl font-black text-slate-900 tracking-tighter">{plan.participants_count}</div>
+                                                        <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Participants</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Right Column: Meta Info */}
+                                            <div className="lg:col-span-5 bg-slate-50/50 p-10 md:p-16 flex flex-col justify-center space-y-10">
+                                                <div className="flex items-center gap-5">
+                                                    <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-slate-100 text-xl font-black text-slate-900 uppercase">
+                                                        {plan.createur?.prenom[0]}{plan.createur?.nom[0]}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xl font-black text-slate-900">{plan.createur?.prenom} {plan.createur?.nom}</span>
+                                                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Responsable de Plan</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-6 pt-6 border-t border-slate-200">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">Période</span>
+                                                        <span className="text-sm font-black text-slate-900 uppercase">Du {new Date(plan.date_debut).toLocaleDateString('fr-FR')} au {new Date(plan.date_fin).toLocaleDateString('fr-FR')}</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">Total Volume</span>
+                                                        <span className="text-sm font-black text-slate-900">{plan.themes?.reduce((acc, t) => acc + Number(t.duree_heures), 0)} Heures</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">Entité</span>
+                                                        <span className="text-sm font-black text-blue-600 truncate max-w-[200px]">{plan.entite?.titre}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <h4 className="text-xl font-black text-slate-900 mb-3">{item.title}</h4>
-                                    <p className="text-sm text-slate-500 font-medium leading-relaxed">{item.desc}</p>
+                                ))}
+
+                                {/* Progress Dots */}
+                                <div className="absolute bottom-[-60px] left-1/2 -translate-x-1/2 flex gap-3">
+                                    {latestPlans.map((_, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setCurrentPlanIndex(i)}
+                                            className={`h-2.5 rounded-full transition-all duration-500 ${
+                                                i === currentPlanIndex ? 'w-12 bg-blue-600' : 'w-2.5 bg-slate-200 hover:bg-slate-300'
+                                            }`}
+                                        />
+                                    ))}
                                 </div>
-                            ))}
+                            </div>
+                        ) : (
+                            <div className="bg-slate-50 rounded-[48px] p-32 text-center border-2 border-dashed border-slate-200">
+                                <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-sm">
+                                    <svg className="w-10 h-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                </div>
+                                <h3 className="text-2xl font-black text-slate-900 mb-2">Aucune actualité disponible</h3>
+                                <p className="text-slate-400 font-medium">Les nouveaux plans validés apparaîtront ici automatiquement.</p>
+                            </div>
+                        )}
+                    </div>
+                </section>
+
+                {/* Institutional Support Hub */}
+                <section id="support" className="py-40 px-6">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex flex-col md:flex-row items-center justify-between mb-24 gap-12 text-center md:text-left">
+                            <div className="max-w-2xl">
+                                <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-slate-900 mb-6">Assistance Technique.</h2>
+                                <p className="text-slate-500 text-xl font-medium leading-relaxed">
+                                    Un problème d'accès ? Besoin d'un guide ? Notre équipe est là pour vous accompagner dans la prise en main de l'écosystème SGAFO.
+                                </p>
+                            </div>
+                            <div className="shrink-0">
+                                <a href="mailto:support.sgafo@ofppt.ma" className="inline-flex flex-col items-center gap-4 group">
+                                    <div className="w-24 h-24 rounded-[32px] bg-slate-900 flex items-center justify-center text-white shadow-2xl group-hover:bg-blue-600 transition-all">
+                                        <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                    </div>
+                                    <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 group-hover:text-slate-900 transition-colors">Ouvrir un ticket</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-10">
+                            {/* FAQ */}
+                            <div className="group bg-white p-12 rounded-[48px] border border-slate-200/60 shadow-xl shadow-slate-200/10 hover:border-blue-500/30 transition-all">
+                                <h4 className="text-2xl font-black mb-8 uppercase tracking-tighter">Questions Fréquentes</h4>
+                                <div className="space-y-6">
+                                    {['Processus de validation ?', 'Planification des séances ?', 'Attestations de présence ?'].map((q, i) => (
+                                        <div key={i} className="flex items-center justify-between group/item cursor-pointer">
+                                            <span className="text-sm font-bold text-slate-500 group-hover/item:text-blue-600 transition-colors">{q}</span>
+                                            <svg className="w-4 h-4 text-slate-300 group-hover/item:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Guides */}
+                            <div className="group bg-white p-12 rounded-[48px] border border-slate-200/60 shadow-xl shadow-slate-200/10 hover:border-blue-500/30 transition-all">
+                                <h4 className="text-2xl font-black mb-8 uppercase tracking-tighter">Documentation</h4>
+                                <div className="grid grid-cols-1 gap-4">
+                                    <button className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-900 hover:text-white transition-all group/btn">
+                                        <span className="text-[11px] font-black uppercase tracking-widest">Guide Intégral (PDF)</span>
+                                        <svg className="w-5 h-5 text-slate-300 group-hover/btn:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5m0 0l5-5m-5 5V3" /></svg>
+                                    </button>
+                                    <button className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-900 hover:text-white transition-all group/btn">
+                                        <span className="text-[11px] font-black uppercase tracking-widest">Tutoriel Vidéo CDC</span>
+                                        <svg className="w-5 h-5 text-slate-300 group-hover/btn:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Infrastructure */}
+                            <div className="bg-blue-600 p-12 rounded-[48px] shadow-2xl shadow-blue-600/30 text-white relative overflow-hidden">
+                                <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+                                <h4 className="text-2xl font-black mb-6 uppercase tracking-tighter relative z-10">Infrastructure</h4>
+                                <div className="space-y-4 relative z-10">
+                                    <div className="p-4 bg-white/10 rounded-2xl border border-white/10">
+                                        <div className="text-[10px] font-black uppercase text-white/60 mb-1">Version Logicielle</div>
+                                        <div className="font-bold">Laravel v{laravelVersion} / PHP v{phpVersion}</div>
+                                    </div>
+                                    <div className="p-4 bg-white/10 rounded-2xl border border-white/10">
+                                        <div className="text-[10px] font-black uppercase text-white/60 mb-1">Environnement</div>
+                                        <div className="font-bold uppercase tracking-widest text-xs">Production Intranet</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
             </main>
 
-            {/* Footer Institutional Clean */}
-            <footer className="py-20 px-6 bg-slate-50 border-t border-slate-200">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-10">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 shadow-sm">
-                            <svg viewBox="0 0 100 100" className="w-full h-full text-slate-900" fill="currentColor">
-                                <circle cx="50" cy="50" r="30" />
-                            </svg>
+            {/* Institutional Footer */}
+            <footer className="py-24 px-6 bg-slate-50 border-t border-slate-200">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
+                    <div className="flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center p-2 shadow-sm">
+                             <svg viewBox="0 0 100 100" className="w-full h-full text-slate-900" fill="currentColor"><circle cx="50" cy="50" r="40" /></svg>
                         </div>
                         <div className="flex flex-col text-left leading-none">
-                            <span className="text-2xl font-black tracking-tighter text-slate-900">SGAFO</span>
-                            <span className="text-[10px] font-black text-slate-400 tracking-[0.1em] uppercase">Espace Intranet • OFPPT 2026</span>
+                            <span className="text-3xl font-black tracking-tighter text-slate-900 uppercase">SGAFO</span>
+                            <span className="text-[11px] font-black text-slate-400 tracking-[0.2em] uppercase">Espace Intranet • OFPPT 2026</span>
                         </div>
                     </div>
                     
-                    <div className="flex gap-10 text-[11px] font-black uppercase tracking-widest text-slate-400">
-                        <a href="#" className="hover:text-blue-600 transition-colors">Portail OFPPT</a>
-                        <a href="#" className="hover:text-blue-600 transition-colors">Assistance</a>
+                    <div className="flex gap-12 text-[12px] font-black uppercase tracking-[0.2em] text-slate-400">
+                        <a href="#" className="hover:text-blue-600 transition-colors">Portail</a>
                         <a href="#" className="hover:text-blue-600 transition-colors">Sécurité</a>
+                        <a href="#" className="hover:text-blue-600 transition-colors">Cookies</a>
                     </div>
-
-                    <div className="text-right flex flex-col items-end gap-2">
-                         <div className="px-4 py-2 bg-white rounded-full border border-slate-200 shadow-sm text-[10px] font-black text-slate-500">
-                            Laravel v{laravelVersion} • PHP v{phpVersion}
-                        </div>
-                        <p className="text-[11px] text-slate-300 font-bold uppercase tracking-widest">© 2026 Tous droits réservés</p>
-                    </div>
+                </div>
+                <div className="max-w-7xl mx-auto mt-16 pt-10 border-t border-slate-200/60 text-center">
+                    <p className="text-[11px] text-slate-300 font-bold uppercase tracking-[0.3em]">© 2026 Office de la Formation Professionnelle et de la Promotion du Travail</p>
                 </div>
             </footer>
         </div>

@@ -14,14 +14,41 @@ use App\Http\Controllers\Admin\PilotageController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\InstitutController;
 use App\Http\Controllers\Admin\LogistiqueController as AdminLogistiqueController;
+use App\Models\User;
+use App\Models\PlanFormation;
+use App\Models\Secteur;
+use App\Models\PlanTheme;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+    // 1. Statistiques Institutionnelles
+    $stats = [
+        'formateurs' => User::whereHas('roles', function($q) { $q->where('code', 'FORMATEUR'); })->count(),
+        'plans' => PlanFormation::where('statut', 'validé')->count(),
+        'secteurs' => Secteur::count(),
+        'totalHeures' => PlanTheme::whereHas('plan', function($q) { $q->where('statut', 'validé'); })->sum('duree_heures'),
+    ];
+
+    // 2. Plans pour le carousel (Les 5 derniers plans validés avec détails enrichis)
+    $latestPlans = PlanFormation::with(['entite.secteur', 'createur', 'themes.animateurs'])
+        ->withCount(['participants'])
+        ->where('statut', 'validé')
+        ->latest('date_validation')
+        ->limit(5)
+        ->get()
+        ->map(function($plan) {
+            // Calcul manuel des animateurs uniques
+            $plan->animateurs_count = count($plan->getAnimateurIds());
+            return $plan;
+        });
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
+        'canRegister' => false,
+        'stats' => $stats,
+        'latestPlans' => $latestPlans,
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
