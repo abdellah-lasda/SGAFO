@@ -102,10 +102,23 @@ class SeanceController extends Controller
             return $qcm;
         });
 
+        // Vérifier les feedbacks
+        $seance->load('feedbackForm');
+        $hasFeedbackForm = $seance->feedbackForm !== null;
+        $hasSubmittedFeedback = false;
+        
+        if ($hasFeedbackForm) {
+            $hasSubmittedFeedback = \App\Models\FeedbackSubmission::where('feedback_form_id', $seance->feedbackForm->id)
+                ->where('participant_id', $user->id)
+                ->exists();
+        }
+
         return Inertia::render('Modules/Participant/SeanceShow', [
             'seance' => $seance,
             'canPassQcm' => $canPassQcm,
             'qcms' => $qcms,
+            'hasFeedbackForm' => $hasFeedbackForm,
+            'hasSubmittedFeedback' => $hasSubmittedFeedback,
         ]);
     }
     public function planShow(PlanFormation $plan)

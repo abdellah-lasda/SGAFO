@@ -32,7 +32,7 @@ class SeanceController extends Controller
         $plan->load(['themes.animateurs', 'siteFormation', 'createur', 'participants']);
         
         $seances = Seance::where('plan_id', $plan->id)
-            ->with(['themes', 'site'])
+            ->with(['themes', 'site', 'feedbackForm'])
             ->orderBy('date')
             ->orderBy('debut')
             ->get();

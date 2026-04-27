@@ -153,8 +153,10 @@ Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')-
     Route::post('notifications/mark-all-as-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
 
     // Feedback Management (RF/CDC)
+    Route::get('feedback/dashboard', [FeedbackAdminController::class, 'dashboard'])->name('feedback.dashboard');
     Route::get('feedback/builder/{seance}', [FeedbackAdminController::class, 'builder'])->name('feedback.builder');
     Route::post('feedback/save/{seance}', [FeedbackAdminController::class, 'save'])->name('feedback.save');
+    Route::post('feedback/quick-store/{seance}', [FeedbackAdminController::class, 'quickStore'])->name('feedback.quick-store');
     Route::get('feedback/results/{seance}', [FeedbackAdminController::class, 'results'])->name('feedback.results');
     Route::patch('feedback/submissions/{submission}/publish', [FeedbackAdminController::class, 'togglePublish'])->name('feedback.submissions.toggle-publish');
 });
