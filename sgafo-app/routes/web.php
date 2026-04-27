@@ -102,6 +102,7 @@ Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')-
 });
 
 Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')->group(function () {
+    Route::post('plans/availability/check', [PlanFormationController::class, 'checkAvailability'])->name('plans.availability.check');
     Route::resource('plans', PlanFormationController::class);
     Route::get('plans/{plan}/export-pdf', [PlanFormationController::class, 'exportPdf'])->name('plans.export-pdf');
     Route::post('plans/{plan}/submit', [PlanFormationController::class, 'submit'])->name('plans.submit');
@@ -109,14 +110,13 @@ Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')-
     Route::post('plans/{plan}/reject', [PlanFormationController::class, 'reject'])->name('plans.reject');
     Route::post('plans/{plan}/confirm', [PlanFormationController::class, 'confirm'])->name('plans.confirm');
     Route::post('plans/{plan}/cancel', [PlanFormationController::class, 'cancel'])->name('plans.cancel');
-    Route::post('plans/{plan}/cloturer', [PlanFormationController::class, 'cloturerPlanning'])->name('plans.cloturer');
-    Route::post('plans/{plan}/reouvrir', [PlanFormationController::class, 'reouvrirPlanning'])->name('plans.reouvrir');
-
     Route::prefix('validations')->name('validations.')->group(function () {
         Route::get('/', [PlanValidationController::class, 'index'])->name('index');
         Route::get('plans/{plan}', [PlanValidationController::class, 'show'])->name('show');
         Route::get('plans/{plan}/planning', [SeanceController::class, 'index'])->name('planning.index');
         Route::post('plans/{plan}/seances', [SeanceController::class, 'store'])->name('planning.store');
+        Route::post('plans/{plan}/cloturer', [PlanFormationController::class, 'cloturerPlanning'])->name('planning.cloturer');
+        Route::post('plans/{plan}/reouvrir', [PlanFormationController::class, 'reouvrirPlanning'])->name('planning.reouvrir');
     });
     
     Route::resource('seances', SeanceController::class)->only(['destroy']);

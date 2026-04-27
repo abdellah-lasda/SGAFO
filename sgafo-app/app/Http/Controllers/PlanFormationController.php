@@ -70,7 +70,8 @@ class PlanFormationController extends Controller
         $messages = [
             'titre.required' => 'Le titre du plan est obligatoire.',
             'date_debut.required' => 'La date de début est obligatoire pour planifier les séances.',
-            'date_fin.after_or_equal' => 'La date de fin doit être égale ou postérieure à la date de début.',
+            'date_debut.after_or_equal' => 'La date de début doit être aujourd\'hui ou dans le futur.',
+            'date_fin.after_or_equal' => 'La date de fin doit être ultérieure ou égale à la date de début.',
             'themes.required' => 'Vous devez configurer au moins un thème.',
             'themes.*.animateur_ids.required' => 'Chaque thème doit avoir au moins un formateur affecté.',
             'themes.*.animateur_ids.min' => 'Chaque thème doit avoir au moins un formateur affecté.',
@@ -80,7 +81,7 @@ class PlanFormationController extends Controller
         $validated = $request->validate([
             'entite_id' => 'required|exists:entite_formations,id',
             'titre' => 'required|string|max:200',
-            'date_debut' => 'required|date',
+            'date_debut' => 'required|date|after_or_equal:today',
             'date_fin' => 'required|date|after_or_equal:date_debut',
             'themes' => 'required|array|min:1',
             'themes.*.nom' => 'required|string|max:200',
@@ -100,6 +101,50 @@ class PlanFormationController extends Controller
             'hebergements.*.nombre_nuits' => 'required|integer|min:1',
             'hebergements.*.cout_total' => 'required|numeric|min:0',
         ], $messages);
+
+        $dateDebut = $validated['date_debut'] ?? null;
+        $dateFin = $validated['date_fin'] ?? null;
+
+        if ($dateDebut && $dateFin) {
+            // 1. Formateurs
+            $formateurIds = [];
+            if (!empty($validated['themes'])) {
+                foreach ($validated['themes'] as $theme) {
+                    if (!empty($theme['animateur_ids'])) {
+                        $formateurIds = array_merge($formateurIds, $theme['animateur_ids']);
+                    }
+                }
+            }
+            $formateurIds = array_unique($formateurIds);
+            
+            if (!empty($formateurIds)) {
+                $busyFormateurId = \App\Models\SeanceTheme::whereIn('formateur_id', $formateurIds)
+                    ->whereHas('seance', function($sq) use ($dateDebut, $dateFin) {
+                        $sq->whereBetween('date', [$dateDebut, $dateFin]);
+                    })->value('formateur_id');
+
+                if ($busyFormateurId) {
+                    $f = \App\Models\User::find($busyFormateurId);
+                    return redirect()->back()->with('error', "Impossible d'enregistrer le plan : Le formateur {$f->nom} {$f->prenom} a déjà des engagements sur la période du {$dateDebut} au {$dateFin}.")->withInput();
+                }
+            }
+
+            // 2. Participants
+            $participantIds = $validated['participant_ids'] ?? [];
+            if (!empty($participantIds)) {
+                $busyParticipantId = \App\Models\User::whereIn('id', $participantIds)
+                    ->whereHas('plans', function($q) use ($dateDebut, $dateFin) {
+                        $q->whereHas('seances', function($sq) use ($dateDebut, $dateFin) {
+                            $sq->whereBetween('date', [$dateDebut, $dateFin]);
+                        });
+                    })->value('id');
+
+                if ($busyParticipantId) {
+                    $p = \App\Models\User::find($busyParticipantId);
+                    return redirect()->back()->with('error', "Impossible d'enregistrer le plan : Le participant {$p->nom} {$p->prenom} a déjà des séances prévues sur la période du {$dateDebut} au {$dateFin}.")->withInput();
+                }
+            }
+        }
 
         return DB::transaction(function () use ($validated) {
             $plan = PlanFormation::create([
@@ -225,6 +270,53 @@ class PlanFormationController extends Controller
             'hebergements.*.nombre_nuits' => 'required|integer|min:1',
             'hebergements.*.cout_total' => 'required|numeric|min:0',
         ], $messages);
+
+        $dateDebut = $validated['date_debut'] ?? null;
+        $dateFin = $validated['date_fin'] ?? null;
+        $planId = $plan->id;
+
+        if ($dateDebut && $dateFin) {
+            // 1. Formateurs
+            $formateurIds = [];
+            if (!empty($validated['themes'])) {
+                foreach ($validated['themes'] as $theme) {
+                    if (!empty($theme['animateur_ids'])) {
+                        $formateurIds = array_merge($formateurIds, $theme['animateur_ids']);
+                    }
+                }
+            }
+            $formateurIds = array_unique($formateurIds);
+            
+            if (!empty($formateurIds)) {
+                $busyFormateurId = \App\Models\SeanceTheme::whereIn('formateur_id', $formateurIds)
+                    ->whereHas('seance', function($sq) use ($dateDebut, $dateFin, $planId) {
+                        $sq->whereBetween('date', [$dateDebut, $dateFin])
+                           ->where('plan_id', '!=', $planId);
+                    })->value('formateur_id');
+
+                if ($busyFormateurId) {
+                    $f = \App\Models\User::find($busyFormateurId);
+                    return redirect()->back()->with('error', "Impossible de mettre à jour le plan : Le formateur {$f->nom} {$f->prenom} a déjà des engagements sur la période du {$dateDebut} au {$dateFin}.")->withInput();
+                }
+            }
+
+            // 2. Participants
+            $participantIds = $validated['participant_ids'] ?? [];
+            if (!empty($participantIds)) {
+                $busyParticipantId = \App\Models\User::whereIn('id', $participantIds)
+                    ->whereHas('plans', function($q) use ($dateDebut, $dateFin, $planId) {
+                        $q->where('plans_formation.id', '!=', $planId)
+                          ->whereHas('seances', function($sq) use ($dateDebut, $dateFin) {
+                              $sq->whereBetween('date', [$dateDebut, $dateFin]);
+                          });
+                    })->value('id');
+
+                if ($busyParticipantId) {
+                    $p = \App\Models\User::find($busyParticipantId);
+                    return redirect()->back()->with('error', "Impossible de mettre à jour le plan : Le participant {$p->nom} {$p->prenom} a déjà des séances prévues sur la période du {$dateDebut} au {$dateFin}.")->withInput();
+                }
+            }
+        }
 
         return DB::transaction(function () use ($validated, $plan) {
             $plan->update([
@@ -578,5 +670,61 @@ class PlanFormationController extends Controller
         \Illuminate\Support\Facades\Notification::send($notifiables, new PlanCancelledNotification($plan, $motif));
 
         return redirect()->back()->with('success', 'La formation a été annulée et les équipes ont été informées.');
+    }
+
+    /**
+     * Check user availability for the frontend planning stepper.
+     */
+    public function checkAvailability(Request $request)
+    {
+        $validated = $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'integer',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'plan_id' => 'nullable|integer',
+        ]);
+
+        $userIds = $validated['user_ids'];
+        $startDate = $validated['start_date'];
+        $endDate = $validated['end_date'];
+        $planId = $validated['plan_id'] ?? null;
+
+        $conflicts = [];
+
+        $seancesQuery = \App\Models\Seance::with(['plan.participants', 'themes'])
+            ->whereBetween('date', [$startDate, $endDate]);
+
+        if ($planId) {
+            $seancesQuery->where('plan_id', '!=', $planId);
+        }
+
+        $seances = $seancesQuery->get();
+
+        foreach ($seances as $seance) {
+            // Check Animators
+            foreach ($seance->themes as $theme) {
+                if ($theme->formateur_id && in_array($theme->formateur_id, $userIds)) {
+                    $conflicts[$theme->formateur_id][] = [
+                        'date' => $seance->date,
+                        'plan_titre' => $seance->plan ? $seance->plan->titre : 'Autre formation',
+                    ];
+                }
+            }
+
+            // Check Participants
+            if ($seance->plan) {
+                $participantIds = $seance->plan->participants->pluck('id')->toArray();
+                $overlapping = array_intersect($participantIds, $userIds);
+                foreach ($overlapping as $pId) {
+                    $conflicts[$pId][] = [
+                        'date' => $seance->date,
+                        'plan_titre' => $seance->plan->titre,
+                    ];
+                }
+            }
+        }
+
+        return response()->json(['conflicts' => $conflicts]);
     }
 }

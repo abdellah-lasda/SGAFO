@@ -12,6 +12,7 @@ interface Props {
 }
 
 export default function Step2Themes({ titre, setTitre, themes, setThemes, dateDebut, setDateDebut, dateFin, setDateFin }: Props) {
+    const today = new Date().toISOString().split('T')[0];
     const totalHeures = themes.reduce((s, t) => s + Number(t.duree_heures || 0), 0);
 
     const nbJours = (() => {
@@ -80,6 +81,7 @@ export default function Step2Themes({ titre, setTitre, themes, setThemes, dateDe
                         <input
                             type="date"
                             value={dateDebut}
+                            min={today}
                             onChange={(e) => setDateDebut(e.target.value)}
                             className="w-full px-4 py-3 text-sm font-medium border border-blue-200 bg-white rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                         />
@@ -90,7 +92,7 @@ export default function Step2Themes({ titre, setTitre, themes, setThemes, dateDe
                         <input
                             type="date"
                             value={dateFin}
-                            min={dateDebut || undefined}
+                            min={dateDebut || today}
                             onChange={(e) => setDateFin(e.target.value)}
                             className="w-full px-4 py-3 text-sm font-medium border border-blue-200 bg-white rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                         />

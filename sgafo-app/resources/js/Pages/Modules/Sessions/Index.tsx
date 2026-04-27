@@ -112,6 +112,19 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
         // Validation côté client : cohérence horaire
         const timeErr = validateTimeRange(data.debut, data.fin);
         if (timeErr) { setTimeError(timeErr); return; }
+
+        // Chevauchement local visuel
+        const hasOverlap = dailySeances.some(s => {
+            const existingStart = s.debut.substring(0, 5);
+            const existingEnd = s.fin.substring(0, 5);
+            return (existingStart < data.fin && existingEnd > data.debut);
+        });
+
+        if (hasOverlap) {
+            setTimeError('Une séance existe déjà sur cette plage horaire pour cette journée.');
+            return;
+        }
+
         setTimeError(null);
 
         if (!isDurationValid) return;
@@ -822,6 +835,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                             value={data.recurrence.date_fin}
                                                             onChange={e => setData('recurrence', { ...data.recurrence, date_fin: e.target.value })}
                                                             min={selectedDate}
+                                                            max={plan.date_fin ? plan.date_fin.toString() : undefined}
                                                             required
                                                         />
                                                     </div>

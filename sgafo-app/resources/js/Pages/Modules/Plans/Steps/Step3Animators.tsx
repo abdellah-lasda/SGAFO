@@ -88,6 +88,7 @@ export default function Step3Animators({ themes, setThemes, formateurs, dateDebu
     }, [formateurs.length, dateDebut, dateFin]);
 
     const toggleFormateurSelection = (id: number) => {
+        if (conflicts[id]) return;
         setSelectedFormateurs((prev: number[]) =>
             prev.includes(id) ? prev.filter((p: number) => p !== id) : [...prev, id]
         );
@@ -125,14 +126,15 @@ export default function Step3Animators({ themes, setThemes, formateurs, dateDebu
         setThemes(updated);
     };
 
-    const allFilteredSelected = filteredFormateurs.length > 0 && filteredFormateurs.every((f: any) => selectedFormateurs.includes(f.id));
+    const availableFilteredFormateurs = filteredFormateurs.filter((f: any) => !conflicts[f.id]);
+    const allFilteredSelected = availableFilteredFormateurs.length > 0 && availableFilteredFormateurs.every((f: any) => selectedFormateurs.includes(f.id));
 
     const toggleSelectAll = () => {
-        const filteredIds = filteredFormateurs.map((f: any) => f.id);
+        const availableIds = availableFilteredFormateurs.map((f: any) => f.id);
         if (allFilteredSelected) {
-            setSelectedFormateurs((prev: number[]) => prev.filter((id: number) => !filteredIds.includes(id)));
+            setSelectedFormateurs((prev: number[]) => prev.filter((id: number) => !availableIds.includes(id)));
         } else {
-            setSelectedFormateurs((prev: number[]) => [...new Set([...prev, ...filteredIds])]);
+            setSelectedFormateurs((prev: number[]) => [...new Set([...prev, ...availableIds])]);
         }
     };
 
@@ -391,13 +393,14 @@ export default function Step3Animators({ themes, setThemes, formateurs, dateDebu
                                         <tr
                                             key={f.id}
                                             onClick={() => toggleFormateurSelection(f.id)}
-                                            className={`cursor-pointer transition-colors ${isSelected ? 'bg-emerald-50/50' : 'hover:bg-slate-50'}`}
+                                            className={`transition-colors ${conflicts[f.id] ? 'opacity-50 bg-slate-50 cursor-not-allowed' : isSelected ? 'bg-emerald-50/50 cursor-pointer' : 'hover:bg-slate-50 cursor-pointer'}`}
                                         >
                                             <td className="px-4 py-4 text-center">
                                                 <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors mx-auto ${
-                                                    isSelected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 bg-white'
+                                                    conflicts[f.id] ? 'border-slate-200 bg-slate-100' : isSelected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 bg-white hover:border-emerald-400'
                                                 }`}>
                                                     {isSelected && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
+                                                    {conflicts[f.id] && <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-4 font-bold text-slate-800">

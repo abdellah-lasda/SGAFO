@@ -88,17 +88,19 @@ export default function Step4Participants({ formateurs, participantIds, setParti
     const [pendingIds, setPendingIds] = useState<number[]>([]);
 
     const togglePending = (id: number) => {
+        if (conflicts[id]) return;
         setPendingIds((prev: number[]) => prev.includes(id) ? prev.filter((p: number) => p !== id) : [...prev, id]);
     };
 
-    const allFilteredPending = filtered.length > 0 && filtered.every((f: any) => pendingIds.includes(f.id));
+    const availableFiltered = filtered.filter((f: any) => !conflicts[f.id] && !participantIds.includes(f.id));
+    const allFilteredPending = availableFiltered.length > 0 && availableFiltered.every((f: any) => pendingIds.includes(f.id));
 
     const toggleSelectAll = () => {
-        const filteredIds = filtered.map((f: any) => f.id);
+        const availableIds = availableFiltered.map((f: any) => f.id);
         if (allFilteredPending) {
-            setPendingIds((prev: number[]) => prev.filter((id: number) => !filteredIds.includes(id)));
+            setPendingIds((prev: number[]) => prev.filter((id: number) => !availableIds.includes(id)));
         } else {
-            setPendingIds((prev: number[]) => [...new Set([...prev, ...filteredIds])]);
+            setPendingIds((prev: number[]) => [...new Set([...prev, ...availableIds])]);
         }
     };
 
@@ -313,13 +315,17 @@ export default function Step4Participants({ formateurs, participantIds, setParti
                                     return (
                                         <tr
                                             key={f.id}
-                                            onClick={() => !isAlreadyAdded && togglePending(f.id)}
+                                            onClick={() => {
+                                                if (!isAlreadyAdded && !conflicts[f.id]) togglePending(f.id);
+                                            }}
                                             className={`transition-colors ${
                                                 isAlreadyAdded
                                                     ? 'opacity-40 cursor-not-allowed bg-slate-50'
-                                                    : isPending
-                                                        ? 'bg-blue-50/50 cursor-pointer'
-                                                        : 'hover:bg-slate-50 cursor-pointer'
+                                                    : conflicts[f.id]
+                                                        ? 'opacity-50 cursor-not-allowed bg-slate-50'
+                                                        : isPending
+                                                            ? 'bg-blue-50/50 cursor-pointer'
+                                                            : 'hover:bg-slate-50 cursor-pointer'
                                             }`}
                                         >
                                             <td className="px-4 py-4 text-center">
@@ -327,9 +333,10 @@ export default function Step4Participants({ formateurs, participantIds, setParti
                                                     <svg className="w-5 h-5 text-emerald-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
                                                 ) : (
                                                     <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors mx-auto ${
-                                                        isPending ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300 bg-white'
+                                                        conflicts[f.id] ? 'border-slate-200 bg-slate-100' : isPending ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300 bg-white hover:border-blue-400'
                                                     }`}>
                                                         {isPending && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
+                                                        {conflicts[f.id] && <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>}
                                                     </div>
                                                 )}
                                             </td>

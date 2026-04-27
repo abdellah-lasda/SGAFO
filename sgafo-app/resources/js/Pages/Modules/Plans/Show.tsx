@@ -49,7 +49,12 @@ export default function Show({ plan, isValidationContext }: Props) {
 
     const handleCancel = () => {
         if (motifAnnulation.trim().length < 10) return;
-        router.post(route('modules.plans.cancel', plan.id), { motif_annulation: motifAnnulation });
+        router.post(route('modules.plans.cancel', plan.id), { motif_annulation: motifAnnulation }, {
+            onSuccess: () => {
+                setShowCancelModal(false);
+                setMotifAnnulation('');
+            }
+        });
     };
 
     // Permissions
@@ -123,14 +128,14 @@ export default function Show({ plan, isValidationContext }: Props) {
                             </button>
                         )}
 
-                        {canDelete && (
+                        {/* {canDelete && (
                             <button
                                 onClick={() => setShowDeleteConfirm(true)}
                                 className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-red-50 text-red-600 border border-red-100 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"
                             >
                                 🗑️ Supprimer
                             </button>
-                        )}
+                        )} */}
                     </div>
                 </div>
 
