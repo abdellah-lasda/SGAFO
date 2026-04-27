@@ -18,7 +18,7 @@ class PilotageController extends Controller
     {
         $tab = $request->input('tab', 'dashboard');
         $search = $request->input('search');
-        
+
         $stats = [
             'entites' => ['total' => EntiteFormation::count()],
             'plans' => [

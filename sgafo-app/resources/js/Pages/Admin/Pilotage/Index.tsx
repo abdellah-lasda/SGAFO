@@ -51,7 +51,7 @@ export default function Index({ stats, currentTab, recent_plans, entites, plans,
             <Head title="Pilotage Global" />
 
             <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500">
-                
+
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     <StatCard label="Formations" value={stats.entites.total} color="blue" icon="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" />
@@ -68,11 +68,10 @@ export default function Index({ stats, currentTab, recent_plans, entites, plans,
                             <Link
                                 key={tab.id}
                                 href={route('admin.pilotage.index', { tab: tab.id })}
-                                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all uppercase tracking-widest ${
-                                    currentTab === tab.id 
-                                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' 
-                                    : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'
-                                }`}
+                                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all uppercase tracking-widest ${currentTab === tab.id
+                                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20'
+                                        : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'
+                                    }`}
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={tab.icon} />
@@ -101,14 +100,14 @@ export default function Index({ stats, currentTab, recent_plans, entites, plans,
                 {/* Tab Content */}
                 <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
                     {currentTab === 'dashboard' && <DashboardView recentPlans={recent_plans} stats={stats} />}
-                    {currentTab === 'entites' && <EntitesTable data={entites} onDelete={(id: number, title: string) => setConfirmDelete({id, type: 'entite', title})} />}
-                    {currentTab === 'plans' && <PlansTable data={plans} onDelete={(id: number, title: string) => setConfirmDelete({id, type: 'plan', title})} />}
-                    {currentTab === 'sessions' && <SessionsTable data={sessions} onDelete={(id: number, title: string) => setConfirmDelete({id, type: 'session', title})} />}
+                    {currentTab === 'entites' && <EntitesTable data={entites} onDelete={(id: number, title: string) => setConfirmDelete({ id, type: 'entite', title })} />}
+                    {currentTab === 'plans' && <PlansTable data={plans} onDelete={(id: number, title: string) => setConfirmDelete({ id, type: 'plan', title })} />}
+                    {currentTab === 'sessions' && <SessionsTable data={sessions} onDelete={(id: number, title: string) => setConfirmDelete({ id, type: 'session', title })} />}
                     {currentTab === 'qcms' && <QcmsTable data={qcms} />}
                 </div>
             </div>
 
-            <ConfirmDialog 
+            <ConfirmDialog
                 isOpen={!!confirmDelete}
                 title="Confirmer la suppression"
                 message={`Êtes-vous sûr de vouloir supprimer définitivement "${confirmDelete?.title}" ? Cette action est irréversible.`}
@@ -175,7 +174,7 @@ function DashboardView({ recentPlans, stats }: any) {
                     ))}
                 </div>
             </div>
-            
+
             <div className="space-y-6">
                 <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Répartition Plans</h3>
                 <div className="space-y-3">

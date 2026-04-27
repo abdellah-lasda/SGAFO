@@ -27,22 +27,9 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    $stats = [
-        'formations_count' => \App\Models\EntiteFormation::count(),
-        'secteurs_count' => \App\Models\Secteur::count(),
-        'sites_count' => \App\Models\SiteFormation::count(),
-        'formateurs_count' => \App\Models\User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))->count(),
-        'plans_pending_count' => \App\Models\PlanFormation::where('statut', 'soumis')->count(),
-    ];
-
-    $latestFormations = \App\Models\EntiteFormation::with(['secteur', 'createur'])->latest()->take(3)->get();
-
-    return Inertia::render('Dashboard', [
-        'stats' => $stats,
-        'latestFormations' => $latestFormations
-    ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
