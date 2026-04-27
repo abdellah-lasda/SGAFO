@@ -7,6 +7,8 @@ use App\Models\PlanFormation;
 use App\Models\FeedbackForm;
 use App\Models\FeedbackQuestion;
 use App\Models\FeedbackSubmission;
+use App\Notifications\NewFeedbackNotification;
+use App\Notifications\FeedbackRequiredNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -162,6 +164,7 @@ class FeedbackAdminController extends Controller
             }
 
             DB::commit();
+
             return back()->with('success', 'Évaluation standard activée pour cette séance.');
         } catch (\Exception $e) {
             DB::rollBack();

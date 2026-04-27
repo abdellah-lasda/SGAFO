@@ -162,7 +162,7 @@ export default function Create({ plan, entites, secteurs, sites, hotels, formate
                 }
             });
         } else {
-            router.post(route('modules.plans.store'), payload);
+            router.post(route('modules.plans.store'), { ...payload, _action: 'submit' });
         }
     };
 
@@ -175,7 +175,7 @@ export default function Create({ plan, entites, secteurs, sites, hotels, formate
                 }
             });
         } else {
-            router.post(route('modules.plans.store'), payload);
+            router.post(route('modules.plans.store'), { ...payload, _action: 'confirm' });
         }
     };
 

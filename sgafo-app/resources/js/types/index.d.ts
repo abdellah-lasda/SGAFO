@@ -2,11 +2,17 @@ export interface AppNotification {
     id: string;
     type: string;
     data: {
-        plan_id: number;
-        plan_titre: string;
         message: string;
-        type: 'soumission' | 'success' | 'danger' | 'info';
+        type: 'soumission' | 'success' | 'danger' | 'info' | 'feedback_received' | 'feedback_required' | 'plan_validated' | 'qcm_required';
         action_url: string;
+        title?: string;
+        color?: string;
+        plan_id?: number;
+        plan_titre?: string;
+        plan_title?: string;
+        participant_name?: string;
+        seance_id?: number;
+        qcm_id?: number;
         entite_nom?: string;
         createur_nom?: string;
         commentaire?: string;

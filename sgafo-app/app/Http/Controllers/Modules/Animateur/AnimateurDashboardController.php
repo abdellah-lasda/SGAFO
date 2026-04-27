@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Modules\Animateur;
 use App\Http\Controllers\Controller;
 use App\Models\PlanFormation;
 use App\Models\Seance;
+use App\Notifications\FeedbackRequiredNotification;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
+use Inertia\Inertia;
 
 class AnimateurDashboardController extends Controller
 {
@@ -193,8 +195,31 @@ class AnimateurDashboardController extends Controller
 
         if ($request->input('is_closing')) {
             $seance->update(['statut' => 'terminée']);
+
+            // Si un feedback est actif pour cette séance, notifier les participants PRÉSENTS
+            $seance->load(['feedbackForm', 'qcms' => function($q) {
+                $q->where('est_publie', true);
+            }]);
+            
+            $presents = collect();
+            if ($seance->feedbackForm || $seance->qcms->count() > 0) {
+                $presents = $seance->presences()->whereIn('statut', ['présent', 'retard'])->with('participant')->get()->pluck('participant');
+            }
+
+            if ($presents->count() > 0) {
+                if ($seance->feedbackForm) {
+                    Notification::send($presents, new FeedbackRequiredNotification($seance));
+                }
+
+                if ($seance->qcms->count() > 0) {
+                    // Notifier pour le premier QCM publié trouvé
+                    $qcm = $seance->qcms->first();
+                    Notification::send($presents, new \App\Notifications\QcmRequiredNotification($qcm));
+                }
+            }
+
             return redirect()->route('modules.animateur.dashboard')
-                ->with('success', 'Séance clôturée et présences enregistrées.');
+                ->with('success', 'Séance clôturée. Les participants présents ont été notifiés pour l\'évaluation.');
         }
 
         return back()->with('success', 'Présences mises à jour.');

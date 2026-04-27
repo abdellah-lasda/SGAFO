@@ -192,6 +192,14 @@ class PlanFormationController extends Controller
                 }
             }
 
+            if ($request->input('_action') === 'submit') {
+                return $this->submit($plan);
+            }
+
+            if ($request->input('_action') === 'confirm') {
+                return $this->confirm($plan);
+            }
+
             return redirect()->route('modules.plans.show', $plan)
                            ->with('success', 'Plan créé en brouillon.');
         });
@@ -471,8 +479,19 @@ class PlanFormationController extends Controller
         // Notifier le créateur
         $plan->createur->notify(new PlanFormationDecision($plan, 'validé'));
 
+        // Notifier les participants et animateurs que le planning est prêt
+        $notifiables = collect($plan->participants);
+        $animateurIds = $plan->getAnimateurIds();
+        if (!empty($animateurIds)) {
+            $animateurs = User::whereIn('id', $animateurIds)->get();
+            $notifiables = $notifiables->merge($animateurs);
+        }
+        $notifiables = $notifiables->unique('id');
+        
+        Notification::send($notifiables, new \App\Notifications\PlanValidatedNotification($plan));
+
         return redirect()->route('modules.plans.show', $plan)
-                       ->with('success', 'Plan validé techniquement et publié au catalogue.');
+                       ->with('success', 'Plan validé techniquement et publié au catalogue. Les équipes ont été notifiées.');
     }
 
     /**
@@ -554,7 +573,18 @@ class PlanFormationController extends Controller
             'commentaire' => 'Le planning a été clôturé définitivement.',
         ]);
 
-        return redirect()->back()->with('success', 'Planning clôturé. La formation est prête pour l\'exécution.');
+        // Notifier les participants et animateurs que le planning est prêt
+        $notifiables = collect($plan->participants);
+        $animateurIds = $plan->getAnimateurIds();
+        if (!empty($animateurIds)) {
+            $animateurs = User::whereIn('id', $animateurIds)->get();
+            $notifiables = $notifiables->merge($animateurs);
+        }
+        $notifiables = $notifiables->unique('id');
+        
+        Notification::send($notifiables, new \App\Notifications\PlanValidatedNotification($plan));
+
+        return redirect()->back()->with('success', 'Planning clôturé. La formation est prête pour l\'exécution et les équipes ont été notifiées.');
     }
 
     /**

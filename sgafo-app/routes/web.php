@@ -119,6 +119,10 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth'])->group(function () {
     Route::get('catalogue-national', [\App\Http\Controllers\CatalogueController::class, 'index'])->name('modules.catalogue.index');
     Route::get('catalogue-national/{plan}', [\App\Http\Controllers\CatalogueController::class, 'show'])->name('modules.catalogue.show');
+    
+    // Notifications (Accessibles à tous les rôles)
+    Route::post('notifications/{id}/mark-as-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('modules.notifications.mark-as-read');
+    Route::post('notifications/mark-all-as-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('modules.notifications.mark-all-as-read');
 });
 
 Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')->group(function () {
@@ -148,9 +152,6 @@ Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')-
     
     // Logistique (Utilisée par les coordinateurs pour consultation)
     Route::get('logistique', [LogistiqueController::class, 'index'])->name('logistique.index');
-
-    Route::post('notifications/{id}/mark-as-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
-    Route::post('notifications/mark-all-as-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
 
     // Feedback Management (RF/CDC)
     Route::get('feedback/dashboard', [FeedbackAdminController::class, 'dashboard'])->name('feedback.dashboard');

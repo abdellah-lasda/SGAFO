@@ -21,7 +21,7 @@ export default function FeedbackDashboard({ submissions, plans, filters, stats }
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="font-black text-2xl text-slate-900 italic">Feedbacks & Avis Participants</h2>}
+            header={<span>Feedbacks & Avis Participants</span>}
         >
             <Head title="Dashboard Feedback" />
 

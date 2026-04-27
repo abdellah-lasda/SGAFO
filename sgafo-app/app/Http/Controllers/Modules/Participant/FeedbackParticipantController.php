@@ -6,9 +6,12 @@ use App\Models\Seance;
 use App\Models\FeedbackForm;
 use App\Models\FeedbackSubmission;
 use App\Models\FeedbackResponse;
+use App\Models\User;
+use App\Notifications\NewFeedbackNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 
 class FeedbackParticipantController extends Controller
@@ -78,7 +81,12 @@ class FeedbackParticipantController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('participant.seance.show', $seance->id)->with('success', 'Merci pour votre évaluation !');
+
+            // Notifier les RF et CDC concernés (ou l'administrateur système)
+            $admins = User::role(['RF', 'CDC'])->get();
+            Notification::send($admins, new NewFeedbackNotification($submission));
+
+            return redirect()->route('participant.formations')->with('success', 'Merci pour votre retour !');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Erreur lors de la soumission : ' . $e->getMessage()]);
