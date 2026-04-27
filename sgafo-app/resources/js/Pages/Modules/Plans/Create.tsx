@@ -320,6 +320,10 @@ export default function Create({ plan, entites, secteurs, sites, hotels, formate
                             siteId={siteId}
                             plateforme={plateforme}
                             lienVisio={lienVisio}
+                            dateDebut={dateDebut}
+                            dateFin={dateFin}
+                            hebergements={hebergements}
+                            hotels={hotels}
                             isRF={isRF}
                             plan={plan || null}
                             onSave={handleSave}
