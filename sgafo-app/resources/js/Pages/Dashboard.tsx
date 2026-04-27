@@ -42,6 +42,15 @@ interface Props extends PageProps {
         } | null;
         my_latest_created: any[] | null;
         my_latest_validated: any[] | null;
+        formateur_data: {
+            upcoming_animated: any[];
+            upcoming_participated: any[];
+            pedagogical_stats: {
+                sessions_count: number;
+                student_attendance: number;
+                my_average_score: number;
+            }
+        } | null;
         admin_alerts?: {
             users_sans_role: number;
             users_suspendus: number;
@@ -76,6 +85,7 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
     const isAdmin = user.roles?.some((r: any) => r.code === 'ADMIN');
     const isRF = user.roles?.some((r: any) => r.code === 'RF');
     const isCDC = user.roles?.some((r: any) => r.code === 'CDC');
+    const isFormateur = user.roles?.some((r: any) => r.code === 'FORMATEUR');
 
     const handleFilterChange = (key: string, value: string) => {
         const newFilters = { ...filters, [key]: value };
@@ -89,7 +99,7 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
 
     return (
         <AuthenticatedLayout
-            header={<span className="font-black text-slate-900 uppercase tracking-widest text-sm">Tableau de Bord {isCDC ? 'Chef de Complexe' : ''}</span>}
+            header={<span className="font-black text-slate-900 uppercase tracking-widest text-sm">Espace {isFormateur ? 'Pédagogique' : 'Pilotage'}</span>}
         >
             <Head title="Tableau de bord" />
 
@@ -100,7 +110,7 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                     <div>
                         <h1 className="text-3xl font-black text-slate-900 tracking-tight">Bonjour, {user.prenom}</h1>
                         <div className="flex items-center gap-2 mt-1">
-                            <p className="text-slate-500 font-medium text-xs uppercase tracking-widest">SGAFO • {isAdmin ? 'Administration Centrale' : isCDC ? 'Direction de Complexe' : 'Gestion de Formation'}</p>
+                            <p className="text-slate-500 font-medium text-xs uppercase tracking-widest">SGAFO • {isAdmin ? 'Administration Centrale' : isFormateur ? 'Expert Formateur & Apprenant' : isCDC ? 'Direction de Complexe' : 'Gestion de Formation'}</p>
                             {(isRF || isCDC) && (
                                 <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-black uppercase tracking-tighter border border-blue-100">
                                     {isRF ? 'Périmètre' : 'Complexe'}: {isRF ? user.regions?.map((r: any) => r.nom).join(', ') : user.instituts?.map((i: any) => i.nom).join(', ')}
@@ -109,34 +119,116 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                         </div>
                     </div>
                     
-                    <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-200/60">
-                        <FilterSelect label="Année" value={filters.annee} options={filterOptions.annees} onChange={(v: string) => handleFilterChange('annee', v)} />
-                        {isAdmin && (
-                            <FilterSelect label="Région" value={filters.region_id} options={filterOptions.regions.map(r => ({ label: r.nom, value: r.id }))} onChange={(v: string) => handleFilterChange('region_id', v)} />
-                        )}
-                        <FilterSelect label="Secteur" value={filters.secteur_id} options={filterOptions.secteurs.map(s => ({ label: s.nom, value: s.id }))} onChange={(v: string) => handleFilterChange('secteur_id', v)} />
-                        <button onClick={resetFilters} className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl transition-colors">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                        </button>
-                    </div>
+                    {!isFormateur && (
+                        <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-200/60">
+                            <FilterSelect label="Année" value={filters.annee} options={filterOptions.annees} onChange={(v: string) => handleFilterChange('annee', v)} />
+                            {isAdmin && (
+                                <FilterSelect label="Région" value={filters.region_id} options={filterOptions.regions.map(r => ({ label: r.nom, value: r.id }))} onChange={(v: string) => handleFilterChange('region_id', v)} />
+                            )}
+                            <FilterSelect label="Secteur" value={filters.secteur_id} options={filterOptions.secteurs.map(s => ({ label: s.nom, value: s.id }))} onChange={(v: string) => handleFilterChange('secteur_id', v)} />
+                            <button onClick={resetFilters} className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl transition-colors">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            </button>
+                        </div>
+                    )}
                 </div>
 
-                {/* ROW 1: Main Circular KPIs */}
+                {/* ROW 1: KPIs */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <CircularKPI label="Présence" value={dataStats.attendance_rate} color="blue" />
-                    <CircularKPI label={(isRF || isCDC) ? "Plans Complexe" : "Plans Actifs"} value={dataStats.plans.total} max={100} color="indigo" />
-                    <CircularKPI label="Sites Occupés" value={dataStats.site_occupancy.length} max={dataStats.sites_count} color="emerald" />
-                    {(isRF || isCDC) ? (
+                    <CircularKPI 
+                        label={isFormateur ? "Présence Élèves" : "Présence globale"} 
+                        value={isFormateur ? dataStats.formateur_data?.pedagogical_stats.student_attendance ?? 0 : dataStats.attendance_rate} 
+                        color="blue" 
+                    />
+                    <CircularKPI 
+                        label={isFormateur ? "Mon Score Moyen" : (isRF || isCDC) ? "Plans Complexe" : "Plans Actifs"} 
+                        value={isFormateur ? dataStats.formateur_data?.pedagogical_stats.my_average_score ?? 0 : dataStats.plans.total} 
+                        max={100} 
+                        color="indigo" 
+                    />
+                    <CircularKPI 
+                        label={isFormateur ? "Séances Animées" : "Sites Occupés"} 
+                        value={isFormateur ? dataStats.formateur_data?.pedagogical_stats.sessions_count ?? 0 : dataStats.site_occupancy.length} 
+                        max={isFormateur ? 100 : dataStats.sites_count} 
+                        color="emerald" 
+                    />
+                    {isFormateur ? (
+                        <div className="bg-slate-900 p-8 rounded-[2.5rem] shadow-xl flex flex-col items-center justify-center border border-slate-800">
+                             <span className="text-3xl font-black text-white">{dataStats.formateur_data?.upcoming_animated.length ?? 0}</span>
+                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">À Animer</span>
+                        </div>
+                    ) : (isRF || isCDC) ? (
                         <CircularKPI label="Réponse QCM" value={dataStats.qcm_stats.rate} color="rose" />
                     ) : (
                         <CircularKPI label="Formateurs" value={dataStats.formateurs_count} max={dataStats.formateurs_count} color="purple" />
                     )}
                 </div>
 
-                {/* ROW 2: Activity Row */}
-                {(isRF || isCDC) ? (
+                {/* ROW 2: Activity Feeds */}
+                {isFormateur ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Latest Created */}
+                        {/* PATH 1: ANIMATOR JOURNEY */}
+                        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/60">
+                            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-8 flex items-center gap-3">
+                                <div className="w-2 h-6 bg-blue-600 rounded-full"></div>
+                                Parcours Animateur
+                            </h2>
+                            <div className="space-y-4">
+                                {dataStats.formateur_data?.upcoming_animated.length === 0 && (
+                                    <p className="text-[10px] font-black text-slate-400 uppercase text-center py-10">Aucune séance à animer prochainement</p>
+                                )}
+                                {dataStats.formateur_data?.upcoming_animated.map((seance: any) => (
+                                    <div key={seance.id} className="p-5 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between group hover:bg-blue-50 transition-colors">
+                                        <div className="flex items-center gap-5">
+                                            <div className="w-12 h-12 bg-white rounded-2xl flex flex-col items-center justify-center border border-slate-100 shadow-sm text-blue-600 font-black">
+                                                <span className="text-xs">{new Date(seance.date).getDate()}</span>
+                                                <span className="text-[8px] uppercase">{new Date(seance.date).toLocaleDateString('fr-FR', { month: 'short' })}</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-900 uppercase tracking-tight line-clamp-1">{seance.plan?.entite?.titre}</p>
+                                                <p className="text-[8px] font-black text-slate-400 uppercase mt-0.5">{seance.debut.substring(0,5)} • {seance.site?.nom}</p>
+                                            </div>
+                                        </div>
+                                        <Link href={route('modules.seances.show', seance.id)} className="p-2 bg-white text-blue-600 rounded-xl border border-blue-100 opacity-0 group-hover:opacity-100 transition-all">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+                                        </Link>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* PATH 2: PARTICIPANT JOURNEY */}
+                        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/60">
+                            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-8 flex items-center gap-3">
+                                <div className="w-2 h-6 bg-purple-600 rounded-full"></div>
+                                Parcours Participant
+                            </h2>
+                            <div className="space-y-4">
+                                {dataStats.formateur_data?.upcoming_participated.length === 0 && (
+                                    <p className="text-[10px] font-black text-slate-400 uppercase text-center py-10">Aucune formation à suivre pour le moment</p>
+                                )}
+                                {dataStats.formateur_data?.upcoming_participated.map((plan: any) => (
+                                    <div key={plan.id} className="p-5 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between group hover:bg-purple-50 transition-colors">
+                                        <div className="flex items-center gap-5">
+                                            <div className="w-12 h-12 bg-white rounded-2xl flex flex-col items-center justify-center border border-slate-100 shadow-sm text-purple-600 font-black">
+                                                <span className="text-xs">{new Date(plan.date_debut).getDate()}</span>
+                                                <span className="text-[8px] uppercase">{new Date(plan.date_debut).toLocaleDateString('fr-FR', { month: 'short' })}</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-900 uppercase tracking-tight line-clamp-1">{plan.entite?.titre}</p>
+                                                <p className="text-[8px] font-black text-slate-400 uppercase mt-0.5">Statut: {plan.statut}</p>
+                                            </div>
+                                        </div>
+                                        <Link href={route('modules.plans.show', plan.id)} className="p-2 bg-white text-purple-600 rounded-xl border border-purple-100 opacity-0 group-hover:opacity-100 transition-all">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                        </Link>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                ) : (isRF || isCDC) ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/60">
                             <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-8 flex items-center gap-3">
                                 <div className="w-2 h-6 bg-blue-600 rounded-full"></div>
@@ -144,7 +236,7 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                             </h2>
                             <div className="space-y-4">
                                 {dataStats.my_latest_created?.map((plan: any) => (
-                                    <Link key={plan.id} href={route('modules.plans.show', plan.id)} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-lg transition-all group">
+                                    <Link key={plan.id} href={route('modules.plans.show', plan.id)} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-lg transition-all">
                                         <div className="flex items-center gap-4">
                                             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                                             <div>
@@ -157,14 +249,10 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                                 ))}
                             </div>
                         </div>
-                        {/* Right Section: RF Activity or CDC Alerts */}
                         {isRF ? (
                             <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/60 flex flex-col justify-center">
                                 <div className="flex items-center justify-between mb-8">
-                                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-3">
-                                        <div className="w-2 h-6 bg-rose-600 rounded-full"></div>
-                                        Performance QCM
-                                    </h2>
+                                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-3"><div className="w-2 h-6 bg-rose-600 rounded-full"></div>Performance QCM</h2>
                                     <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black">{dataStats.qcm_stats.count} QCMs</span>
                                 </div>
                                 <div className="flex items-center gap-8 bg-slate-50 p-6 rounded-3xl border border-slate-100">
@@ -175,19 +263,14 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                                         </svg>
                                         <span className="absolute text-sm font-black text-slate-900">{dataStats.qcm_stats.rate}%</span>
                                     </div>
-                                    <div>
-                                        <p className="text-xs font-black text-slate-900 uppercase tracking-tight">Taux de réponse</p>
-                                    </div>
+                                    <p className="text-xs font-black text-slate-900 uppercase tracking-tight">Taux de réponse</p>
                                 </div>
                             </div>
                         ) : (
                             <div className="bg-slate-900 p-10 rounded-[2.5rem] shadow-xl border border-slate-800 flex flex-col justify-between">
-                                <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                                    <div className="w-2 h-6 bg-rose-500 rounded-full"></div>
-                                    Actions Chef de Complexe
-                                </h2>
+                                <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-3"><div className="w-2 h-6 bg-rose-500 rounded-full"></div>Actions CDC</h2>
                                 <div className="space-y-4 mt-6">
-                                    <SystemAlertItem label="Mes Brouillons en attente" count={dataStats.cdc_alerts?.my_drafts ?? 0} color="blue" link={route('modules.plans.index', { statut: 'brouillon' })} />
+                                    <SystemAlertItem label="Mes Brouillons" count={dataStats.cdc_alerts?.my_drafts ?? 0} color="blue" link={route('modules.plans.index', { statut: 'brouillon' })} />
                                     <SystemAlertItem label="Mes Plans rejetés" count={dataStats.cdc_alerts?.my_rejected ?? 0} color="rose" link={route('modules.plans.index', { statut: 'rejeté' })} />
                                 </div>
                             </div>
@@ -199,80 +282,29 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                     </div>
                 )}
 
-                {/* ROW 3: Distributions */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200/60">
-                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-10 flex items-center gap-3">
-                            <div className="w-2 h-6 bg-indigo-600 rounded-full"></div>
-                            État du Complexe
-                        </h2>
-                        <div className="flex flex-col md:flex-row items-center gap-10">
-                            <DonutChart 
-                                data={Object.entries(dataStats.plans.by_status).map(([k, v]) => ({ label: k, value: v }))} 
-                                colors={['#64748b', '#3b82f6', '#10b981', '#6366f1', '#f43f5e', '#dc2626']}
-                            />
-                            <div className="flex-1 grid grid-cols-2 gap-4 w-full">
-                                {Object.entries(dataStats.plans.by_status).map(([status, count]) => (
-                                    <div key={status} className="p-4 bg-slate-50 rounded-2xl flex flex-col justify-center border border-slate-100">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{status}</span>
-                                        <span className="text-xl font-black text-slate-900 mt-1">{count}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {isRF ? (
-                        <div className="bg-slate-900 p-10 rounded-[2.5rem] shadow-xl border border-slate-800 space-y-8">
-                            <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                                <div className="w-2 h-6 bg-rose-500 rounded-full"></div>
-                                Mes Actions Prioritaires
-                            </h2>
-                            <div className="space-y-4">
-                                <SystemAlertItem label="Plans à confirmer" count={dataStats.rf_alerts?.pending_confirmation ?? 0} color="rose" link={route('modules.plans.index', { statut: 'soumis' })} />
-                                <SystemAlertItem label="Plans à valider" count={dataStats.rf_alerts?.pending_validation ?? 0} color="amber" link={route('modules.plans.index', { statut: 'confirmé' })} />
-                            </div>
-                        </div>
-                    ) : isAdmin ? (
+                {/* ROW 3: Distributions (Hidden for Formateur) */}
+                {!isFormateur && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200/60">
-                             <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-10 flex items-center gap-3">
-                                <div className="w-2 h-6 bg-purple-600 rounded-full"></div>
-                                RH Nationale
+                            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-10 flex items-center gap-3">
+                                <div className="w-2 h-6 bg-indigo-600 rounded-full"></div>
+                                État Global
                             </h2>
-                            <DonutChart data={Object.entries(dataStats.users_by_role || {}).map(([k, v]) => ({ label: k, value: v }))} colors={['#10b981', '#3b82f6', '#8b5cf6', '#f43f5e']} />
+                            <DonutChart data={Object.entries(dataStats.plans.by_status).map(([k, v]) => ({ label: k, value: v }))} colors={['#64748b', '#3b82f6', '#10b981', '#6366f1', '#f43f5e', '#dc2626']} />
                         </div>
-                    ) : (
-                        <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200/60">
-                            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-8 flex items-center gap-3">
-                                <div className="w-2 h-6 bg-teal-500 rounded-full"></div>
-                                Performance Sites Complexe
-                            </h2>
-                            <HorizontalBarChart data={dataStats.site_occupancy} color="#14b8a6" />
-                        </div>
-                    )}
-                </div>
-
-                {/* ROW 4: Planning Feed */}
-                <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-200/60">
-                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-8">Planning Immédiat du Complexe</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {dataStats.upcoming_seances.map((seance, i) => (
-                            <div key={i} className="p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 flex flex-col justify-between hover:bg-white hover:shadow-2xl transition-all group">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center border border-slate-100 shadow-sm text-blue-600 font-black text-sm">
-                                        {new Date(seance.date).getDate()}
-                                    </div>
-                                    <span className="text-[10px] font-black text-slate-300">#{i+1}</span>
-                                </div>
-                                <p className="text-[10px] font-black text-slate-900 uppercase tracking-tight line-clamp-2">{seance.plan?.entite?.titre}</p>
-                                <div className="mt-6 pt-4 border-t border-slate-200/50 flex items-center justify-between">
-                                    <span className="text-[8px] font-black text-slate-400 uppercase">{seance.debut.substring(0,5)}</span>
-                                    <span className="text-[8px] font-black text-blue-500 uppercase">{seance.site?.nom}</span>
-                                </div>
+                        {isAdmin ? (
+                            <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200/60">
+                                 <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-10 flex items-center gap-3"><div className="w-2 h-6 bg-purple-600 rounded-full"></div>RH Nationale</h2>
+                                <DonutChart data={Object.entries(dataStats.users_by_role || {}).map(([k, v]) => ({ label: k, value: v }))} colors={['#10b981', '#3b82f6', '#8b5cf6', '#f43f5e']} />
                             </div>
-                        ))}
+                        ) : (
+                            <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200/60">
+                                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-8 flex items-center gap-3"><div className="w-2 h-6 bg-teal-500 rounded-full"></div>Performance Sites</h2>
+                                <HorizontalBarChart data={dataStats.site_occupancy} color="#14b8a6" />
+                            </div>
+                        )}
                     </div>
-                </div>
+                )}
 
             </div>
         </AuthenticatedLayout>
@@ -306,12 +338,12 @@ function TrendAreaChart({ data }: any) {
     const height = 160; const width = 800;
     const points = data.map((d: any, i: number) => `${(i / (data.length - 1)) * width},${height - (d.count / max) * height}`).join(' ');
     return (
-        <div className="relative pt-10">
+        <div className="relative pt-10 px-4">
             <svg viewBox={`0 0 ${width} ${height}`} className="w-full overflow-visible">
                 <polyline fill="rgba(59, 130, 246, 0.1)" points={`0,${height} ${points} ${width},${height}`} />
                 <polyline fill="none" stroke="#3b82f6" strokeWidth="4" points={points} />
             </svg>
-            <div className="flex justify-between mt-6 px-2">
+            <div className="flex justify-between mt-6">
                 {data.map((d: any, i: number) => <span key={i} className="text-[10px] font-black text-slate-400 uppercase">{d.label}</span>)}
             </div>
         </div>

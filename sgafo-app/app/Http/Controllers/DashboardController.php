@@ -90,6 +90,23 @@ class DashboardController extends Controller
             'my_latest_validated' => $user->hasRole('RF') 
                 ? PlanFormation::where('valide_par', $user->id)->latest()->take(3)->with('entite')->get() 
                 : null,
+
+            // Formateur Specific (Animator + Participant)
+            'formateur_data' => $user->hasRole('FORMATEUR') ? [
+                'upcoming_animated' => Seance::whereHas('seanceThemes', fn($q) => $q->where('formateur_id', $user->id))
+                    ->where('date', '>=', now()->toDateString())
+                    ->with(['plan.entite', 'site'])
+                    ->orderBy('date')->orderBy('debut')->take(3)->get(),
+                'upcoming_participated' => PlanFormation::whereHas('participants', fn($q) => $q->where('users.id', $user->id))
+                    ->where('date_debut', '>=', now()->toDateString())
+                    ->with('entite')
+                    ->orderBy('date_debut')->take(3)->get(),
+                'pedagogical_stats' => [
+                    'sessions_count' => Seance::whereHas('seanceThemes', fn($q) => $q->where('formateur_id', $user->id))->count(),
+                    'student_attendance' => $this->calculateStudentAttendanceForFormateur($user),
+                    'my_average_score' => \App\Models\QcmTentative::where('user_id', $user->id)->avg('score') ?? 0,
+                ]
+            ] : null,
         ];
 
         $latestFormations = EntiteFormation::with(['secteur', 'createur'])
@@ -331,6 +348,19 @@ class DashboardController extends Controller
             'count' => $totalQcm,
             'rate' => round($totalRate / $totalQcm, 1)
         ];
+    }
+
+    private function calculateStudentAttendanceForFormateur($user)
+    {
+        $seanceIds = Seance::whereHas('seanceThemes', fn($q) => $q->where('formateur_id', $user->id))->pluck('id');
+        if ($seanceIds->isEmpty()) return 0;
+
+        $query = Presence::whereIn('seance_id', $seanceIds);
+        $total = (clone $query)->count();
+        if ($total === 0) return 0;
+
+        $present = (clone $query)->whereIn('statut', ['présent', 'retard'])->count();
+        return round(($present / $total) * 100, 1);
     }
 
     private function getFilterOptions()

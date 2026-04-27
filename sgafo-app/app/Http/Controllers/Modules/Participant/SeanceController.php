@@ -121,8 +121,7 @@ class SeanceController extends Controller
         }
 
         $plan->load([
-            'entite', 
-            'domaine',
+            'entite.secteur', 
             'themes',
             'seances' => function($q) {
                 $q->with(['site', 'seanceThemes.theme', 'seanceThemes.formateur'])->orderBy('date', 'asc');

@@ -58,17 +58,17 @@ export default function Sidebar({ user }: SidebarProps) {
                 <div>
                     <h3 className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Principal</h3>
                     <div className="space-y-1.5">
-                        {! isFormateur && (
-                            <Link
-                                href={route('dashboard')}
-                                className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-lg transition-colors ${route().current('dashboard') ? activeClass : inactiveClass}`}
-                            >
-                                <svg className="mr-3 h-5 w-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                </svg>
-                                Tableau de bord
-                            </Link>
-                        )}
+                    
+                        <Link
+                            href={route('dashboard')}
+                            className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-lg transition-colors ${route().current('dashboard') ? activeClass : inactiveClass}`}
+                        >
+                            <svg className="mr-3 h-5 w-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            Tableau de bord
+                        </Link>
+                        
                         <Link
                             href={route('modules.catalogue.index')}
                             className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('modules.catalogue.*') ? activeClass : inactiveClass}`}
