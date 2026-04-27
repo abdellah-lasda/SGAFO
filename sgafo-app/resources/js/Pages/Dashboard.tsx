@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import React from 'react';
 
 interface Props extends PageProps {
     stats: {
@@ -16,6 +17,9 @@ interface Props extends PageProps {
         plans_per_sector: any[];
         plans_per_region: any[];
         top_sites: any[];
+        top_formateurs: any[];
+        upcoming_seances: any[];
+        site_occupancy: any[];
         plans_evolution: any[];
         attendance_rate: number;
         users_by_role: {
@@ -36,14 +40,6 @@ interface Props extends PageProps {
             users_sans_role: number;
             users_suspendus: number;
             sites_inactifs: number;
-        };
-        rf_alerts?: {
-            pending_confirmation: number;
-            pending_validation: number;
-        };
-        cdc_alerts?: {
-            my_drafts: number;
-            my_rejected: number;
         };
     };
     latestFormations: any[];
@@ -73,384 +69,158 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
     const resetFilters = () => {
         router.get(route('dashboard'));
     };
-    
-    const kpiStats = [
-        { label: 'Formations au Catalogue', value: (dataStats?.formations_count ?? 0).toString(), icon: (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002 2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-        ), color: 'bg-emerald-50 text-emerald-600' },
-        { label: 'Secteurs Couverts', value: (dataStats?.secteurs_count ?? 0).toString(), icon: (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-        ), color: 'bg-blue-50 text-blue-600' },
-        { label: 'Sites de Formation', value: (dataStats?.sites_count ?? 0).toString(), icon: (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002 2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-        ), color: 'bg-amber-50 text-amber-600' },
-        { label: 'Formateurs Actifs', value: (dataStats?.formateurs_count ?? 0).toString(), icon: (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-        ), color: 'bg-purple-50 text-purple-600' },
-    ];
 
     return (
         <AuthenticatedLayout
-            header={<span>Tableau de bord</span>}
+            header={<span className="font-black text-slate-900 uppercase tracking-widest text-sm">Tableau de bord Stratégique</span>}
         >
-            <Head title="Tableau de bord" />
+            <Head title="Dashboard" />
 
-            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
+            <div className="space-y-8 animate-in fade-in duration-1000 p-2 lg:p-6 bg-slate-50/50 min-h-screen">
                 
-                {/* Welcome Header */}
-                <div className="relative p-10 bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden group hover:shadow-xl transition-all duration-300">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50 rounded-bl-[15rem] -mr-32 -mt-32 opacity-40 transition-transform group-hover:scale-110"></div>
-                    <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-                        <div>
-                            <span className="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg shadow-blue-500/30">
-                                Vue d'ensemble
-                            </span>
-                            <h1 className="mt-6 text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                                Ravi de vous revoir,<br />
-                                <span className="text-blue-600">{user.prenom} {user.nom}</span> !
-                            </h1>
-                            <p className="mt-4 text-slate-500 font-medium max-w-lg leading-relaxed">
-                                Le système de gestion de l'offre de formation est opérationnel. Consultez vos dernières activités et pilotez votre catalogue national d'un seul coup d'œil.
-                            </p>
-                        </div>
-                        <div className="hidden lg:block">
-                            <Link 
-                                href={user.roles?.some((r: any) => r.code === 'ADMIN') 
-                                    ? route('admin.pilotage.index', { tab: 'entites' }) 
-                                    : route('modules.entites.index')
-                                }
-                                className="inline-flex items-center px-8 py-4 bg-slate-900 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-2xl active:scale-95"
-                            >
-                                Explorer le Catalogue
-                                <svg className="ml-3 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7-7 7M5 12h16" /></svg>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Global Filter Bar */}
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 flex flex-wrap items-center gap-4">
-                    <div className="flex-1 flex flex-wrap gap-4">
-                        <select 
-                            value={filters.annee || ''} 
-                            onChange={(e) => handleFilterChange('annee', e.target.value)}
-                            className="bg-slate-50 border-none rounded-xl text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20"
-                        >
-                            <option value="">Année</option>
-                            {filterOptions.annees.map(y => <option key={y} value={y}>{y}</option>)}
-                        </select>
-
-                        <select 
-                            value={filters.region_id || ''} 
-                            onChange={(e) => handleFilterChange('region_id', e.target.value)}
-                            className="bg-slate-50 border-none rounded-xl text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20"
-                        >
-                            <option value="">Région</option>
-                            {filterOptions.regions.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
-                        </select>
-
-                        <select 
-                            value={filters.ville || ''} 
-                            onChange={(e) => handleFilterChange('ville', e.target.value)}
-                            className="bg-slate-50 border-none rounded-xl text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20"
-                        >
-                            <option value="">Ville</option>
-                            {filterOptions.villes.map(v => <option key={v} value={v}>{v}</option>)}
-                        </select>
-
-                        <select 
-                            value={filters.secteur_id || ''} 
-                            onChange={(e) => handleFilterChange('secteur_id', e.target.value)}
-                            className="bg-slate-50 border-none rounded-xl text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20"
-                        >
-                            <option value="">Secteur</option>
-                            {filterOptions.secteurs.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
-                        </select>
+                {/* Header & Filter Bar */}
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                    <div>
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Bonjour, {user.prenom}</h1>
+                        <p className="text-slate-500 font-medium text-xs uppercase tracking-widest mt-1">SGAFO • Pilotage National d'Activité</p>
                     </div>
                     
-                    <button 
-                        onClick={resetFilters}
-                        className="px-6 py-2.5 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-colors"
-                    >
-                        Reset
-                    </button>
+                    <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-200/60">
+                        <FilterSelect label="Année" value={filters.annee} options={filterOptions.annees} onChange={(v: string) => handleFilterChange('annee', v)} />
+                        <FilterSelect label="Région" value={filters.region_id} options={filterOptions.regions.map(r => ({ label: r.nom, value: r.id }))} onChange={(v: string) => handleFilterChange('region_id', v)} />
+                        <FilterSelect label="Secteur" value={filters.secteur_id} options={filterOptions.secteurs.map(s => ({ label: s.nom, value: s.id }))} onChange={(v: string) => handleFilterChange('secteur_id', v)} />
+                        <button onClick={resetFilters} className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl transition-colors">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        </button>
+                    </div>
                 </div>
 
-                {/* Stats Grid */}
+                {/* ROW 1: Main Circular KPIs */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {kpiStats.map((stat, i) => (
-                        <div key={i} className="bg-white p-8 rounded-2xl border border-slate-200/60 shadow-sm transition-all hover:border-blue-200 hover:shadow-md group">
-                            <div className="flex justify-between items-start mb-6">
-                                <div className={`w-14 h-14 rounded-xl ${stat.color} flex items-center justify-center shadow-lg shadow-inner group-hover:scale-110 transition-transform`}>
-                                    {stat.icon}
-                                </div>
-                                <span className="p-2 bg-slate-50 text-slate-300 rounded-xl group-hover:text-blue-200 transition-colors">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                                </span>
-                            </div>
-                            <h3 className="text-3xl font-black text-slate-900 mb-1">{stat.value}</h3>
-                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                        </div>
-                    ))}
+                    <CircularKPI label="Présence" value={dataStats.attendance_rate} color="blue" />
+                    <CircularKPI label="Plans Actifs" value={dataStats.plans.total} max={100} color="indigo" />
+                    <CircularKPI label="Sites Occupés" value={dataStats.site_occupancy.length} max={dataStats.sites_count} color="emerald" />
+                    <CircularKPI label="Formateurs" value={dataStats.users_by_role.formateurs} max={dataStats.formateurs_count} color="purple" />
                 </div>
 
-                {/* Main Content Area */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    
-                    {/* LEFT: Analytical Charts */}
-                    <div className="lg:col-span-2 space-y-8">
-                        
-                        {/* Evolution Trend & Attendance Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
-                                <h2 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
-                                    <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-                                    Évolution (6 mois)
-                                </h2>
-                                <div className="h-40 flex items-end justify-between gap-2 px-2">
-                                    {dataStats.plans_evolution.map((point: any, i: number) => (
-                                        <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                                            <div 
-                                                className="w-full bg-blue-100 rounded-t-lg group-hover:bg-blue-600 transition-all duration-500 relative"
-                                                style={{ height: `${point.count > 0 ? (point.count / Math.max(...dataStats.plans_evolution.map((p: any) => p.count))) * 100 : 5}%` }}
-                                            >
-                                                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-black text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {point.count}
-                                                </span>
-                                            </div>
-                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter text-center line-clamp-1">{point.label}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm flex items-center gap-6">
-                                <div className="relative w-32 h-32 flex items-center justify-center">
-                                    <svg className="w-full h-full transform -rotate-90">
-                                        <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-slate-50" />
-                                        <circle 
-                                            cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="10" fill="transparent" 
-                                            strokeDasharray={351}
-                                            strokeDashoffset={351 - (351 * dataStats.attendance_rate) / 100}
-                                            className="text-emerald-500 transition-all duration-1000 ease-out" 
-                                            strokeLinecap="round"
-                                        />
-                                    </svg>
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                        <span className="text-2xl font-black text-slate-900">{dataStats.attendance_rate}%</span>
-                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Présence</span>
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Taux de Présence</h3>
-                                    <p className="text-[10px] text-slate-400 font-medium leading-relaxed mt-2 italic">
-                                        Calculé sur l'ensemble des sessions filtrées.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Distribution Sectors & Regions Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
-                                <h2 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
-                                    <div className="w-1 h-5 bg-indigo-600 rounded-full"></div>
-                                    Plans par Secteur
-                                </h2>
-                                <div className="space-y-4">
-                                    {dataStats.plans_per_sector.slice(0, 5).map((sector: any) => (
-                                        <div key={sector.id} className="space-y-1.5">
-                                            <div className="flex justify-between text-[10px] font-black uppercase">
-                                                <span className="text-slate-500">{sector.nom}</span>
-                                                <span className="text-slate-900">{sector.plans_count}</span>
-                                            </div>
-                                            <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-                                                <div 
-                                                    className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
-                                                    style={{ width: `${dataStats.plans.total > 0 ? (sector.plans_count / dataStats.plans.total) * 100 : 0}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
-                                <h2 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
-                                    <div className="w-1 h-5 bg-amber-500 rounded-full"></div>
-                                    Impact Régional
-                                </h2>
-                                <div className="space-y-4">
-                                    {dataStats.plans_per_region.slice(0, 5).map((region: any) => (
-                                        <div key={region.id} className="space-y-1.5">
-                                            <div className="flex justify-between text-[10px] font-black uppercase">
-                                                <span className="text-slate-500">{region.nom}</span>
-                                                <span className="text-slate-900">{region.plans_count}</span>
-                                            </div>
-                                            <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-                                                <div 
-                                                    className="h-full bg-amber-500 rounded-full transition-all duration-1000"
-                                                    style={{ width: `${dataStats.plans.total > 0 ? (region.plans_count / dataStats.plans.total) * 100 : 0}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* NEW: Users & Regional Establishments Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                             {/* Users by Role */}
-                             <div className="bg-slate-900 p-8 rounded-[2.5rem] border border-slate-800 shadow-xl space-y-8">
-                                <h2 className="text-lg font-black text-white flex items-center gap-3 uppercase tracking-tight">
-                                    <div className="w-1 h-5 bg-purple-500 rounded-full"></div>
-                                    Utilisateurs par Rôle
-                                </h2>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <UserRoleCard label="Formateurs" count={dataStats.users_by_role.formateurs} color="emerald" />
-                                    <UserRoleCard label="Responsables F." count={dataStats.users_by_role.rf} color="blue" />
-                                    <UserRoleCard label="Concepteurs" count={dataStats.users_by_role.cdc} color="purple" />
-                                    <UserRoleCard label="Administrateurs" count={dataStats.users_by_role.admin} color="rose" />
-                                </div>
-                             </div>
-
-                             {/* Establishments per Region */}
-                             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
-                                <h2 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
-                                    <div className="w-1 h-5 bg-teal-500 rounded-full"></div>
-                                    Établissements / Région
-                                </h2>
-                                <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                                    {dataStats.instituts_per_region.map((region: any) => (
-                                        <div key={region.id} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
-                                            <span className="text-[10px] font-black text-slate-500 uppercase">{region.nom}</span>
-                                            <span className="px-2.5 py-1 bg-slate-50 text-slate-900 rounded-lg text-[10px] font-black">{region.instituts_count}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                             </div>
-                        </div>
-                    </div>
-
-                    {/* RIGHT: Status, Actions, Top Sites & Content */}
-                    <div className="space-y-8">
-                        <div className="bg-slate-900 rounded-[2.5rem] p-10 border border-slate-800 shadow-xl space-y-8">
-                            <h2 className="text-xl font-black text-white flex items-center gap-3">
-                                <div className="w-1.5 h-6 bg-blue-500 rounded-full"></div>
-                                Statuts des Plans
-                            </h2>
-                            <div className="space-y-6">
-                                {Object.entries(dataStats.plans.by_status).map(([status, count]: any) => (
-                                    <PlanStatusRow key={status} status={status} count={count} total={dataStats.plans.total} />
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* NEW: Content Inventory Grid */}
-                        <div className="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8">
-                            <h2 className="text-xl font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
-                                <div className="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
-                                Inventaire
-                            </h2>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 bg-slate-50 rounded-2xl text-center group hover:bg-emerald-50 transition-colors">
-                                    <p className="text-2xl font-black text-slate-900 group-hover:text-emerald-600">{dataStats.content_counts.metiers}</p>
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Métiers</p>
-                                </div>
-                                <div className="p-4 bg-slate-50 rounded-2xl text-center group hover:bg-blue-50 transition-colors">
-                                    <p className="text-2xl font-black text-slate-900 group-hover:text-blue-600">{dataStats.content_counts.qcm}</p>
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">QCMs</p>
-                                </div>
-                                <div className="p-4 bg-slate-50 rounded-2xl text-center group hover:bg-amber-50 transition-colors">
-                                    <p className="text-2xl font-black text-slate-900 group-hover:text-amber-600">{dataStats.content_counts.seances}</p>
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Séances</p>
-                                </div>
-                                <div className="p-4 bg-slate-50 rounded-2xl text-center group hover:bg-indigo-50 transition-colors">
-                                    <p className="text-2xl font-black text-slate-900 group-hover:text-indigo-600">{dataStats.content_counts.formations}</p>
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Modules</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8">
-                             <h2 className="text-xl font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
-                                <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-                                Top Sites
-                            </h2>
-                            <div className="space-y-4">
-                                {dataStats.top_sites.map((site: any, i: number) => (
-                                    <div key={site.id} className="flex items-center justify-between group">
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-xs font-black text-slate-300">#{i+1}</span>
-                                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-wider line-clamp-1">{site.nom}</span>
-                                        </div>
-                                        <span className="px-2 py-1 bg-slate-50 text-slate-400 rounded-lg font-black text-[9px] group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">{site.plans_count} PLANS</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="bg-slate-900 rounded-[2.5rem] p-10 border border-slate-800 shadow-xl space-y-8">
-                            <h2 className="text-xl font-black text-white flex items-center gap-3">
-                                <div className="w-1.5 h-6 bg-rose-500 rounded-full"></div>
-                                Actions
-                            </h2>
-                            <div className="space-y-4">
-                                {dataStats.admin_alerts && (
-                                    <>
-                                        <SystemAlertItem label="Users sans rôle" count={dataStats.admin_alerts.users_sans_role} color="rose" link={route('admin.users.index')} />
-                                        <SystemAlertItem label="Comptes suspendus" count={dataStats.admin_alerts.users_suspendus} color="amber" link={route('admin.users.index')} />
-                                        <SystemAlertItem label="Sites inactifs" count={dataStats.admin_alerts.sites_inactifs} color="slate" link={route('admin.logistique.index')} />
-                                    </>
-                                )}
-                                
-                                {dataStats.rf_alerts && (
-                                    <>
-                                        <SystemAlertItem label="Plans à confirmer" count={dataStats.rf_alerts.pending_confirmation} color="rose" link={route('modules.plans.index', { statut: 'soumis' })} />
-                                        <SystemAlertItem label="Plans à valider" count={dataStats.rf_alerts.pending_validation} color="amber" link={route('modules.plans.index', { statut: 'confirmé' })} />
-                                    </>
-                                )}
-
-                                {dataStats.cdc_alerts && (
-                                    <>
-                                        <SystemAlertItem label="Mes brouillons" count={dataStats.cdc_alerts.my_drafts} color="blue" link={route('modules.plans.index', { statut: 'brouillon' })} />
-                                        <SystemAlertItem label="Plans rejetés" count={dataStats.cdc_alerts.my_rejected} color="rose" link={route('modules.plans.index', { statut: 'rejeté' })} />
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Recent News Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
-                    <div className="lg:col-span-3 bg-white rounded-[2.5rem] p-10 border border-slate-200/60 shadow-sm">
-                        <h2 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3 uppercase tracking-tight">
-                            <div className="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
-                            Actualités du Catalogue National
+                {/* ROW 2: Evolution Area Chart (Full Width) */}
+                <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/60">
+                    <div className="flex justify-between items-center mb-10">
+                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-3">
+                            <div className="w-2 h-6 bg-blue-600 rounded-full"></div>
+                            Évolution de l'Activité
                         </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {latestFormations.length > 0 ? latestFormations.map((formation, i) => (
-                                <Link 
-                                    key={formation.id} 
-                                    href={route('modules.entites.show', formation.id)}
-                                    className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:bg-white hover:shadow-xl hover:border-blue-100 transition-all cursor-pointer group"
-                                >
-                                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-blue-600 font-bold border border-slate-100 uppercase text-[9px] mb-4 group-hover:scale-110 transition-transform">
-                                        {formation.secteur?.nom?.substring(0, 3) || 'FT'}
+                        <div className="flex items-center gap-4 text-[10px] font-black text-slate-400">
+                            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-blue-500 rounded-full"></div> PLANS CRÉÉS</div>
+                        </div>
+                    </div>
+                    <TrendAreaChart data={dataStats.plans_evolution} />
+                </div>
+
+                {/* ROW 3: Distributions (Donuts) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200/60">
+                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-10 flex items-center gap-3">
+                            <div className="w-2 h-6 bg-indigo-600 rounded-full"></div>
+                            Statuts des Dossiers
+                        </h2>
+                        <div className="flex flex-col md:flex-row items-center gap-10">
+                            <DonutChart 
+                                data={Object.entries(dataStats.plans.by_status).map(([k, v]) => ({ label: k, value: v }))} 
+                                colors={['#64748b', '#3b82f6', '#10b981', '#6366f1', '#f43f5e', '#dc2626']}
+                            />
+                            <div className="flex-1 grid grid-cols-2 gap-4 w-full">
+                                {Object.entries(dataStats.plans.by_status).map(([status, count], i) => (
+                                    <div key={status} className="p-4 bg-slate-50 rounded-2xl flex flex-col justify-center border border-slate-100">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{status}</span>
+                                        <span className="text-xl font-black text-slate-900 mt-1">{count}</span>
                                     </div>
-                                    <h4 className="text-xs font-black text-slate-900 group-hover:text-blue-600 transition-colors tracking-tight line-clamp-2 min-h-[32px]">{formation.titre}</h4>
-                                    <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{new Date(formation.created_at).toLocaleDateString()}</span>
-                                        <svg className="w-4 h-4 text-slate-300 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200/60">
+                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-10 flex items-center gap-3">
+                            <div className="w-2 h-6 bg-purple-600 rounded-full"></div>
+                            Répartition RH
+                        </h2>
+                        <div className="flex flex-col md:flex-row items-center gap-10">
+                            <DonutChart 
+                                data={Object.entries(dataStats.users_by_role).map(([k, v]) => ({ label: k, value: v }))} 
+                                colors={['#10b981', '#3b82f6', '#8b5cf6', '#f43f5e']}
+                            />
+                            <div className="flex-1 grid grid-cols-2 gap-4 w-full">
+                                {Object.entries(dataStats.users_by_role).map(([role, count]) => (
+                                    <div key={role} className="p-4 bg-slate-50 rounded-2xl flex flex-col justify-center border border-slate-100">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{role}</span>
+                                        <span className="text-xl font-black text-slate-900 mt-1">{count}</span>
                                     </div>
-                                </Link>
-                            )) : (
-                                <div className="col-span-3 p-10 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                                    <p className="text-sm font-medium text-slate-400 uppercase tracking-widest">Aucune activité récente pour le moment.</p>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ROW 4: Impact (Horizontal Bars) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200/60">
+                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-8 flex items-center gap-3">
+                            <div className="w-2 h-6 bg-emerald-600 rounded-full"></div>
+                            Impact par Secteur
+                        </h2>
+                        <HorizontalBarChart data={dataStats.plans_per_sector.slice(0, 8)} color="#10b981" />
+                    </div>
+
+                    <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200/60">
+                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-8 flex items-center gap-3">
+                            <div className="w-2 h-6 bg-amber-500 rounded-full"></div>
+                            Impact par Région
+                        </h2>
+                        <HorizontalBarChart data={dataStats.plans_per_region.slice(0, 8)} color="#f59e0b" />
+                    </div>
+                </div>
+
+                {/* ROW 5: Inventory & Activity */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Content Inventory */}
+                    <div className="bg-slate-900 p-10 rounded-[3rem] shadow-xl border border-slate-800 flex flex-col justify-between">
+                        <h2 className="text-xl font-black text-white uppercase tracking-tight mb-8">Inventaire Digital</h2>
+                        <div className="space-y-6">
+                            {Object.entries(dataStats.content_counts).map(([label, count]) => (
+                                <div key={label} className="flex items-center justify-between group">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{label}</span>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-white font-black text-lg">{count}</span>
+                                        <div className="w-24 h-1 bg-slate-800 rounded-full overflow-hidden">
+                                            <div className="h-full bg-blue-500 w-[60%]" />
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Upcoming Sessions */}
+                    <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-200/60 lg:col-span-2">
+                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-8">Planning Immédiat</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {dataStats.upcoming_seances.map((seance, i) => (
+                                <div key={i} className="p-5 bg-slate-50 rounded-3xl border border-slate-100 flex items-center gap-5 hover:scale-[1.02] transition-transform">
+                                    <div className="w-14 h-14 bg-white rounded-2xl flex flex-col items-center justify-center border border-slate-100 shadow-sm text-blue-600">
+                                        <span className="text-xs font-black leading-none">{new Date(seance.date).getDate()}</span>
+                                        <span className="text-[8px] font-black uppercase tracking-tighter">{new Date(seance.date).toLocaleDateString('fr-FR', { month: 'short' })}</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-slate-900 line-clamp-1">{seance.plan?.entite?.titre}</p>
+                                        <div className="flex items-center gap-3 mt-1">
+                                            <span className="text-[8px] font-black text-slate-400 uppercase">{seance.debut.substring(0,5)}</span>
+                                            <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                            <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest">{seance.site?.nom}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -460,66 +230,167 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
     );
 }
 
-function UserRoleCard({ label, count, color }: { label: string, count: number, color: string }) {
+{/* --- CUSTOM SVG CHART COMPONENTS --- */}
+
+function CircularKPI({ label, value, max = 100, color }: any) {
     const colors: any = {
-        emerald: 'text-emerald-500 bg-emerald-500/5 border-emerald-500/10 hover:bg-emerald-500/10',
-        blue: 'text-blue-500 bg-blue-500/5 border-blue-500/10 hover:bg-blue-500/10',
-        purple: 'text-purple-500 bg-purple-500/5 border-purple-500/10 hover:bg-purple-500/10',
-        rose: 'text-rose-500 bg-rose-500/5 border-rose-500/10 hover:bg-rose-500/10',
+        blue: 'text-blue-600',
+        indigo: 'text-indigo-600',
+        emerald: 'text-emerald-500',
+        purple: 'text-purple-600',
+        rose: 'text-rose-600'
     };
+    const percentage = Math.min((value / max) * 100, 100);
+    const strokeDash = 264;
+    const offset = strokeDash - (strokeDash * percentage) / 100;
+
     return (
-        <div className={`p-4 rounded-2xl border ${colors[color]} transition-colors text-center`}>
-            <p className="text-lg font-black">{count}</p>
-            <p className="text-[8px] font-black uppercase tracking-widest mt-1 opacity-60">{label}</p>
+        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/60 flex flex-col items-center gap-6 hover:shadow-lg transition-all group">
+            <div className="relative w-28 h-28 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90">
+                    <circle cx="56" cy="56" r="42" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-50" />
+                    <circle 
+                        cx="56" cy="56" r="42" stroke="currentColor" strokeWidth="8" fill="transparent" 
+                        strokeDasharray={strokeDash}
+                        strokeDashoffset={offset}
+                        className={`${colors[color]} transition-all duration-1000 ease-out`} 
+                        strokeLinecap="round"
+                    />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-2xl font-black text-slate-900">{max === 100 ? `${value}%` : value}</span>
+                </div>
+            </div>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] group-hover:text-slate-900 transition-colors">{label}</span>
         </div>
     );
 }
 
-function PlanStatusRow({ status, count, total }: { status: string, count: number, total: number }) {
-    const percentage = total > 0 ? (count / total) * 100 : 0;
-    const colors: any = {
-        brouillon: 'bg-slate-500',
-        soumis: 'bg-blue-500',
-        validé: 'bg-emerald-500',
-        confirmé: 'bg-indigo-500',
-        rejeté: 'bg-rose-500',
-        annulé: 'bg-red-600'
-    };
+function TrendAreaChart({ data }: any) {
+    if (!data.length) return null;
+    const max = Math.max(...data.map((d: any) => d.count), 1);
+    const height = 160;
+    const width = 800; // Relative to viewbox
+    const points = data.map((d: any, i: number) => {
+        const x = (i / (data.length - 1)) * width;
+        const y = height - (d.count / max) * height;
+        return `${x},${y}`;
+    }).join(' ');
+
+    const areaPoints = `0,${height} ${points} ${width},${height}`;
 
     return (
-        <div className="space-y-2">
-            <div className="flex justify-between items-end">
-                <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">{status}</span>
-                <span className="text-[10px] font-black text-slate-100">{count}</span>
-            </div>
-            <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                <div 
-                    className={`h-full rounded-full ${colors[status] || 'bg-slate-200'} transition-all duration-1000`}
-                    style={{ width: `${percentage}%` }}
-                ></div>
+        <div className="relative pt-10">
+            <svg viewBox={`0 0 ${width} ${height}`} className="w-full overflow-visible">
+                <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style={{ stopColor: '#3b82f6', stopOpacity: 0.3 }} />
+                        <stop offset="100%" style={{ stopColor: '#3b82f6', stopOpacity: 0 }} />
+                    </linearGradient>
+                </defs>
+                <polyline fill="url(#gradient)" points={areaPoints} />
+                <polyline 
+                    fill="none" 
+                    stroke="#3b82f6" 
+                    strokeWidth="4" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    points={points} 
+                    className="animate-in fade-in duration-1000"
+                />
+                {data.map((d: any, i: number) => {
+                    const x = (i / (data.length - 1)) * width;
+                    const y = height - (d.count / max) * height;
+                    return (
+                        <g key={i} className="group cursor-pointer">
+                            <circle cx={x} cy={y} r="6" fill="#fff" stroke="#3b82f6" strokeWidth="3" className="transition-all group-hover:r-8" />
+                            <text x={x} y={y - 15} textAnchor="middle" className="text-[12px] font-black fill-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {d.count}
+                            </text>
+                        </g>
+                    );
+                })}
+            </svg>
+            <div className="flex justify-between mt-6 px-2">
+                {data.map((d: any, i: number) => (
+                    <span key={i} className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{d.label}</span>
+                ))}
             </div>
         </div>
     );
 }
 
-function SystemAlertItem({ label, count, color, link }: any) {
-    const colors: any = {
-        rose: 'text-rose-500 bg-rose-500/10 border-rose-500/20 hover:bg-rose-500/20',
-        amber: 'text-amber-500 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20',
-        blue: 'text-blue-400 bg-blue-400/10 border-blue-400/20 hover:bg-blue-400/20',
-        slate: 'text-slate-400 bg-slate-400/10 border-slate-400/20 hover:bg-slate-400/20'
-    };
+function DonutChart({ data, colors }: any) {
+    const total = data.reduce((acc: number, d: any) => acc + d.value, 0);
+    let currentAngle = 0;
+    const radius = 50;
+    const innerRadius = 35;
+    const center = 60;
 
-    const content = (
-        <div className={`p-4 rounded-xl border ${colors[color]} flex items-center justify-between transition-colors ${link ? 'cursor-pointer' : ''}`}>
-            <span className="text-[9px] font-black uppercase tracking-wider">{label}</span>
-            <span className="text-xs font-black">{count}</span>
+    return (
+        <div className="relative w-48 h-48 flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 120 120" className="w-full h-full transform -rotate-90">
+                {data.map((d: any, i: number) => {
+                    if (d.value === 0) return null;
+                    const angle = (d.value / total) * 360;
+                    const x1 = center + radius * Math.cos((Math.PI * currentAngle) / 180);
+                    const y1 = center + radius * Math.sin((Math.PI * currentAngle) / 180);
+                    const x2 = center + radius * Math.cos((Math.PI * (currentAngle + angle)) / 180);
+                    const y2 = center + radius * Math.sin((Math.PI * (currentAngle + angle)) / 180);
+                    
+                    const largeArcFlag = angle > 180 ? 1 : 0;
+                    const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} L ${center + innerRadius * Math.cos((Math.PI * (currentAngle + angle)) / 180)} ${center + innerRadius * Math.sin((Math.PI * (currentAngle + angle)) / 180)} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${center + innerRadius * Math.cos((Math.PI * currentAngle) / 180)} ${center + innerRadius * Math.sin((Math.PI * currentAngle) / 180)} Z`;
+                    
+                    currentAngle += angle;
+                    return <path key={i} d={pathData} fill={colors[i % colors.length]} className="hover:opacity-80 transition-opacity cursor-pointer" />;
+                })}
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-black text-slate-900">{total}</span>
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Total</span>
+            </div>
         </div>
     );
+}
 
-    if (link && count > 0) {
-        return <Link href={link}>{content}</Link>;
-    }
+function HorizontalBarChart({ data, color }: any) {
+    const max = Math.max(...data.map((d: any) => d.plans_count), 1);
+    return (
+        <div className="space-y-6 pt-4">
+            {data.map((d: any, i: number) => (
+                <div key={i} className="space-y-2 group">
+                    <div className="flex justify-between items-end">
+                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest group-hover:text-slate-900 transition-colors">{d.nom}</span>
+                        <span className="text-xs font-black text-slate-900">{d.plans_count}</span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100/50">
+                        <div 
+                            className="h-full rounded-full transition-all duration-1000 shadow-sm"
+                            style={{ width: `${(d.plans_count / max) * 100}%`, backgroundColor: color }}
+                        ></div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
 
-    return content;
+function FilterSelect({ label, value, options, onChange }: any) {
+    return (
+        <div className="flex flex-col px-2">
+            <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1">{label}</span>
+            <select 
+                value={value || ''} 
+                onChange={(e) => onChange(e.target.value)}
+                className="bg-transparent border-none p-0 pr-6 text-[10px] font-black text-slate-900 uppercase tracking-wider focus:ring-0 cursor-pointer"
+            >
+                <option value="">Tous</option>
+                {options.map((o: any) => (
+                    <option key={typeof o === 'object' ? o.value : o} value={typeof o === 'object' ? o.value : o}>
+                        {typeof o === 'object' ? o.label : o}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
 }

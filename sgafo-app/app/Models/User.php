@@ -103,4 +103,12 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(PlanFormation::class, 'plan_participants', 'participant_id', 'plan_id');
     }
+
+    /**
+     * Séances animées par cet utilisateur (Formateur).
+     */
+    public function seances()
+    {
+        return $this->belongsToMany(Seance::class, 'seance_themes', 'formateur_id', 'seance_id');
+    }
 }
