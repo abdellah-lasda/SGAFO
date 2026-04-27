@@ -86,7 +86,6 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
     const isRF = user.roles?.some((r: any) => r.code === 'RF');
     const isCDC = user.roles?.some((r: any) => r.code === 'CDC');
     const isFormateur = user.roles?.some((r: any) => r.code === 'FORMATEUR');
-
     const handleFilterChange = (key: string, value: string) => {
         const newFilters = { ...filters, [key]: value };
         if (value === '') delete (newFilters as any)[key];
@@ -142,14 +141,16 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                     />
                     <CircularKPI 
                         label={isFormateur ? "Mon Score Moyen" : (isRF || isCDC) ? "Plans Complexe" : "Plans Actifs"} 
-                        value={isFormateur ? dataStats.formateur_data?.pedagogical_stats.my_average_score ?? 0 : dataStats.plans.total} 
-                        max={100} 
+                        value={isFormateur ? Number(dataStats.formateur_data?.pedagogical_stats.my_average_score).toFixed(2) ?? 0 : dataStats.plans.total} 
+                        max={isFormateur ? 100 : (dataStats.plans.total > 100 ? dataStats.plans.total : 100)} 
+                        suffix={isFormateur ? "%" : ""}
                         color="indigo" 
                     />
                     <CircularKPI 
                         label={isFormateur ? "Séances Animées" : "Sites Occupés"} 
                         value={isFormateur ? dataStats.formateur_data?.pedagogical_stats.sessions_count ?? 0 : dataStats.site_occupancy.length} 
-                        max={isFormateur ? 100 : dataStats.sites_count} 
+                        max={isFormateur ? 100 : (dataStats.sites_count > 0 ? dataStats.sites_count : 10)} 
+                        suffix={isFormateur ? "" : ""}
                         color="emerald" 
                     />
                     {isFormateur ? (
@@ -160,7 +161,7 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                     ) : (isRF || isCDC) ? (
                         <CircularKPI label="Réponse QCM" value={dataStats.qcm_stats.rate} color="rose" />
                     ) : (
-                        <CircularKPI label="Formateurs" value={dataStats.formateurs_count} max={dataStats.formateurs_count} color="purple" />
+                        <CircularKPI label="Formateurs" value={dataStats.formateurs_count} max={dataStats.formateurs_count || 1} suffix="" color="purple" />
                     )}
                 </div>
 
@@ -189,13 +190,14 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                                                 <p className="text-[8px] font-black text-slate-400 uppercase mt-0.5">{seance.debut.substring(0,5)} • {seance.site?.nom}</p>
                                             </div>
                                         </div>
-                                        <Link href={route('modules.seances.show', seance.id)} className="p-2 bg-white text-blue-600 rounded-xl border border-blue-100 opacity-0 group-hover:opacity-100 transition-all">
+                                        <Link href={route('modules.animateur.formations.show', seance.plan.id)} className="p-2 bg-white text-blue-600 rounded-xl border border-blue-100 opacity-0 group-hover:opacity-100 transition-all">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
                                         </Link>
                                     </div>
                                 ))}
                             </div>
                         </div>
+
 
                         {/* PATH 2: PARTICIPANT JOURNEY */}
                         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/60">
@@ -219,7 +221,7 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                                                 <p className="text-[8px] font-black text-slate-400 uppercase mt-0.5">Statut: {plan.statut}</p>
                                             </div>
                                         </div>
-                                        <Link href={route('modules.plans.show', plan.id)} className="p-2 bg-white text-purple-600 rounded-xl border border-purple-100 opacity-0 group-hover:opacity-100 transition-all">
+                                        <Link href={route('participant.plan.show', plan.id)} className="p-2 bg-white text-purple-600 rounded-xl border border-purple-100 opacity-0 group-hover:opacity-100 transition-all">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                                         </Link>
                                     </div>
@@ -290,7 +292,7 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                                 <div className="w-2 h-6 bg-indigo-600 rounded-full"></div>
                                 État Global
                             </h2>
-                            <DonutChart data={Object.entries(dataStats.plans.by_status).map(([k, v]) => ({ label: k, value: v }))} colors={['#64748b', '#3b82f6', '#10b981', '#6366f1', '#f43f5e', '#dc2626']} />
+                            <DonutChart data={Object.entries(dataStats.plans.by_status).map(([k, v]) => ({ label: k, value: v }))} colors={['#94a3b8', '#3b82f6', '#10b981', '#6366f1', '#f43f5e', '#e11d48']} />
                         </div>
                         {isAdmin ? (
                             <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200/60">
@@ -313,11 +315,17 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
 
 {/* --- CUSTOM SVG CHART COMPONENTS --- */}
 
-function CircularKPI({ label, value, max = 100, color }: any) {
+function CircularKPI({ label, value, max = 100, color, suffix = "%" }: any) {
     const colors: any = { blue: 'text-blue-600', indigo: 'text-indigo-600', emerald: 'text-emerald-500', purple: 'text-purple-600', rose: 'text-rose-500' };
     const percentage = Math.min((value / max) * 100, 100);
     const strokeDash = 264;
     const offset = strokeDash - (strokeDash * percentage) / 100;
+    
+    // Formatting: round to 1 decimal if it's a percentage or large float
+    const displayValue = typeof value === 'number' 
+        ? (value % 1 === 0 ? value : value.toFixed(1)) 
+        : value;
+
     return (
         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/60 flex flex-col items-center gap-6 hover:shadow-lg transition-all">
             <div className="relative w-28 h-28 flex items-center justify-center">
@@ -325,9 +333,11 @@ function CircularKPI({ label, value, max = 100, color }: any) {
                     <circle cx="56" cy="56" r="42" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-50" />
                     <circle cx="56" cy="56" r="42" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={strokeDash} strokeDashoffset={offset} className={`${colors[color]} transition-all duration-1000`} strokeLinecap="round" />
                 </svg>
-                <span className="absolute text-2xl font-black text-slate-900">{max === 100 ? `${value}%` : value}</span>
+                <span className="absolute text-2xl font-black text-slate-900 leading-none flex items-baseline">
+                    {displayValue}<span className="text-xs ml-0.5 opacity-40">{suffix}</span>
+                </span>
             </div>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{label}</span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">{label}</span>
         </div>
     );
 }
@@ -354,21 +364,38 @@ function DonutChart({ data, colors }: any) {
     const total = data.reduce((acc: number, d: any) => acc + d.value, 0);
     let currentAngle = 0; const radius = 50; const center = 60;
     return (
-        <div className="relative w-48 h-48 flex items-center justify-center">
-            <svg viewBox="0 0 120 120" className="w-full h-full transform -rotate-90">
-                {data.map((d: any, i: number) => {
-                    if (d.value === 0) return null;
-                    const angle = (d.value / total) * 360;
-                    const x1 = center + radius * Math.cos((Math.PI * currentAngle) / 180);
-                    const y1 = center + radius * Math.sin((Math.PI * currentAngle) / 180);
-                    const x2 = center + radius * Math.cos((Math.PI * (currentAngle + angle)) / 180);
-                    const y2 = center + radius * Math.sin((Math.PI * (currentAngle + angle)) / 180);
-                    const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${angle > 180 ? 1 : 0} 1 ${x2} ${y2} L ${center} ${center} Z`;
-                    currentAngle += angle;
-                    return <path key={i} d={pathData} fill={colors[i % colors.length]} />;
-                })}
-            </svg>
-            <span className="absolute text-2xl font-black text-slate-900">{total}</span>
+        <div className="flex flex-col md:flex-row items-center gap-10">
+            <div className="relative w-40 h-40 flex items-center justify-center shrink-0">
+                <svg viewBox="0 0 120 120" className="w-full h-full transform -rotate-90">
+                    {data.map((d: any, i: number) => {
+                        if (d.value === 0) return null;
+                        const angle = (d.value / total) * 360;
+                        const x1 = center + radius * Math.cos((Math.PI * currentAngle) / 180);
+                        const y1 = center + radius * Math.sin((Math.PI * currentAngle) / 180);
+                        const x2 = center + radius * Math.cos((Math.PI * (currentAngle + angle)) / 180);
+                        const y2 = center + radius * Math.sin((Math.PI * (currentAngle + angle)) / 180);
+                        const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${angle > 180 ? 1 : 0} 1 ${x2} ${y2} L ${center} ${center} Z`;
+                        currentAngle += angle;
+                        return <path key={i} d={pathData} fill={colors[i % colors.length]} className="hover:opacity-80 transition-opacity cursor-help" />;
+                    })}
+                    <circle cx={center} cy={center} r={radius - 15} fill="white" />
+                </svg>
+                <div className="absolute flex flex-col items-center leading-none">
+                    <span className="text-2xl font-black text-slate-900">{total}</span>
+                    <span className="text-[8px] font-black text-slate-400 uppercase mt-1">Total</span>
+                </div>
+            </div>
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3 w-full">
+                {data.map((d: any, i: number) => (
+                    <div key={i} className="flex items-center gap-3">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colors[i % colors.length] }}></div>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-slate-900 uppercase leading-tight truncate max-w-[120px]">{d.label}</span>
+                            <span className="text-[9px] font-bold text-slate-400">{d.value} ({total > 0 ? Math.round((d.value/total)*100) : 0}%)</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }

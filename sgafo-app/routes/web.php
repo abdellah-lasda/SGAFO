@@ -9,6 +9,7 @@ use App\Http\Controllers\LogistiqueController;
 use App\Http\Controllers\Modules\Animateur\AnimateurDashboardController;
 use App\Http\Controllers\Modules\Animateur\SeancePedagogiqueController;
 use App\Http\Controllers\Modules\Animateur\QcmAnimateurController;
+use App\Http\Controllers\Modules\Animateur\PlanRessourceController;
 use App\Http\Controllers\Admin\DomaineController as AdminDomaineController;
 use App\Http\Controllers\Admin\PilotageController;
 use App\Http\Controllers\Admin\UserController;
@@ -156,6 +157,24 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
     Route::get('/dashboard', [AnimateurDashboardController::class, 'index'])->name('dashboard');
     Route::get('/formations', [AnimateurDashboardController::class, 'formations'])->name('formations');
     Route::get('/formations/{plan}', [AnimateurDashboardController::class, 'showFormation'])->name('formations.show');
+    
+    // Plan Resources (Animateur)
+    Route::post('/formations/{plan}/ressources', [PlanRessourceController::class, 'store'])->name('formations.ressources.store');
+    Route::put('/formations/ressources/{ressource}', [PlanRessourceController::class, 'update'])->name('formations.ressources.update');
+    Route::delete('/formations/ressources/{ressource}', [PlanRessourceController::class, 'destroy'])->name('formations.ressources.destroy');
+
+    // Seances (Préparation & Ressources)
+    Route::get('/seances/{seance}/preparation', [SeancePedagogiqueController::class, 'edit'])->name('seances.preparation');
+    Route::patch('/seances/{seance}/description', [SeancePedagogiqueController::class, 'updateDescription'])->name('seances.update-description');
+    Route::post('/seances/{seance}/ressources', [SeancePedagogiqueController::class, 'addResource'])->name('seances.ressources.store');
+    Route::put('/seances/ressources/{ressource}', [SeancePedagogiqueController::class, 'updateResource'])->name('seances.ressources.update');
+    Route::delete('/seances/ressources/{ressource}', [SeancePedagogiqueController::class, 'deleteResource'])->name('seances.ressources.destroy');
+
+    // Attendance (Appel & Rapports)
+    Route::get('/seances/{seance}/attendance', [AnimateurDashboardController::class, 'attendance'])->name('seances.attendance');
+    Route::post('/seances/{seance}/attendance', [AnimateurDashboardController::class, 'submitAttendance'])->name('seances.attendance.submit');
+    Route::get('/seances/{seance}/print-sheet', [AnimateurDashboardController::class, 'printSheet'])->name('seances.print-sheet');
+    Route::get('/seances/{seance}/export-absences', [AnimateurDashboardController::class, 'exportAbsences'])->name('seances.export-absences');
 });
 
 // Espace Participant

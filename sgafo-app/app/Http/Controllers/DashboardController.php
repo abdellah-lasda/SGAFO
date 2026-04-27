@@ -125,11 +125,20 @@ class DashboardController extends Controller
 
     private function getFilteredPlansQuery(array $filters)
     {
+        $user = auth()->user();
         return PlanFormation::query()
             ->when($filters['annee'], fn($q) => $q->whereYear('date_debut', $filters['annee']))
             ->when($filters['secteur_id'], fn($q) => $q->whereHas('entite', fn($sq) => $sq->where('secteur_id', $filters['secteur_id'])))
-            ->when(isset($filters['scope_region_ids']), fn($q) => $q->whereHas('participants.instituts.region', fn($sq) => $sq->whereIn('id', $filters['scope_region_ids'])))
-            ->when(isset($filters['scope_institut_ids']), fn($q) => $q->whereHas('participants.instituts', fn($sq) => $sq->whereIn('instituts.id', $filters['scope_institut_ids'])))
+            // Scope Restriction: CDC/RF should see plans they manage OR plans where their participants are involved
+            ->when(isset($filters['scope_region_ids']) || isset($filters['scope_institut_ids']), function($q) use ($filters, $user) {
+                $q->where(function($sq) use ($filters, $user) {
+                    $sq->where('cree_par', $user->id)
+                      ->orWhereHas('participants.instituts.region', function($ssq) use ($filters) {
+                          if (isset($filters['scope_region_ids'])) $ssq->whereIn('regions.id', $filters['scope_region_ids']);
+                      })
+                      ->when(isset($filters['scope_institut_ids']), fn($ssq) => $ssq->orWhereHas('participants.instituts', fn($sssq) => $sssq->whereIn('instituts.id', $filters['scope_institut_ids'])));
+                });
+            })
             ->when($filters['region_id'], fn($q) => $q->whereHas('participants.instituts.region', fn($sq) => $sq->where('id', $filters['region_id'])))
             ->when($filters['ville'], fn($q) => $q->whereHas('participants.instituts', fn($sq) => $sq->where('ville', $filters['ville'])));
     }
@@ -236,15 +245,21 @@ class DashboardController extends Controller
     private function getUsersByRole(array $filters)
     {
         $scopeCallback = function($q) use ($filters) {
+            // Priority 1: Mandatory Scope (RF/CDC)
             $q->when(isset($filters['scope_region_ids']), fn($sq) => $sq->whereHas('regions', fn($ssq) => $ssq->whereIn('regions.id', $filters['scope_region_ids'])))
               ->when(isset($filters['scope_institut_ids']), fn($sq) => $sq->whereHas('instituts', fn($ssq) => $ssq->whereIn('instituts.id', $filters['scope_institut_ids'])));
+            
+            // Priority 2: Active Filters (Dropdowns)
+            $q->when($filters['region_id'], fn($sq) => $sq->whereHas('regions', fn($ssq) => $ssq->where('regions.id', $filters['region_id'])))
+              ->when($filters['ville'], fn($sq) => $sq->whereHas('instituts', fn($ssq) => $ssq->where('instituts.ville', $filters['ville'])))
+              ->when($filters['secteur_id'], fn($sq) => $sq->whereHas('secteurs', fn($ssq) => $ssq->where('secteurs.id', $filters['secteur_id'])));
         };
 
         return [
-            'formateurs' => User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))->where($scopeCallback)->count(),
-            'rf' => User::whereHas('roles', fn($q) => $q->where('code', 'RF'))->where($scopeCallback)->count(),
-            'cdc' => User::whereHas('roles', fn($q) => $q->where('code', 'CDC'))->where($scopeCallback)->count(),
-            'admin' => User::whereHas('roles', fn($q) => $q->where('code', 'ADMIN'))->where($scopeCallback)->count(),
+            'Formateurs' => User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))->where($scopeCallback)->count(),
+            'RF' => User::whereHas('roles', fn($q) => $q->where('code', 'RF'))->where($scopeCallback)->count(),
+            'CDC' => User::whereHas('roles', fn($q) => $q->where('code', 'CDC'))->where($scopeCallback)->count(),
+            'Admin' => User::whereHas('roles', fn($q) => $q->where('code', 'ADMIN'))->where($scopeCallback)->count(),
         ];
     }
 
