@@ -167,7 +167,7 @@ export default function Welcome({
                         </div>
 
                         {latestPlans.length > 0 ? (
-                            <div className="relative min-h-[500px]">
+                            <div className="relative min-h-[900px] md:min-h-[600px] lg:min-h-[500px]">
                                 {latestPlans.map((plan, index) => (
                                     <div
                                         key={plan.id}
@@ -177,9 +177,9 @@ export default function Welcome({
                                                 : 'opacity-0 scale-95 translate-y-8 pointer-events-none'
                                         }`}
                                     >
-                                        <div className="grid lg:grid-cols-12 gap-0 overflow-hidden bg-white rounded-[48px] border border-slate-200 shadow-2xl h-full min-h-[500px]">
+                                        <div className="grid lg:grid-cols-12 gap-0 overflow-hidden bg-white rounded-[32px] md:rounded-[48px] border border-slate-200 shadow-2xl h-full min-h-[900px] md:min-h-[600px] lg:min-h-[500px]">
                                             {/* Left Column: Main Info */}
-                                            <div className="lg:col-span-7 p-10 md:p-16 flex flex-col justify-center border-r border-slate-50">
+                                            <div className="lg:col-span-7 p-6 sm:p-10 md:p-16 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-slate-100">
                                                 <div className="flex items-center gap-3 mb-8">
                                                     <span className="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[11px] font-black uppercase tracking-widest border border-blue-100">
                                                         {plan.entite?.secteur?.nom}
@@ -191,7 +191,7 @@ export default function Welcome({
                                                     </span>
                                                 </div>
                                                 
-                                                <h3 className="text-4xl md:text-5xl font-black text-slate-900 leading-[1.1] mb-8 tracking-tighter">
+                                                <h3 className="text-2xl sm:text-3xl md:text-5xl font-black text-slate-900 leading-[1.1] mb-6 md:mb-8 tracking-tighter">
                                                     {plan.titre}
                                                 </h3>
                                                 
@@ -204,7 +204,7 @@ export default function Welcome({
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-3 gap-8 p-8 bg-slate-50 rounded-[32px] border border-slate-100">
+                                                <div className="grid grid-cols-3 gap-4 sm:gap-8 p-6 sm:p-8 bg-slate-50 rounded-2xl sm:rounded-[32px] border border-slate-100">
                                                     <div>
                                                         <div className="text-3xl font-black text-slate-900 tracking-tighter">{plan.themes?.length || 0}</div>
                                                         <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Modules</div>
@@ -214,14 +214,14 @@ export default function Welcome({
                                                         <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Animateurs</div>
                                                     </div>
                                                     <div>
-                                                        <div className="text-3xl font-black text-slate-900 tracking-tighter">{plan.participants_count}</div>
-                                                        <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Participants</div>
+                                                        <div className="text-xl sm:text-3xl font-black text-slate-900 tracking-tighter">{plan.participants_count}</div>
+                                                        <div className="text-[8px] sm:text-[10px] font-black uppercase text-slate-400 tracking-widest text-center sm:text-left">Participants</div>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Right Column: Meta Info */}
-                                            <div className="lg:col-span-5 bg-slate-50/50 p-10 md:p-16 flex flex-col justify-center space-y-10">
+                                            <div className="lg:col-span-5 bg-slate-50/50 p-6 sm:p-10 md:p-16 flex flex-col justify-center space-y-6 md:space-y-10">
                                                 <div className="flex items-center gap-5">
                                                     <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-slate-100 text-xl font-black text-slate-900 uppercase">
                                                         {plan.createur?.prenom[0]}{plan.createur?.nom[0]}
