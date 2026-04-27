@@ -24,4 +24,12 @@ class SiteFormation extends Model
     {
         return $this->belongsTo(Region::class);
     }
+
+    /**
+     * Get the training plans hosted by this site.
+     */
+    public function plans()
+    {
+        return $this->hasMany(PlanFormation::class, 'site_formation_id');
+    }
 }

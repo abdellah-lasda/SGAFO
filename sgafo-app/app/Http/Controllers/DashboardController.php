@@ -50,6 +50,35 @@ class DashboardController extends Controller
                     'annulé' => (clone $plansQuery)->where('statut', 'annulé')->count(),
                 ]
             ],
+            'plans_per_sector' => Secteur::withCount(['entites as plans_count' => function($q) use ($plansQuery) {
+                    $q->whereHas('plans', function($sq) use ($plansQuery) {
+                        $sq->whereIn('id', (clone $plansQuery)->select('id'));
+                    });
+                }])
+                ->orderByDesc('plans_count')
+                ->get(['id', 'nom', 'plans_count']),
+
+            'plans_per_region' => Region::all()->map(function($region) use ($plansQuery) {
+                return [
+                    'id' => $region->id,
+                    'nom' => $region->nom,
+                    'plans_count' => (clone $plansQuery)->whereHas('participants.instituts', function($q) use ($region) {
+                        $q->where('region_id', $region->id);
+                    })->count()
+                ];
+            })->sortByDesc('plans_count')->values(),
+
+            'top_sites' => SiteFormation::withCount(['plans' => function($q) use ($plansQuery) {
+                    $q->whereIn('id', (clone $plansQuery)->select('id'));
+                }])
+                ->orderByDesc('plans_count')
+                ->take(5)
+                ->get(['id', 'nom', 'plans_count']),
+
+            'plans_evolution' => $this->getPlansEvolution(),
+            
+            'attendance_rate' => $this->calculateAttendanceRate($annee, $regionId, $ville, $secteurId),
+
             // Admin Specific Alerts
             'admin_alerts' => $user->isAdmin() ? [
                 'users_sans_role' => User::doesntHave('roles')->count(),
@@ -89,5 +118,39 @@ class DashboardController extends Controller
                             ->pluck('year'),
             ]
         ]);
+    }
+
+    private function calculateAttendanceRate($annee, $regionId, $ville, $secteurId)
+    {
+        $query = \App\Models\Presence::query()
+            ->whereHas('seance', function($q) use ($annee, $regionId, $ville, $secteurId) {
+                $q->when($annee, fn($sq) => $sq->whereYear('date', $annee))
+                  ->when($regionId, fn($sq) => $sq->whereHas('plan.participants.instituts.region', fn($ssq) => $ssq->where('id', $regionId)))
+                  ->when($ville, fn($sq) => $sq->whereHas('plan.participants.instituts', fn($ssq) => $ssq->where('ville', $ville)))
+                  ->when($secteurId, fn($sq) => $sq->whereHas('plan.entite', fn($ssq) => $ssq->where('secteur_id', $secteurId)));
+            });
+
+        $total = (clone $query)->count();
+        if ($total === 0) return 0;
+
+        $present = (clone $query)->whereIn('statut', ['présent', 'retard'])->count();
+        
+        return round(($present / $total) * 100, 1);
+    }
+
+    private function getPlansEvolution()
+    {
+        $evolution = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $count = PlanFormation::whereMonth('created_at', $month->month)
+                ->whereYear('created_at', $month->year)
+                ->count();
+            $evolution[] = [
+                'label' => $month->translatedFormat('M Y'),
+                'count' => $count
+            ];
+        }
+        return $evolution;
     }
 }

@@ -20,4 +20,9 @@ class Institut extends Model
     {
         return $this->belongsToMany(User::class);
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
 }

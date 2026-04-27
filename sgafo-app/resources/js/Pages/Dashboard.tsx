@@ -13,6 +13,11 @@ interface Props extends PageProps {
             total: number;
             by_status: Record<string, number>;
         };
+        plans_per_sector: any[];
+        plans_per_region: any[];
+        top_sites: any[];
+        plans_evolution: any[];
+        attendance_rate: number;
         admin_alerts?: {
             users_sans_role: number;
             users_suspendus: number;
@@ -55,7 +60,7 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
         router.get(route('dashboard'));
     };
     
-    const stats = [
+    const kpiStats = [
         { label: 'Formations au Catalogue', value: (dataStats?.formations_count ?? 0).toString(), icon: (
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002 2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
         ), color: 'bg-emerald-50 text-emerald-600' },
@@ -157,35 +162,9 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                     </button>
                 </div>
 
-                {/* Pending Validation Alert (For RF) */}
-                {dataStats.plans_pending_count > 0 && (
-                    <div className="relative group">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-                        <div className="relative p-8 bg-white ring-1 ring-slate-200/60 rounded-2xl flex flex-col md:flex-row items-center gap-6 justify-between shadow-sm">
-                            <div className="flex items-center gap-6">
-                                <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 flex-shrink-0 animate-bounce">
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-black text-slate-900 tracking-tight">Validation en attente</h2>
-                                    <p className="text-sm text-slate-500 font-medium mt-1">
-                                        Il y a <span className="text-amber-600 font-bold">{dataStats.plans_pending_count} plan(s)</span> de formation en attente de votre validation pour votre secteur.
-                                    </p>
-                                </div>
-                            </div>
-                            <Link 
-                                href={route('modules.plans.index', { statut: 'soumis' })}
-                                className="px-8 py-4 bg-amber-500 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/30 active:scale-95 whitespace-nowrap"
-                            >
-                                Examiner les plans
-                            </Link>
-                        </div>
-                    </div>
-                )}
-
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {stats.map((stat, i) => (
+                    {kpiStats.map((stat, i) => (
                         <div key={i} className="bg-white p-8 rounded-2xl border border-slate-200/60 shadow-sm transition-all hover:border-blue-200 hover:shadow-md group">
                             <div className="flex justify-between items-start mb-6">
                                 <div className={`w-14 h-14 rounded-xl ${stat.color} flex items-center justify-center shadow-lg shadow-inner group-hover:scale-110 transition-transform`}>
@@ -201,108 +180,211 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                     ))}
                 </div>
 
-                {/* Distribution & Alerts Row */}
+                {/* Main Content Area */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 bg-white rounded-2xl p-10 border border-slate-200/60 shadow-sm space-y-8">
-                        <h2 className="text-xl font-black text-slate-900 flex items-center gap-3">
-                            <div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
-                            Répartition des Plans de Formation
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                            {Object.entries(dataStats.plans.by_status).map(([status, count]: any) => (
-                                <PlanStatusRow key={status} status={status} count={count} total={dataStats.plans.total} />
-                            ))}
+                    
+                    {/* LEFT: Analytical Charts */}
+                    <div className="lg:col-span-2 space-y-8">
+                        
+                        {/* Evolution Trend & Attendance Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Evolution Trend */}
+                            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
+                                <h2 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
+                                    <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
+                                    Évolution (6 mois)
+                                </h2>
+                                <div className="h-40 flex items-end justify-between gap-2 px-2">
+                                    {dataStats.plans_evolution.map((point: any, i: number) => (
+                                        <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
+                                            <div 
+                                                className="w-full bg-blue-100 rounded-t-lg group-hover:bg-blue-600 transition-all duration-500 relative"
+                                                style={{ height: `${point.count > 0 ? (point.count / Math.max(...dataStats.plans_evolution.map((p: any) => p.count))) * 100 : 5}%` }}
+                                            >
+                                                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-black text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {point.count}
+                                                </span>
+                                            </div>
+                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter text-center line-clamp-1">{point.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Attendance Radial */}
+                            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm flex items-center gap-6">
+                                <div className="relative w-32 h-32 flex items-center justify-center">
+                                    <svg className="w-full h-full transform -rotate-90">
+                                        <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-slate-50" />
+                                        <circle 
+                                            cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="10" fill="transparent" 
+                                            strokeDasharray={351}
+                                            strokeDashoffset={351 - (351 * dataStats.attendance_rate) / 100}
+                                            className="text-emerald-500 transition-all duration-1000 ease-out" 
+                                            strokeLinecap="round"
+                                        />
+                                    </svg>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                        <span className="text-2xl font-black text-slate-900">{dataStats.attendance_rate}%</span>
+                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Présence</span>
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Taux de Présence</h3>
+                                    <p className="text-[10px] text-slate-400 font-medium leading-relaxed mt-2 italic">
+                                        Calculé sur l'ensemble des sessions filtrées.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Distribution Sectors & Regions Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Sectors */}
+                            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
+                                <h2 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
+                                    <div className="w-1 h-5 bg-indigo-600 rounded-full"></div>
+                                    Plans par Secteur
+                                </h2>
+                                <div className="space-y-4">
+                                    {dataStats.plans_per_sector.slice(0, 5).map((sector: any) => (
+                                        <div key={sector.id} className="space-y-1.5">
+                                            <div className="flex justify-between text-[10px] font-black uppercase">
+                                                <span className="text-slate-500">{sector.nom}</span>
+                                                <span className="text-slate-900">{sector.plans_count}</span>
+                                            </div>
+                                            <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
+                                                    style={{ width: `${dataStats.plans.total > 0 ? (sector.plans_count / dataStats.plans.total) * 100 : 0}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Regions Impact */}
+                            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
+                                <h2 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
+                                    <div className="w-1 h-5 bg-amber-500 rounded-full"></div>
+                                    Impact Régional
+                                </h2>
+                                <div className="space-y-4">
+                                    {dataStats.plans_per_region.slice(0, 5).map((region: any) => (
+                                        <div key={region.id} className="space-y-1.5">
+                                            <div className="flex justify-between text-[10px] font-black uppercase">
+                                                <span className="text-slate-500">{region.nom}</span>
+                                                <span className="text-slate-900">{region.plans_count}</span>
+                                            </div>
+                                            <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-amber-500 rounded-full transition-all duration-1000"
+                                                    style={{ width: `${dataStats.plans.total > 0 ? (region.plans_count / dataStats.plans.total) * 100 : 0}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="bg-slate-900 rounded-2xl p-10 border border-slate-800 shadow-xl space-y-8">
-                        <h2 className="text-xl font-black text-white flex items-center gap-3">
-                            <div className="w-1.5 h-6 bg-rose-500 rounded-full"></div>
-                            Actions Recommandées
-                        </h2>
-                        <div className="space-y-4">
-                            {dataStats.admin_alerts && (
-                                <>
-                                    <SystemAlertItem label="Users sans rôle" count={dataStats.admin_alerts.users_sans_role} color="rose" link={route('admin.users.index')} />
-                                    <SystemAlertItem label="Comptes suspendus" count={dataStats.admin_alerts.users_suspendus} color="amber" link={route('admin.users.index')} />
-                                    <SystemAlertItem label="Sites inactifs" count={dataStats.admin_alerts.sites_inactifs} color="slate" link={route('admin.logistique.index')} />
-                                </>
-                            )}
-                            
-                            {dataStats.rf_alerts && (
-                                <>
-                                    <SystemAlertItem label="Plans à confirmer" count={dataStats.rf_alerts.pending_confirmation} color="rose" link={route('modules.plans.index', { statut: 'soumis' })} />
-                                    <SystemAlertItem label="Plans à valider" count={dataStats.rf_alerts.pending_validation} color="amber" link={route('modules.plans.index', { statut: 'confirmé' })} />
-                                </>
-                            )}
+                    {/* RIGHT: Status & Actions */}
+                    <div className="space-y-8">
+                        <div className="bg-slate-900 rounded-[2.5rem] p-10 border border-slate-800 shadow-xl space-y-8">
+                            <h2 className="text-xl font-black text-white flex items-center gap-3">
+                                <div className="w-1.5 h-6 bg-blue-500 rounded-full"></div>
+                                Statuts des Plans
+                            </h2>
+                            <div className="space-y-6">
+                                {Object.entries(dataStats.plans.by_status).map(([status, count]: any) => (
+                                    <PlanStatusRow key={status} status={status} count={count} total={dataStats.plans.total} />
+                                ))}
+                            </div>
+                        </div>
 
-                            {dataStats.cdc_alerts && (
-                                <>
-                                    <SystemAlertItem label="Mes brouillons" count={dataStats.cdc_alerts.my_drafts} color="blue" link={route('modules.plans.index', { statut: 'brouillon' })} />
-                                    <SystemAlertItem label="Plans rejetés" count={dataStats.cdc_alerts.my_rejected} color="rose" link={route('modules.plans.index', { statut: 'rejeté' })} />
-                                </>
-                            )}
+                        {/* Top Sites Card */}
+                        <div className="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8">
+                             <h2 className="text-xl font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
+                                <div className="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
+                                Top Sites
+                            </h2>
+                            <div className="space-y-4">
+                                {dataStats.top_sites.map((site: any, i: number) => (
+                                    <div key={site.id} className="flex items-center justify-between group">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs font-black text-slate-300">#{i+1}</span>
+                                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-wider line-clamp-1">{site.nom}</span>
+                                        </div>
+                                        <span className="px-2 py-1 bg-slate-50 text-slate-400 rounded-lg font-black text-[9px] group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">{site.plans_count} PLANS</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
 
-                            {!dataStats.admin_alerts && !dataStats.rf_alerts && !dataStats.cdc_alerts && (
-                                <p className="text-xs text-slate-500 italic">Aucune alerte pour votre profil.</p>
-                            )}
+                        {/* Actions Alert Card */}
+                        <div className="bg-slate-900 rounded-[2.5rem] p-10 border border-slate-800 shadow-xl space-y-8">
+                            <h2 className="text-xl font-black text-white flex items-center gap-3">
+                                <div className="w-1.5 h-6 bg-rose-500 rounded-full"></div>
+                                Actions
+                            </h2>
+                            <div className="space-y-4">
+                                {dataStats.admin_alerts && (
+                                    <>
+                                        <SystemAlertItem label="Users sans rôle" count={dataStats.admin_alerts.users_sans_role} color="rose" link={route('admin.users.index')} />
+                                        <SystemAlertItem label="Comptes suspendus" count={dataStats.admin_alerts.users_suspendus} color="amber" link={route('admin.users.index')} />
+                                        <SystemAlertItem label="Sites inactifs" count={dataStats.admin_alerts.sites_inactifs} color="slate" link={route('admin.logistique.index')} />
+                                    </>
+                                )}
+                                
+                                {dataStats.rf_alerts && (
+                                    <>
+                                        <SystemAlertItem label="Plans à confirmer" count={dataStats.rf_alerts.pending_confirmation} color="rose" link={route('modules.plans.index', { statut: 'soumis' })} />
+                                        <SystemAlertItem label="Plans à valider" count={dataStats.rf_alerts.pending_validation} color="amber" link={route('modules.plans.index', { statut: 'confirmé' })} />
+                                    </>
+                                )}
+
+                                {dataStats.cdc_alerts && (
+                                    <>
+                                        <SystemAlertItem label="Mes brouillons" count={dataStats.cdc_alerts.my_drafts} color="blue" link={route('modules.plans.index', { statut: 'brouillon' })} />
+                                        <SystemAlertItem label="Plans rejetés" count={dataStats.cdc_alerts.my_rejected} color="rose" link={route('modules.plans.index', { statut: 'rejeté' })} />
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Recent Activity / Next Steps */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 bg-white rounded-2xl p-10 border border-slate-200/60 shadow-sm">
-                        <h2 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
-                            <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-                            Actualités du Catalogue
+                {/* Recent News Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
+                    <div className="lg:col-span-3 bg-white rounded-[2.5rem] p-10 border border-slate-200/60 shadow-sm">
+                        <h2 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3 uppercase tracking-tight">
+                            <div className="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
+                            Actualités du Catalogue National
                         </h2>
-                        <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {latestFormations.length > 0 ? latestFormations.map((formation, i) => (
                                 <Link 
                                     key={formation.id} 
                                     href={route('modules.entites.show', formation.id)}
-                                    className="flex items-center gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-slate-100/50 transition-colors cursor-pointer group"
+                                    className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:bg-white hover:shadow-xl hover:border-blue-100 transition-all cursor-pointer group"
                                 >
-                                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-blue-600 font-bold border border-slate-100 uppercase text-[10px]">
+                                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-blue-600 font-bold border border-slate-100 uppercase text-[9px] mb-4 group-hover:scale-110 transition-transform">
                                         {formation.secteur?.nom?.substring(0, 3) || 'FT'}
                                     </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors tracking-tight line-clamp-1">{formation.titre}</h4>
-                                        <p className="text-xs text-slate-400 font-medium mt-1">
-                                            Ajouté le {new Date(formation.created_at).toLocaleDateString()} par <b>{formation.createur?.prenom} {formation.createur?.nom}</b> • Secteur {formation.secteur?.nom}
-                                        </p>
+                                    <h4 className="text-xs font-black text-slate-900 group-hover:text-blue-600 transition-colors tracking-tight line-clamp-2 min-h-[32px]">{formation.titre}</h4>
+                                    <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{new Date(formation.created_at).toLocaleDateString()}</span>
+                                        <svg className="w-4 h-4 text-slate-300 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
                                     </div>
-                                    <svg className="w-5 h-5 text-slate-300 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
                                 </Link>
                             )) : (
-                                <div className="p-10 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                                    <p className="text-sm font-medium text-slate-400">Aucune activité récente pour le moment.</p>
+                                <div className="col-span-3 p-10 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                    <p className="text-sm font-medium text-slate-400 uppercase tracking-widest">Aucune activité récente pour le moment.</p>
                                 </div>
                             )}
                         </div>
-                    </div>
-
-                    <div className="bg-white rounded-2xl p-10 border border-slate-200 shadow-sm relative overflow-hidden">
-                         <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-50 rounded-tl-full opacity-40"></div>
-                         <h2 className="text-xl font-black text-slate-900 mb-8 tracking-tight">Calendrier</h2>
-                         <div className="space-y-6 relative z-10">
-                            <p className="text-sm text-slate-400 font-medium leading-relaxed italic border-l-2 border-blue-600 pl-4 py-2">
-                                Aucune session planifiée pour cette semaine. 
-                                Les modules de planification seront activés dès la Phase 6.
-                            </p>
-                            <div className="pt-4">
-                                <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 italic">Prochaine étape</p>
-                                    <p className="text-xs text-slate-600 font-bold mb-6 italic leading-relaxed">
-                                        Phase 5 : Configuration des sites d'accueil et des hôtels partenaires.
-                                    </p>
-                                    <button className="w-full py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all">
-                                        Voir le plan
-                                    </button>
-                                </div>
-                            </div>
-                         </div>
                     </div>
                 </div>
 
@@ -314,7 +396,7 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
 function PlanStatusRow({ status, count, total }: { status: string, count: number, total: number }) {
     const percentage = total > 0 ? (count / total) * 100 : 0;
     const colors: any = {
-        brouillon: 'bg-slate-400',
+        brouillon: 'bg-slate-500',
         soumis: 'bg-blue-500',
         validé: 'bg-emerald-500',
         confirmé: 'bg-indigo-500',
@@ -325,10 +407,10 @@ function PlanStatusRow({ status, count, total }: { status: string, count: number
     return (
         <div className="space-y-2">
             <div className="flex justify-between items-end">
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{status}</span>
-                <span className="text-xs font-black text-slate-900">{count}</span>
+                <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">{status}</span>
+                <span className="text-[10px] font-black text-slate-100">{count}</span>
             </div>
-            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
                 <div 
                     className={`h-full rounded-full ${colors[status] || 'bg-slate-200'} transition-all duration-1000`}
                     style={{ width: `${percentage}%` }}
@@ -348,8 +430,8 @@ function SystemAlertItem({ label, count, color, link }: any) {
 
     const content = (
         <div className={`p-4 rounded-xl border ${colors[color]} flex items-center justify-between transition-colors ${link ? 'cursor-pointer' : ''}`}>
-            <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
-            <span className="text-sm font-black">{count}</span>
+            <span className="text-[9px] font-black uppercase tracking-wider">{label}</span>
+            <span className="text-xs font-black">{count}</span>
         </div>
     );
 

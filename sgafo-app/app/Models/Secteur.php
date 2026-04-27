@@ -34,4 +34,12 @@ class Secteur extends Model
     {
         return $this->hasMany(Metier::class);
     }
+
+    /**
+     * Get the training entities assigned to this sector.
+     */
+    public function entites()
+    {
+        return $this->hasMany(EntiteFormation::class);
+    }
 }
