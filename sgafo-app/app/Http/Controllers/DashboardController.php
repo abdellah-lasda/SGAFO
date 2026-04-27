@@ -33,10 +33,17 @@ class DashboardController extends Controller
         if (!$user->isAdmin() && $user->hasRole('RF')) {
             $assignedRegionIds = $user->regions()->pluck('regions.id')->toArray();
             if (!empty($assignedRegionIds)) {
-                // Force filter to assigned regions if not already filtering specifically within them
                 if (!$filters['region_id'] || !in_array($filters['region_id'], $assignedRegionIds)) {
                     $filters['scope_region_ids'] = $assignedRegionIds;
                 }
+            }
+        }
+
+        // CDC Scope Restriction
+        if (!$user->isAdmin() && $user->hasRole('CDC')) {
+            $assignedInstitutIds = $user->instituts()->pluck('instituts.id')->toArray();
+            if (!empty($assignedInstitutIds)) {
+                $filters['scope_institut_ids'] = $assignedInstitutIds;
             }
         }
 
@@ -105,6 +112,7 @@ class DashboardController extends Controller
             ->when($filters['annee'], fn($q) => $q->whereYear('date_debut', $filters['annee']))
             ->when($filters['secteur_id'], fn($q) => $q->whereHas('entite', fn($sq) => $sq->where('secteur_id', $filters['secteur_id'])))
             ->when(isset($filters['scope_region_ids']), fn($q) => $q->whereHas('participants.instituts.region', fn($sq) => $sq->whereIn('id', $filters['scope_region_ids'])))
+            ->when(isset($filters['scope_institut_ids']), fn($q) => $q->whereHas('participants.instituts', fn($sq) => $sq->whereIn('instituts.id', $filters['scope_institut_ids'])))
             ->when($filters['region_id'], fn($q) => $q->whereHas('participants.instituts.region', fn($sq) => $sq->where('id', $filters['region_id'])))
             ->when($filters['ville'], fn($q) => $q->whereHas('participants.instituts', fn($sq) => $sq->where('ville', $filters['ville'])));
     }
@@ -166,6 +174,7 @@ class DashboardController extends Controller
             ->whereHas('seance', function($q) use ($filters) {
                 $q->when($filters['annee'], fn($sq) => $sq->whereYear('date', $filters['annee']))
                   ->when(isset($filters['scope_region_ids']), fn($sq) => $sq->whereHas('plan.participants.instituts.region', fn($ssq) => $ssq->whereIn('id', $filters['scope_region_ids'])))
+                  ->when(isset($filters['scope_institut_ids']), fn($sq) => $sq->whereHas('plan.participants.instituts', fn($ssq) => $ssq->whereIn('instituts.id', $filters['scope_institut_ids'])))
                   ->when($filters['region_id'], fn($sq) => $sq->whereHas('plan.participants.instituts.region', fn($ssq) => $ssq->where('id', $filters['region_id'])))
                   ->when($filters['ville'], fn($sq) => $sq->whereHas('plan.participants.instituts', fn($ssq) => $ssq->where('ville', $filters['ville'])))
                   ->when($filters['secteur_id'], fn($sq) => $sq->whereHas('plan.entite', fn($ssq) => $ssq->where('secteur_id', $filters['secteur_id'])));
@@ -210,7 +219,8 @@ class DashboardController extends Controller
     private function getUsersByRole(array $filters)
     {
         $scopeCallback = function($q) use ($filters) {
-            $q->when(isset($filters['scope_region_ids']), fn($sq) => $sq->whereHas('regions', fn($ssq) => $ssq->whereIn('regions.id', $filters['scope_region_ids'])));
+            $q->when(isset($filters['scope_region_ids']), fn($sq) => $sq->whereHas('regions', fn($ssq) => $ssq->whereIn('regions.id', $filters['scope_region_ids'])))
+              ->when(isset($filters['scope_institut_ids']), fn($sq) => $sq->whereHas('instituts', fn($ssq) => $ssq->whereIn('instituts.id', $filters['scope_institut_ids'])));
         };
 
         return [
@@ -244,6 +254,7 @@ class DashboardController extends Controller
     {
         return User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))
             ->when(isset($filters['scope_region_ids']), fn($q) => $q->whereHas('regions', fn($sq) => $sq->whereIn('regions.id', $filters['scope_region_ids'])))
+            ->when(isset($filters['scope_institut_ids']), fn($q) => $q->whereHas('instituts', fn($sq) => $sq->whereIn('instituts.id', $filters['scope_institut_ids'])))
             ->withCount(['seances as sessions_count'])
             ->orderByDesc('sessions_count')
             ->take(5)
@@ -255,6 +266,7 @@ class DashboardController extends Controller
         return Seance::with(['plan.entite', 'site'])
             ->where('date', '>=', now()->toDateString())
             ->when(isset($filters['scope_region_ids']), fn($q) => $q->whereHas('plan.participants.instituts.region', fn($sq) => $sq->whereIn('id', $filters['scope_region_ids'])))
+            ->when(isset($filters['scope_institut_ids']), fn($q) => $q->whereHas('plan.participants.instituts', fn($sq) => $sq->whereIn('instituts.id', $filters['scope_institut_ids'])))
             ->orderBy('date')
             ->orderBy('debut')
             ->take(6)
@@ -265,6 +277,7 @@ class DashboardController extends Controller
     {
         $sites = SiteFormation::where('capacite', '>', 0)
             ->when(isset($filters['scope_region_ids']), fn($q) => $q->whereIn('region_id', $filters['scope_region_ids']))
+            ->when(isset($filters['scope_institut_ids']), fn($q) => $q->whereIn('region_id', Region::whereHas('instituts', fn($sq) => $sq->whereIn('id', $filters['scope_institut_ids']))->pluck('id')))
             ->take(10)
             ->get();
         $occupancy = [];
@@ -287,6 +300,7 @@ class DashboardController extends Controller
                 'count' => PlanFormation::whereMonth('created_at', $month->month)
                     ->whereYear('created_at', $month->year)
                     ->when(isset($filters['scope_region_ids']), fn($q) => $q->whereHas('participants.instituts.region', fn($sq) => $sq->whereIn('id', $filters['scope_region_ids'])))
+                    ->when(isset($filters['scope_institut_ids']), fn($q) => $q->whereHas('participants.instituts', fn($sq) => $sq->whereIn('instituts.id', $filters['scope_institut_ids'])))
                     ->count()
             ];
         }
@@ -296,7 +310,8 @@ class DashboardController extends Controller
     private function getQcmStats(array $filters)
     {
         $qcmQuery = \App\Models\Qcm::query()
-            ->when(isset($filters['scope_region_ids']), fn($q) => $q->whereHas('seance.plan.participants.instituts.region', fn($sq) => $sq->whereIn('id', $filters['scope_region_ids'])));
+            ->when(isset($filters['scope_region_ids']), fn($q) => $q->whereHas('seance.plan.participants.instituts.region', fn($sq) => $sq->whereIn('id', $filters['scope_region_ids'])))
+            ->when(isset($filters['scope_institut_ids']), fn($q) => $q->whereHas('seance.plan.participants.instituts', fn($sq) => $sq->whereIn('instituts.id', $filters['scope_institut_ids'])));
 
         $totalQcm = (clone $qcmQuery)->count();
         if ($totalQcm === 0) return ['count' => 0, 'rate' => 0];
