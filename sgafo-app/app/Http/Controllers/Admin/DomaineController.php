@@ -17,19 +17,28 @@ class DomaineController extends Controller
 
         $cdcs = Cdc::orderBy('nom')->get();
         
-        // On pagine les secteurs qui regroupent les métiers
-        $secteurs = Secteur::with(['cdc', 'metiers'])
+        $secteurs = Secteur::with(['cdc'])
             ->when($search, function($q) use ($search) {
                 $q->where('nom', 'like', "%{$search}%")
                   ->orWhere('code', 'like', "%{$search}%");
             })
             ->orderBy('nom')
-            ->paginate(12)
+            ->paginate(12, ['*'], 'secteurs_page')
+            ->withQueryString();
+
+        $metiers = Metier::with(['secteur'])
+            ->when($search, function($q) use ($search) {
+                $q->where('nom', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%");
+            })
+            ->orderBy('nom')
+            ->paginate(12, ['*'], 'metiers_page')
             ->withQueryString();
 
         return Inertia::render('Admin/Domaines/Index', [
             'cdcs' => $cdcs,
             'secteurs' => $secteurs,
+            'metiers' => $metiers,
             'filters' => $request->only(['search']),
         ]);
     }

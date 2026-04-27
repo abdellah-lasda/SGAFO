@@ -29,85 +29,19 @@ class DashboardController extends Controller
             'secteur_id' => $request->input('secteur_id'),
         ];
 
-        // RF Scope Restriction
-        if (!$user->isAdmin() && $user->hasRole('RF')) {
-            $assignedRegionIds = $user->regions()->pluck('regions.id')->toArray();
-            if (!empty($assignedRegionIds)) {
-                if (!$filters['region_id'] || !in_array($filters['region_id'], $assignedRegionIds)) {
-                    $filters['scope_region_ids'] = $assignedRegionIds;
-                }
-            }
-        }
-
-        // CDC Scope Restriction
-        if (!$user->isAdmin() && $user->hasRole('CDC')) {
-            $assignedInstitutIds = $user->instituts()->pluck('instituts.id')->toArray();
-            if (!empty($assignedInstitutIds)) {
-                $filters['scope_institut_ids'] = $assignedInstitutIds;
-            }
-        }
+        // Scope Restrictions
+        $filters = $this->applyRoleRestrictions($user, $filters);
 
         // Base Query for filtered plans
         $plansQuery = $this->getFilteredPlansQuery($filters);
 
         // Build Statistics Object
-        $stats = [
-            'formations_count' => EntiteFormation::when($filters['secteur_id'], fn($q) => $q->where('secteur_id', $filters['secteur_id']))->count(),
-            'secteurs_count' => Secteur::count(),
-            'sites_count' => SiteFormation::when(isset($filters['scope_region_ids']), fn($q) => $q->whereIn('region_id', $filters['scope_region_ids']))
-                ->when($filters['region_id'], fn($q) => $q->where('region_id', $filters['region_id']))
-                ->count(),
-            'formateurs_count' => User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))
-                ->when(isset($filters['scope_region_ids']), fn($q) => $q->whereHas('regions', fn($sq) => $sq->whereIn('regions.id', $filters['scope_region_ids'])))
-                ->count(),
-            'plans_pending_count' => (clone $plansQuery)->where('statut', 'soumis')->count(), 
-            
-            'plans' => $this->getPlansStats($plansQuery),
-            'plans_per_sector' => $this->getPlansPerSector($plansQuery),
-            'plans_per_region' => $this->getPlansPerRegion($plansQuery, $filters),
-            'top_sites' => $this->getTopSites($plansQuery),
-            'plans_evolution' => $this->getPlansEvolution($filters),
-            'attendance_rate' => $this->calculateAttendanceRate($filters),
-
-            'admin_alerts' => $user->isAdmin() ? $this->getAdminAlerts() : null,
-            'rf_alerts' => $user->hasRole('RF') ? $this->getRfAlerts($filters) : null,
-            'cdc_alerts' => $user->hasRole('CDC') ? $this->getCdcAlerts($user) : null,
-
-            'users_by_role' => $user->isAdmin() ? $this->getUsersByRole($filters) : null,
-            'instituts_per_region' => $this->getInstitutsPerRegion($filters),
-            'content_counts' => $user->isAdmin() ? $this->getContentCounts() : null,
-            'top_formateurs' => $this->getTopFormateurs($filters),
-            'upcoming_seances' => $this->getUpcomingSeances($filters),
-            'site_occupancy' => $this->getSiteOccupancy($filters),
-
-            // QCM Stats
-            'qcm_stats' => $this->getQcmStats($filters),
-
-            // Personal RF Activity
-            'my_latest_created' => $user->hasRole('RF') || $user->hasRole('CDC') 
-                ? PlanFormation::where('cree_par', $user->id)->latest()->take(3)->with('entite')->get() 
-                : null,
-            'my_latest_validated' => $user->hasRole('RF') 
-                ? PlanFormation::where('valide_par', $user->id)->latest()->take(3)->with('entite')->get() 
-                : null,
-
-            // Formateur Specific (Animator + Participant)
-            'formateur_data' => $user->hasRole('FORMATEUR') ? [
-                'upcoming_animated' => Seance::whereHas('seanceThemes', fn($q) => $q->where('formateur_id', $user->id))
-                    ->where('date', '>=', now()->toDateString())
-                    ->with(['plan.entite', 'site'])
-                    ->orderBy('date')->orderBy('debut')->take(3)->get(),
-                'upcoming_participated' => PlanFormation::whereHas('participants', fn($q) => $q->where('users.id', $user->id))
-                    ->where('date_debut', '>=', now()->toDateString())
-                    ->with('entite')
-                    ->orderBy('date_debut')->take(3)->get(),
-                'pedagogical_stats' => [
-                    'sessions_count' => Seance::whereHas('seanceThemes', fn($q) => $q->where('formateur_id', $user->id))->count(),
-                    'student_attendance' => $this->calculateStudentAttendanceForFormateur($user),
-                    'my_average_score' => \App\Models\QcmTentative::where('user_id', $user->id)->avg('score') ?? 0,
-                ]
-            ] : null,
-        ];
+        $stats = array_merge(
+            $this->getGlobalKpis($plansQuery, $filters),
+            $this->getChartData($plansQuery, $filters),
+            $this->getRoleAlerts($user, $filters),
+            $this->getRoleSpecificData($user, $filters)
+        );
 
         $latestFormations = EntiteFormation::with(['secteur', 'createur'])
             ->when($filters['secteur_id'], fn($q) => $q->where('secteur_id', $filters['secteur_id']))
@@ -362,6 +296,104 @@ class DashboardController extends Controller
         return [
             'count' => $totalQcm,
             'rate' => round($totalRate / $totalQcm, 1)
+        ];
+    }
+
+    private function applyRoleRestrictions(User $user, array $filters): array
+    {
+        if (!$user->isAdmin()) {
+            if ($user->hasRole('RF')) {
+                $assignedRegionIds = $user->regions()->pluck('regions.id')->toArray();
+                if (!empty($assignedRegionIds)) {
+                    if (!$filters['region_id'] || !in_array($filters['region_id'], $assignedRegionIds)) {
+                        $filters['scope_region_ids'] = $assignedRegionIds;
+                    }
+                }
+            }
+
+            if ($user->hasRole('CDC')) {
+                $assignedInstitutIds = $user->instituts()->pluck('instituts.id')->toArray();
+                if (!empty($assignedInstitutIds)) {
+                    $filters['scope_institut_ids'] = $assignedInstitutIds;
+                }
+            }
+        }
+        return $filters;
+    }
+
+    private function getGlobalKpis($plansQuery, $filters): array
+    {
+        return [
+            'formations_count' => EntiteFormation::when($filters['secteur_id'], fn($q) => $q->where('secteur_id', $filters['secteur_id']))->count(),
+            'secteurs_count' => Secteur::count(),
+            'sites_count' => SiteFormation::when(isset($filters['scope_region_ids']), fn($q) => $q->whereIn('region_id', $filters['scope_region_ids']))
+                ->when($filters['region_id'], fn($q) => $q->where('region_id', $filters['region_id']))
+                ->count(),
+            'formateurs_count' => User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))
+                ->when(isset($filters['scope_region_ids']), fn($q) => $q->whereHas('regions', fn($sq) => $sq->whereIn('regions.id', $filters['scope_region_ids'])))
+                ->count(),
+            'plans_pending_count' => (clone $plansQuery)->where('statut', 'soumis')->count(),
+            'plans' => $this->getPlansStats($plansQuery),
+        ];
+    }
+
+    private function getChartData($plansQuery, $filters): array
+    {
+        return [
+            'plans_per_sector' => $this->getPlansPerSector($plansQuery),
+            'plans_per_region' => $this->getPlansPerRegion($plansQuery, $filters),
+            'top_sites' => $this->getTopSites($plansQuery),
+            'plans_evolution' => $this->getPlansEvolution($filters),
+            'attendance_rate' => $this->calculateAttendanceRate($filters),
+            'instituts_per_region' => $this->getInstitutsPerRegion($filters),
+            'site_occupancy' => $this->getSiteOccupancy($filters),
+        ];
+    }
+
+    private function getRoleAlerts(User $user, array $filters): array
+    {
+        return [
+            'admin_alerts' => $user->isAdmin() ? $this->getAdminAlerts() : null,
+            'rf_alerts' => $user->hasRole('RF') ? $this->getRfAlerts($filters) : null,
+            'cdc_alerts' => $user->hasRole('CDC') ? $this->getCdcAlerts($user) : null,
+        ];
+    }
+
+    private function getRoleSpecificData(User $user, array $filters): array
+    {
+        return [
+            'users_by_role' => $user->isAdmin() ? $this->getUsersByRole($filters) : null,
+            'content_counts' => $user->isAdmin() ? $this->getContentCounts() : null,
+            'top_formateurs' => $this->getTopFormateurs($filters),
+            'upcoming_seances' => $this->getUpcomingSeances($filters),
+            'qcm_stats' => $this->getQcmStats($filters),
+            'my_latest_created' => ($user->hasRole('RF') || $user->hasRole('CDC')) 
+                ? PlanFormation::where('cree_par', $user->id)->latest()->take(3)->with('entite')->get() 
+                : null,
+            'my_latest_validated' => $user->hasRole('RF') 
+                ? PlanFormation::where('valide_par', $user->id)->latest()->take(3)->with('entite')->get() 
+                : null,
+            'formateur_data' => $user->hasRole('FORMATEUR') ? $this->getFormateurSpecificData($user) : null,
+        ];
+    }
+
+    private function getFormateurSpecificData(User $user): array
+    {
+        return [
+            'upcoming_animated' => Seance::whereHas('seanceThemes', fn($q) => $q->where('formateur_id', $user->id))
+                ->where('date', '>=', now()->toDateString())
+                ->with(['plan.entite', 'site'])
+                ->orderBy('date')->orderBy('debut')->take(3)->get(),
+            'upcoming_participated' => PlanFormation::whereHas('participants', fn($q) => $q->where('users.id', $user->id))
+                ->where('statut', 'validé')
+                ->where('date_debut', '>=', now()->toDateString())
+                ->with('entite')
+                ->orderBy('date_debut')->take(3)->get(),
+            'pedagogical_stats' => [
+                'sessions_count' => Seance::whereHas('seanceThemes', fn($q) => $q->where('formateur_id', $user->id))->count(),
+                'student_attendance' => $this->calculateStudentAttendanceForFormateur($user),
+                'my_average_score' => \App\Models\QcmTentative::where('user_id', $user->id)->avg('score') ?? 0,
+            ]
         ];
     }
 

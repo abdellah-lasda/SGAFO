@@ -12,9 +12,85 @@ interface Props {
 }
 
 export default function Index({ instituts, regions, filters }: Props) {
+
+    function ManageInstitutModal({ isOpen, onClose, institut, regions }: any) {
+        const isEditing = !!institut;
+        const { data, setData, post, put, processing, errors, reset } = useForm({
+            nom: institut?.nom || '',
+            code: institut?.code || '',
+            adresse: institut?.adresse || '',
+            ville: institut?.ville || '',
+            region_id: institut?.region_id || '',
+        });
+
+        const submit = (e: React.FormEvent) => {
+            e.preventDefault();
+            if (isEditing) {
+                put(route('admin.instituts.update', institut.id), { onSuccess: () => onClose() });
+            } else {
+                post(route('admin.instituts.store'), { 
+                    onSuccess: () => {
+                        reset();
+                        onClose();
+                    } 
+                });
+            }
+        };
+
+        return (
+            <Modal show={isOpen} onClose={onClose}>
+                <form onSubmit={submit} className="p-8 space-y-6">
+                    <div>
+                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+                            {isEditing ? "Modifier l'Établissement" : "Nouvel Établissement"}
+                        </h2>
+                        <p className="text-xs font-bold text-slate-400 uppercase mt-1">
+                            {isEditing ? `Code Système: ${institut.code}` : "Ajout d'un nouvel institut au réseau"}
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="col-span-2">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nom de l'institut</label>
+                            <input type="text" value={data.nom} onChange={e => setData('nom', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" required />
+                            {errors.nom && <div className="text-rose-500 text-[10px] font-black uppercase mt-1">{errors.nom}</div>}
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Code</label>
+                            <input type="text" value={data.code} onChange={e => setData('code', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" required />
+                            {errors.code && <div className="text-rose-500 text-[10px] font-black uppercase mt-1">{errors.code}</div>}
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ville</label>
+                            <input type="text" value={data.ville} onChange={e => setData('ville', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" required />
+                        </div>
+                        <div className="col-span-2">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Région</label>
+                            <select value={data.region_id} onChange={e => setData('region_id', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" required>
+                                <option value="">Sélectionner une région...</option>
+                                {regions.map((r: any) => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                            </select>
+                        </div>
+                        <div className="col-span-2">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Adresse</label>
+                            <input type="text" value={data.adresse} onChange={e => setData('adresse', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4">
+                        <button type="button" onClick={onClose} className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors">Annuler</button>
+                        <button type="submit" disabled={processing} className="px-8 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20 disabled:opacity-50 transition-all active:scale-95">
+                            {isEditing ? 'Mettre à jour' : 'Créer'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+        );
+    }
+
     const [search, setSearch] = useState(filters.search || '');
     const [confirmDelete, setConfirmDelete] = useState<any | null>(null);
-    const [editingInstitut, setEditingInstitut] = useState<any | null>(null);
+    const [managingInstitut, setManagingInstitut] = useState<any | null>(null);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -44,18 +120,28 @@ export default function Index({ instituts, regions, filters }: Props) {
                         </div>
                     </div>
 
-                    <form onSubmit={handleSearch} className="relative w-full md:w-64 group">
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Rechercher un institut..."
-                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-xs font-bold focus:border-blue-500 focus:bg-white transition-all outline-none"
-                        />
-                        <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </form>
+                    <div className="flex items-center gap-4">
+                        <form onSubmit={handleSearch} className="relative w-full md:w-64 group">
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Rechercher un institut..."
+                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-xs font-bold focus:border-blue-500 focus:bg-white transition-all outline-none"
+                            />
+                            <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </form>
+
+                        <button 
+                            onClick={() => setManagingInstitut({})}
+                            className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                            Nouvel Institut
+                        </button>
+                    </div>
                 </div>
 
                 {/* Table Container */}
@@ -83,8 +169,8 @@ export default function Index({ instituts, regions, filters }: Props) {
                                             </span>
                                         </td>
                                         <td className="px-6 py-5 text-xs font-bold text-slate-500 uppercase">{inst.ville}</td>
-                                        <td className="px-8 py-5 text-right space-x-2">
-                                            <button onClick={() => setEditingInstitut(inst)} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                                         <td className="px-8 py-5 text-right space-x-2">
+                                            <button onClick={() => setManagingInstitut(inst)} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                             </button>
                                             <button onClick={() => setConfirmDelete(inst)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors">
@@ -103,12 +189,12 @@ export default function Index({ instituts, regions, filters }: Props) {
                 </div>
             </div>
 
-            {/* Edit Modal */}
-            {editingInstitut && (
-                <EditInstitutModal 
-                    isOpen={!!editingInstitut} 
-                    onClose={() => setEditingInstitut(null)} 
-                    institut={editingInstitut} 
+            {/* Manage Modal */}
+            {managingInstitut && (
+                <ManageInstitutModal 
+                    isOpen={!!managingInstitut} 
+                    onClose={() => setManagingInstitut(null)} 
+                    institut={Object.keys(managingInstitut).length > 0 ? managingInstitut : null} 
                     regions={regions} 
                 />
             )}
@@ -123,66 +209,8 @@ export default function Index({ instituts, regions, filters }: Props) {
                 onCancel={() => setConfirmDelete(null)}
             />
         </AuthenticatedLayout>
-    );
-}
+)}
 
-function EditInstitutModal({ isOpen, onClose, institut, regions }: any) {
-    const { data, setData, put, processing, errors } = useForm({
-        nom: institut.nom || '',
-        code: institut.code || '',
-        adresse: institut.adresse || '',
-        ville: institut.ville || '',
-        region_id: institut.region_id || '',
-    });
 
-    const submit = (e: React.FormEvent) => {
-        e.preventDefault();
-        put(route('admin.instituts.update', institut.id), {
-            onSuccess: () => onClose(),
-        });
-    };
 
-    return (
-        <Modal show={isOpen} onClose={onClose}>
-            <form onSubmit={submit} className="p-8 space-y-6">
-                <div>
-                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Modifier l'Établissement</h2>
-                    <p className="text-xs font-bold text-slate-400 uppercase mt-1">Code Système: {institut.code}</p>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="col-span-2">
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nom de l'institut</label>
-                        <input type="text" value={data.nom} onChange={e => setData('nom', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" />
-                        {errors.nom && <div className="text-rose-500 text-[10px] font-black uppercase mt-1">{errors.nom}</div>}
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Code</label>
-                        <input type="text" value={data.code} onChange={e => setData('code', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" />
-                        {errors.code && <div className="text-rose-500 text-[10px] font-black uppercase mt-1">{errors.code}</div>}
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ville</label>
-                        <input type="text" value={data.ville} onChange={e => setData('ville', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" />
-                    </div>
-                    <div className="col-span-2">
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Région</label>
-                        <select value={data.region_id} onChange={e => setData('region_id', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none">
-                            <option value="">Sélectionner une région...</option>
-                            {regions.map((r: any) => <option key={r.id} value={r.id}>{r.nom}</option>)}
-                        </select>
-                    </div>
-                    <div className="col-span-2">
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Adresse</label>
-                        <input type="text" value={data.adresse} onChange={e => setData('adresse', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-indigo-500 focus:bg-white transition-all outline-none" />
-                    </div>
-                </div>
-
-                <div className="flex justify-end gap-3 pt-4">
-                    <button type="button" onClick={onClose} className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors">Annuler</button>
-                    <button type="submit" disabled={processing} className="px-8 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20 disabled:opacity-50 transition-all active:scale-95">Mettre à jour</button>
-                </div>
-            </form>
-        </Modal>
-    );
-}

@@ -16,7 +16,7 @@ export default function Index({ sites, hotels, regions, filters }: Props) {
     const [activeTab, setActiveTab] = useState<'sites' | 'hotels'>('sites');
     const [search, setSearch] = useState(filters.search || '');
     const [confirmDelete, setConfirmDelete] = useState<{ id: number, type: 'site' | 'hotel', title: string } | null>(null);
-    const [editingItem, setEditingItem] = useState<{ type: 'site' | 'hotel', data: any } | null>(null);
+    const [managingItem, setManagingItem] = useState<{ type: 'site' | 'hotel', data?: any } | null>(null);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -74,18 +74,28 @@ export default function Index({ sites, hotels, regions, filters }: Props) {
                         </button>
                     </div>
 
-                    <form onSubmit={handleSearch} className="relative w-full md:w-64 group">
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Rechercher..."
-                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-xs font-bold focus:border-blue-500 focus:bg-white transition-all outline-none"
-                        />
-                        <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </form>
+                    <div className="flex items-center gap-4">
+                        <form onSubmit={handleSearch} className="relative w-full md:w-64 group">
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Rechercher..."
+                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-xs font-bold focus:border-blue-500 focus:bg-white transition-all outline-none"
+                            />
+                            <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </form>
+                        
+                        <button 
+                            onClick={() => setManagingItem({ type: activeTab === 'sites' ? 'site' : 'hotel' })}
+                            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                            {activeTab === 'sites' ? 'Nouveau Site' : 'Nouvel Hôtel'}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Table Container */}
@@ -118,7 +128,7 @@ export default function Index({ sites, hotels, regions, filters }: Props) {
                                                 </span>
                                             </td>
                                             <td className="px-8 py-5 text-right space-x-2">
-                                                <button onClick={() => setEditingItem({ type: 'site', data: site })} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                                                <button onClick={() => setManagingItem({ type: 'site', data: site })} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                                 </button>
                                                 <button onClick={() => setConfirmDelete({ id: site.id, type: 'site', title: site.nom })} className="p-2 text-slate-400 hover:text-rose-600 transition-colors">
@@ -156,7 +166,7 @@ export default function Index({ sites, hotels, regions, filters }: Props) {
                                                 </span>
                                             </td>
                                             <td className="px-8 py-5 text-right space-x-2">
-                                                <button onClick={() => setEditingItem({ type: 'hotel', data: hotel })} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                                                <button onClick={() => setManagingItem({ type: 'hotel', data: hotel })} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                                 </button>
                                                 <button onClick={() => setConfirmDelete({ id: hotel.id, type: 'hotel', title: hotel.nom })} className="p-2 text-slate-400 hover:text-rose-600 transition-colors">
@@ -176,13 +186,13 @@ export default function Index({ sites, hotels, regions, filters }: Props) {
                 </div>
             </div>
 
-            {/* Edit Modals */}
-            {editingItem && (
-                <EditModal 
-                    isOpen={!!editingItem} 
-                    onClose={() => setEditingItem(null)} 
-                    item={editingItem.data} 
-                    type={editingItem.type} 
+            {/* Manage Modal */}
+            {managingItem && (
+                <ManageLogistiqueModal 
+                    isOpen={!!managingItem} 
+                    onClose={() => setManagingItem(null)} 
+                    item={managingItem.data} 
+                    type={managingItem.type} 
                     regions={regions} 
                 />
             )}
@@ -200,45 +210,59 @@ export default function Index({ sites, hotels, regions, filters }: Props) {
     );
 }
 
-function EditModal({ isOpen, onClose, item, type, regions }: any) {
-    const { data, setData, patch, processing, errors } = useForm({
-        nom: item.nom || '',
-        ville: item.ville || '',
-        adresse: item.adresse || '',
-        capacite: item.capacite || 0,
-        prix_nuitee: item.prix_nuitee || 0,
-        region_id: item.region_id || '',
+function ManageLogistiqueModal({ isOpen, onClose, item, type, regions }: any) {
+    const isEditing = !!item;
+    const { data, setData, post, patch, processing, errors, reset } = useForm({
+        nom: item?.nom || '',
+        ville: item?.ville || '',
+        adresse: item?.adresse || '',
+        capacite: item?.capacite || 0,
+        prix_nuitee: item?.prix_nuitee || 0,
+        region_id: item?.region_id || '',
     });
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        const r = type === 'site' ? 'admin.logistique.sites.update' : 'admin.logistique.hotels.update';
-        patch(route(r, item.id), {
-            onSuccess: () => onClose(),
-        });
+        const rPrefix = type === 'site' ? 'admin.logistique.sites' : 'admin.logistique.hotels';
+        const rName = isEditing ? `${rPrefix}.update` : `${rPrefix}.store`;
+        
+        if (isEditing) {
+            patch(route(rName, item.id), { onSuccess: () => onClose() });
+        } else {
+            post(route(rName), { 
+                onSuccess: () => {
+                    reset();
+                    onClose();
+                } 
+            });
+        }
     };
 
     return (
         <Modal show={isOpen} onClose={onClose}>
             <form onSubmit={submit} className="p-8 space-y-6">
                 <div>
-                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Modifier {type === 'site' ? 'le site' : "l'hôtel"}</h2>
-                    <p className="text-xs font-bold text-slate-400 uppercase mt-1">ID Unique: #{item.id}</p>
+                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+                        {isEditing ? `Modifier ${type === 'site' ? 'le site' : "l'hôtel"}` : `Nouveau ${type === 'site' ? 'Site' : 'Hôtel'}`}
+                    </h2>
+                    <p className="text-xs font-bold text-slate-400 uppercase mt-1">
+                        {isEditing ? `ID Unique: #${item.id}` : "Enregistrement d'une nouvelle ressource"}
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="col-span-2">
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nom</label>
-                        <input type="text" value={data.nom} onChange={e => setData('nom', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-blue-500 focus:bg-white transition-all outline-none" />
+                        <input type="text" value={data.nom} onChange={e => setData('nom', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-blue-500 focus:bg-white transition-all outline-none" required />
                         {errors.nom && <div className="text-rose-500 text-[10px] font-black uppercase mt-1">{errors.nom}</div>}
                     </div>
                     <div>
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ville</label>
-                        <input type="text" value={data.ville} onChange={e => setData('ville', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-blue-500 focus:bg-white transition-all outline-none" />
+                        <input type="text" value={data.ville} onChange={e => setData('ville', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-blue-500 focus:bg-white transition-all outline-none" required />
                     </div>
                     <div>
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Région</label>
-                        <select value={data.region_id} onChange={e => setData('region_id', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-blue-500 focus:bg-white transition-all outline-none">
+                        <select value={data.region_id} onChange={e => setData('region_id', e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:border-blue-500 focus:bg-white transition-all outline-none" required>
                             <option value="">Sélectionner...</option>
                             {regions.map((r: any) => <option key={r.id} value={r.id}>{r.nom}</option>)}
                         </select>
@@ -258,7 +282,9 @@ function EditModal({ isOpen, onClose, item, type, regions }: any) {
 
                 <div className="flex justify-end gap-3 pt-4">
                     <button type="button" onClick={onClose} className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors">Annuler</button>
-                    <button type="submit" disabled={processing} className="px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 disabled:opacity-50 transition-all active:scale-95">Enregistrer</button>
+                    <button type="submit" disabled={processing} className="px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 disabled:opacity-50 transition-all active:scale-95">
+                        {isEditing ? 'Mettre à jour' : 'Créer'}
+                    </button>
                 </div>
             </form>
         </Modal>

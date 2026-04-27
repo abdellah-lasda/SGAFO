@@ -39,7 +39,7 @@ Route::get('/', function () {
         ->latest('date_validation')
         ->limit(5)
         ->get()
-        ->map(function($plan) {
+        ->map(function(PlanFormation $plan) {
             // Calcul manuel des animateurs uniques
             $plan->animateurs_count = count($plan->getAnimateurIds());
             return $plan;
