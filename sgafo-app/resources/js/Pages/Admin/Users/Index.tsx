@@ -25,6 +25,21 @@ export default function Index({ users, roles, regions, instituts, secteurs, cdcs
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [search, setSearch] = useState(filters.search || '');
     const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
+    const [activeRole, setActiveRole] = useState<string>('');
+
+    const roleFilters = [
+        { code: '', label: 'Tous', color: 'bg-slate-900 text-white border-slate-900', inactive: 'bg-white text-slate-500 border-slate-200 hover:border-slate-400' },
+        { code: 'RF', label: 'RF', color: 'bg-purple-600 text-white border-purple-600', inactive: 'bg-purple-50 text-purple-600 border-purple-200 hover:border-purple-400' },
+        { code: 'CDC', label: 'CDC', color: 'bg-blue-600 text-white border-blue-600', inactive: 'bg-blue-50 text-blue-600 border-blue-200 hover:border-blue-400' },
+        { code: 'FORMATEUR', label: 'Formateur', color: 'bg-emerald-600 text-white border-emerald-600', inactive: 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:border-emerald-400' },
+        { code: 'DR', label: 'DR', color: 'bg-amber-500 text-white border-amber-500', inactive: 'bg-amber-50 text-amber-600 border-amber-200 hover:border-amber-400' },
+        { code: 'ADMIN', label: 'Admin', color: 'bg-rose-600 text-white border-rose-600', inactive: 'bg-rose-50 text-rose-600 border-rose-200 hover:border-rose-400' },
+    ];
+
+    const filteredUsers = users.data.filter((user: any) => {
+        if (!activeRole) return true;
+        return user.roles.some((r: any) => r.code === activeRole);
+    });
 
     const handleCreate = () => {
         setEditingUser(null);
@@ -64,7 +79,9 @@ export default function Index({ users, roles, regions, instituts, secteurs, cdcs
                         </div>
                         <div>
                             <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Annuaire</h3>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase">{users.total} Utilisateurs au total</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase">
+                                {activeRole ? `${filteredUsers.length} résultat(s)` : `${users.total} Utilisateurs au total`}
+                            </p>
                         </div>
                     </div>
 
@@ -90,6 +107,25 @@ export default function Index({ users, roles, regions, instituts, secteurs, cdcs
                     </div>
                 </div>
 
+                {/* Role Filter Badges */}
+                <div className="flex flex-wrap items-center gap-2 px-1">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">Filtrer par rôle :</span>
+                    {roleFilters.map((rf) => (
+                        <button
+                            key={rf.code}
+                            onClick={() => setActiveRole(rf.code)}
+                            className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border-2 transition-all duration-200 active:scale-95 ${
+                                activeRole === rf.code ? rf.color : rf.inactive
+                            }`}
+                        >
+                            {rf.label}
+                            {activeRole === rf.code && rf.code !== '' && (
+                                <span className="ml-1.5 opacity-70">({filteredUsers.length})</span>
+                            )}
+                        </button>
+                    ))}
+                </div>
+
                 {/* Table Container */}
                 <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
                     <div className="overflow-x-auto">
@@ -104,7 +140,7 @@ export default function Index({ users, roles, regions, instituts, secteurs, cdcs
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {users.data.map((user: any) => (
+                                {filteredUsers.map((user: any) => (
                                     <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
                                         <td className="px-8 py-5">
                                             <div className="flex items-center gap-4">
