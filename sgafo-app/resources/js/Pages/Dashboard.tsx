@@ -18,6 +18,20 @@ interface Props extends PageProps {
         top_sites: any[];
         plans_evolution: any[];
         attendance_rate: number;
+        users_by_role: {
+            formateurs: number;
+            rf: number;
+            cdc: number;
+            admin: number;
+        };
+        instituts_per_region: any[];
+        content_counts: {
+            metiers: number;
+            secteurs: number;
+            qcm: number;
+            seances: number;
+            formations: number;
+        };
         admin_alerts?: {
             users_sans_role: number;
             users_suspendus: number;
@@ -188,7 +202,6 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                         
                         {/* Evolution Trend & Attendance Row */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Evolution Trend */}
                             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
                                 <h2 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
                                     <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
@@ -211,7 +224,6 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                                 </div>
                             </div>
 
-                            {/* Attendance Radial */}
                             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm flex items-center gap-6">
                                 <div className="relative w-32 h-32 flex items-center justify-center">
                                     <svg className="w-full h-full transform -rotate-90">
@@ -240,7 +252,6 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
 
                         {/* Distribution Sectors & Regions Row */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Sectors */}
                             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
                                 <h2 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
                                     <div className="w-1 h-5 bg-indigo-600 rounded-full"></div>
@@ -264,7 +275,6 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                                 </div>
                             </div>
 
-                            {/* Regions Impact */}
                             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
                                 <h2 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
                                     <div className="w-1 h-5 bg-amber-500 rounded-full"></div>
@@ -288,9 +298,42 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                                 </div>
                             </div>
                         </div>
+
+                        {/* NEW: Users & Regional Establishments Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                             {/* Users by Role */}
+                             <div className="bg-slate-900 p-8 rounded-[2.5rem] border border-slate-800 shadow-xl space-y-8">
+                                <h2 className="text-lg font-black text-white flex items-center gap-3 uppercase tracking-tight">
+                                    <div className="w-1 h-5 bg-purple-500 rounded-full"></div>
+                                    Utilisateurs par Rôle
+                                </h2>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <UserRoleCard label="Formateurs" count={dataStats.users_by_role.formateurs} color="emerald" />
+                                    <UserRoleCard label="Responsables F." count={dataStats.users_by_role.rf} color="blue" />
+                                    <UserRoleCard label="Concepteurs" count={dataStats.users_by_role.cdc} color="purple" />
+                                    <UserRoleCard label="Administrateurs" count={dataStats.users_by_role.admin} color="rose" />
+                                </div>
+                             </div>
+
+                             {/* Establishments per Region */}
+                             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
+                                <h2 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
+                                    <div className="w-1 h-5 bg-teal-500 rounded-full"></div>
+                                    Établissements / Région
+                                </h2>
+                                <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                                    {dataStats.instituts_per_region.map((region: any) => (
+                                        <div key={region.id} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+                                            <span className="text-[10px] font-black text-slate-500 uppercase">{region.nom}</span>
+                                            <span className="px-2.5 py-1 bg-slate-50 text-slate-900 rounded-lg text-[10px] font-black">{region.instituts_count}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                             </div>
+                        </div>
                     </div>
 
-                    {/* RIGHT: Status & Actions */}
+                    {/* RIGHT: Status, Actions, Top Sites & Content */}
                     <div className="space-y-8">
                         <div className="bg-slate-900 rounded-[2.5rem] p-10 border border-slate-800 shadow-xl space-y-8">
                             <h2 className="text-xl font-black text-white flex items-center gap-3">
@@ -304,10 +347,35 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                             </div>
                         </div>
 
-                        {/* Top Sites Card */}
+                        {/* NEW: Content Inventory Grid */}
+                        <div className="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8">
+                            <h2 className="text-xl font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
+                                <div className="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
+                                Inventaire
+                            </h2>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 bg-slate-50 rounded-2xl text-center group hover:bg-emerald-50 transition-colors">
+                                    <p className="text-2xl font-black text-slate-900 group-hover:text-emerald-600">{dataStats.content_counts.metiers}</p>
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Métiers</p>
+                                </div>
+                                <div className="p-4 bg-slate-50 rounded-2xl text-center group hover:bg-blue-50 transition-colors">
+                                    <p className="text-2xl font-black text-slate-900 group-hover:text-blue-600">{dataStats.content_counts.qcm}</p>
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">QCMs</p>
+                                </div>
+                                <div className="p-4 bg-slate-50 rounded-2xl text-center group hover:bg-amber-50 transition-colors">
+                                    <p className="text-2xl font-black text-slate-900 group-hover:text-amber-600">{dataStats.content_counts.seances}</p>
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Séances</p>
+                                </div>
+                                <div className="p-4 bg-slate-50 rounded-2xl text-center group hover:bg-indigo-50 transition-colors">
+                                    <p className="text-2xl font-black text-slate-900 group-hover:text-indigo-600">{dataStats.content_counts.formations}</p>
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Modules</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8">
                              <h2 className="text-xl font-black text-slate-900 flex items-center gap-3 uppercase tracking-tight">
-                                <div className="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
+                                <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
                                 Top Sites
                             </h2>
                             <div className="space-y-4">
@@ -323,7 +391,6 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
                             </div>
                         </div>
 
-                        {/* Actions Alert Card */}
                         <div className="bg-slate-900 rounded-[2.5rem] p-10 border border-slate-800 shadow-xl space-y-8">
                             <h2 className="text-xl font-black text-white flex items-center gap-3">
                                 <div className="w-1.5 h-6 bg-rose-500 rounded-full"></div>
@@ -390,6 +457,21 @@ export default function Dashboard({ stats: dataStats, latestFormations, filters,
 
             </div>
         </AuthenticatedLayout>
+    );
+}
+
+function UserRoleCard({ label, count, color }: { label: string, count: number, color: string }) {
+    const colors: any = {
+        emerald: 'text-emerald-500 bg-emerald-500/5 border-emerald-500/10 hover:bg-emerald-500/10',
+        blue: 'text-blue-500 bg-blue-500/5 border-blue-500/10 hover:bg-blue-500/10',
+        purple: 'text-purple-500 bg-purple-500/5 border-purple-500/10 hover:bg-purple-500/10',
+        rose: 'text-rose-500 bg-rose-500/5 border-rose-500/10 hover:bg-rose-500/10',
+    };
+    return (
+        <div className={`p-4 rounded-2xl border ${colors[color]} transition-colors text-center`}>
+            <p className="text-lg font-black">{count}</p>
+            <p className="text-[8px] font-black uppercase tracking-widest mt-1 opacity-60">{label}</p>
+        </div>
     );
 }
 

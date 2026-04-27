@@ -95,6 +95,41 @@ class DashboardController extends Controller
                 'my_drafts' => PlanFormation::where('cree_par', $user->id)->where('statut', 'brouillon')->count(),
                 'my_rejected' => PlanFormation::where('cree_par', $user->id)->where('statut', 'rejeté')->count(),
             ] : null,
+
+            // System & Resource Stats
+            'users_by_role' => [
+                'formateurs' => User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))->count(),
+                'rf' => User::whereHas('roles', fn($q) => $q->where('code', 'RF'))->count(),
+                'cdc' => User::whereHas('roles', fn($q) => $q->where('code', 'CDC'))->count(),
+                'admin' => User::whereHas('roles', fn($q) => $q->where('code', 'ADMIN'))->count(),
+            ],
+            
+            'instituts_per_region' => Region::withCount('instituts')
+                ->orderByDesc('instituts_count')
+                ->get(['id', 'nom', 'instituts_count']),
+
+            'content_counts' => [
+                'metiers' => \App\Models\Metier::count(),
+                'secteurs' => Secteur::count(),
+                'qcm' => \App\Models\Qcm::count(),
+                'seances' => Seance::count(),
+                'formations' => EntiteFormation::count(),
+            ],
+
+            'top_formateurs' => User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))
+                ->withCount(['seances as sessions_count'])
+                ->orderByDesc('sessions_count')
+                ->take(5)
+                ->get(['id', 'nom', 'prenom', 'sessions_count']),
+
+            'upcoming_seances' => Seance::with(['plan.entite', 'site'])
+                ->where('date', '>=', now()->toDateString())
+                ->orderBy('date')
+                ->orderBy('debut')
+                ->take(5)
+                ->get(),
+
+            'site_occupancy' => $this->getSiteOccupancy(),
         ];
 
         $latestFormations = EntiteFormation::with(['secteur', 'createur'])
