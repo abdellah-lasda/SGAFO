@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Modules\Admin\FeedbackAdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EntiteFormationController;
 use App\Http\Controllers\PlanFormationController;
@@ -150,6 +151,12 @@ Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')-
 
     Route::post('notifications/{id}/mark-as-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
     Route::post('notifications/mark-all-as-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+
+    // Feedback Management (RF/CDC)
+    Route::get('feedback/builder/{seance}', [FeedbackAdminController::class, 'builder'])->name('feedback.builder');
+    Route::post('feedback/save/{seance}', [FeedbackAdminController::class, 'save'])->name('feedback.save');
+    Route::get('feedback/results/{seance}', [FeedbackAdminController::class, 'results'])->name('feedback.results');
+    Route::patch('feedback/submissions/{submission}/publish', [FeedbackAdminController::class, 'togglePublish'])->name('feedback.submissions.toggle-publish');
 });
 
 // Espace Animateur
@@ -185,6 +192,10 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('participant')->name('part
     Route::get('/seance/{seance}', [App\Http\Controllers\Modules\Participant\SeanceController::class, 'show'])->name('seance.show');
     Route::get('/qcm/{qcm}', [App\Http\Controllers\Modules\Participant\QcmController::class, 'show'])->name('qcm.passage');
     Route::post('/qcm/{qcm}/submit', [App\Http\Controllers\Modules\Participant\QcmController::class, 'submit'])->name('qcm.submit');
+    
+    // Feedback Participant
+    Route::get('/feedback/{seance}', [App\Http\Controllers\Modules\Participant\FeedbackParticipantController::class, 'show'])->name('feedback.show');
+    Route::post('/feedback/{seance}/submit', [App\Http\Controllers\Modules\Participant\FeedbackParticipantController::class, 'submit'])->name('feedback.submit');
 });
 
 require __DIR__.'/auth.php';

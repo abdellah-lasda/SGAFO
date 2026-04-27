@@ -59,4 +59,9 @@ class Seance extends Model
     {
         return $this->hasMany(Qcm::class);
     }
+
+    public function feedbackForm()
+    {
+        return $this->hasOne(FeedbackForm::class);
+    }
 }

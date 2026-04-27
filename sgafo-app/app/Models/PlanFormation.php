@@ -90,6 +90,11 @@ class PlanFormation extends Model
         return $this->hasMany(PlanRessource::class, 'plan_formation_id');
     }
 
+    public function feedbackSubmissions()
+    {
+        return $this->hasMany(FeedbackSubmission::class, 'plan_id');
+    }
+
     // ─── Helpers ────────────────────────────────────────────
 
     /**

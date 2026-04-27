@@ -4,7 +4,9 @@ import { PlanFormation } from '@/types/plan';
 import { useState, useMemo } from 'react';
 
 interface Props {
-    plan: PlanFormation;
+    plan: PlanFormation & {
+        feedbackSubmissions: any[];
+    };
 }
 
 
@@ -22,6 +24,7 @@ export default function Show({ plan }: Props) {
         { id: 'programme', label: 'Programme', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg> },
         { id: 'equipe', label: 'Équipe & Participants', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
         { id: 'logistique', label: 'Logistique & Planning', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
+        { id: 'avis', label: 'Avis & Témoignages', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg> },
     ];
 
     return (
@@ -367,6 +370,49 @@ export default function Show({ plan }: Props) {
                                             </tbody>
                                         </table>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tab Content: Avis */}
+                        {activeTab === 'avis' && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="bg-white rounded-[2rem] p-10 border border-slate-100 shadow-sm">
+                                    <h2 className="text-2xl font-black text-slate-900 mb-10 flex items-center gap-3">
+                                        <span className="w-2 h-8 bg-emerald-500 rounded-full"></span>
+                                        Retours des participants
+                                    </h2>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        {plan.feedbackSubmissions?.map((submission, idx) => (
+                                            <div key={idx} className="relative p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 italic">
+                                                <div className="absolute -top-4 -left-4 w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg">
+                                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M14.017 21L14.017 18C14.017 16.8954 13.1216 16 12.017 16H9.01701C7.91244 16 7.01701 16.8954 7.01701 18V21M14.017 21H17.017C18.1216 21 19.017 20.1046 19.017 19V10C19.017 8.89543 18.1216 8 17.017 8H3.01701C1.91244 8 1.01701 8.89543 1.01701 10V19C1.01701 20.1046 1.91244 21 3.01701 21H7.01701M14.017 21V10" /></svg>
+                                                </div>
+                                                <p className="text-slate-700 font-medium mb-6 leading-relaxed">
+                                                    "{submission.commentaire_general}"
+                                                </p>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 bg-white rounded-xl border border-slate-100 flex items-center justify-center font-black text-emerald-500 text-xs">
+                                                        {submission.participant?.nom[0]}{submission.participant?.prenom[0]}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-black text-slate-900">{submission.participant?.nom} {submission.participant?.prenom}</p>
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Participant certifié</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {(plan.feedbackSubmissions?.length === 0 || !plan.feedbackSubmissions) && (
+                                        <div className="text-center py-20 bg-slate-50/50 rounded-[2.5rem] border border-dashed border-slate-200">
+                                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                            </div>
+                                            <p className="text-sm font-bold text-slate-400 italic">Aucun avis publié pour le moment.</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}

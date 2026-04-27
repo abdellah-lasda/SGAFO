@@ -62,25 +62,27 @@ interface Props extends PageProps {
     seance: Seance;
     canPassQcm: boolean;
     qcms: Qcm[];
+    hasFeedbackForm: boolean;
+    hasSubmittedFeedback: boolean;
 }
 
-export default function SeanceShow({ auth, seance, canPassQcm, qcms }: Props) {
+export default function SeanceShow({ auth, seance, canPassQcm, qcms, hasFeedbackForm, hasSubmittedFeedback }: Props) {
     return (
         <AuthenticatedLayout header={<div className="flex items-center gap-2">
-                    <Link href={route('participant.formations')} className="text-slate-400 hover:text-blue-600 transition-colors font-bold">Mes formations</Link>
-                    <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
-                    <span className="font-bold text-slate-900">Détails de la séance</span>
-                </div>}>
+            <Link href={route('participant.formations')} className="text-slate-400 hover:text-blue-600 transition-colors font-bold">Mes formations</Link>
+            <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+            <span className="font-bold text-slate-900">Détails de la séance</span>
+        </div>}>
             <Head title={`Séance - ${seance.plan.titre}`} />
 
             <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                
+
                 {/* Header Section */}
                 <div className="bg-white rounded-[2.5rem] p-10 border border-slate-200 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50 rounded-full blur-[100px] -mr-48 -mt-48 opacity-50"></div>
-                    
+
                     <div className="relative z-10">
-                        <Link 
+                        <Link
                             href={route('participant.formations')}
                             className="inline-flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors mb-8"
                         >
@@ -116,10 +118,10 @@ export default function SeanceShow({ auth, seance, canPassQcm, qcms }: Props) {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    
+
                     {/* Left Column: Modules & Details */}
                     <div className="lg:col-span-2 space-y-8">
-                        
+
                         {/* Description & Site */}
                         <div className="bg-white rounded-[2.5rem] p-10 border border-slate-200 shadow-sm">
                             <div className="grid grid-cols-1 gap-12">
@@ -128,7 +130,7 @@ export default function SeanceShow({ auth, seance, canPassQcm, qcms }: Props) {
                                         <div className="w-1.5 h-4 bg-blue-600 rounded-full"></div>
                                         À propos de la séance
                                     </h3>
-                                    <div 
+                                    <div
                                         className="text-slate-600 text-sm leading-relaxed prose prose-slate max-w-none"
                                         dangerouslySetInnerHTML={{ __html: seance.description || "Aucune description supplémentaire fournie pour cette séance." }}
                                     />
@@ -145,7 +147,7 @@ export default function SeanceShow({ auth, seance, canPassQcm, qcms }: Props) {
                                             </div>
                                             <div>
                                                 <p className="font-black text-slate-900">{seance.site?.nom || 'Non défini'}</p>
-                                                <p className="text-xs text-slate-500 font-medium leading-relaxed">{seance.site?.adresse}<br/>{seance.site?.ville}</p>
+                                                <p className="text-xs text-slate-500 font-medium leading-relaxed">{seance.site?.adresse}<br />{seance.site?.ville}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -162,7 +164,7 @@ export default function SeanceShow({ auth, seance, canPassQcm, qcms }: Props) {
                                         <h4 className="text-lg font-black text-slate-900 mb-3 group-hover:text-blue-600 transition-colors italic">
                                             {st.theme.nom}
                                         </h4>
-                                        <div 
+                                        <div
                                             className="text-sm text-slate-500 leading-relaxed italic prose prose-sm prose-slate max-w-none"
                                             dangerouslySetInnerHTML={{ __html: st.theme.objectifs || "Consultez les objectifs de ce module pendant la séance." }}
                                         />
@@ -186,11 +188,11 @@ export default function SeanceShow({ auth, seance, canPassQcm, qcms }: Props) {
 
                     {/* Right Column: QCM & Resources */}
                     <div className="space-y-8">
-                        
+
                         {/* QCM Access Card */}
                         <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
                             <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-blue-600/20 rounded-full blur-2xl"></div>
-                            
+
                             <h3 className="text-xs font-black uppercase tracking-widest mb-8 flex items-center gap-2">
                                 <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                 Évaluation
@@ -213,7 +215,7 @@ export default function SeanceShow({ auth, seance, canPassQcm, qcms }: Props) {
                                             </div>
 
                                             {canPassQcm ? (
-                                                <Link 
+                                                <Link
                                                     href={route('participant.qcm.passage', qcm.id)}
                                                     className="w-full inline-block py-4 bg-blue-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest text-center hover:bg-blue-500 transition-all shadow-lg active:scale-95"
                                                 >
@@ -235,11 +237,11 @@ export default function SeanceShow({ auth, seance, canPassQcm, qcms }: Props) {
                         {/* Resources / Support Card */}
                         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm">
                             <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-8">Supports de cours</h3>
-                            
+
                             {seance.ressources.length > 0 ? (
                                 <div className="space-y-3">
                                     {seance.ressources.map(res => (
-                                        <a 
+                                        <a
                                             key={res.id}
                                             href={res.url}
                                             target="_blank"

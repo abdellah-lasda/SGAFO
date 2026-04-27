@@ -33,7 +33,7 @@ class SeanceController extends Controller
 
         // 3. Calculer les statistiques
         $totalPlans = $plans->count();
-        $totalHours = $allSeances->sum(function($s) {
+        $totalHours = $allSeances->sum(function ($s) {
             // Approximation ou somme réelle si disponible
             return 4; // Par défaut 4h par séance si non spécifié
         });
@@ -73,7 +73,7 @@ class SeanceController extends Controller
             'seanceThemes.theme',
             'seanceThemes.formateur',
             'ressources',
-            'qcms' => function($q) {
+            'qcms' => function ($q) {
                 $q->where('est_publie', true);
             }
         ]);
@@ -83,22 +83,22 @@ class SeanceController extends Controller
         $now = Carbon::now();
         $dateStr = $seance->date instanceof Carbon ? $seance->date->format('Y-m-d') : Carbon::parse($seance->date)->format('Y-m-d');
         $seanceStart = Carbon::parse($dateStr . ' ' . $seance->debut);
-        
+
         $canPassQcm = $now->greaterThanOrEqualTo($seanceStart);
 
         // Vérifier si les QCMs ont déjà été faits
-        $qcms = $seance->qcms->map(function($qcm) use ($user) {
+        $qcms = $seance->qcms->map(function ($qcm) use ($user) {
             $qcm->deja_fait = QcmTentative::where('user_id', $user->id)
                 ->where('qcm_id', $qcm->id)
                 ->exists();
-            
+
             if ($qcm->deja_fait) {
                 $qcm->derniere_tentative = QcmTentative::where('user_id', $user->id)
                     ->where('qcm_id', $qcm->id)
                     ->latest()
                     ->first();
             }
-            
+
             return $qcm;
         });
 
@@ -115,15 +115,15 @@ class SeanceController extends Controller
         // Vérifier si le participant est bien inscrit à ce plan et qu'il est accessible
         $isEnrolled = $plan->participants()->where('users.id', $user->id)->exists();
         $allowedStatuses = ['validé', 'terminée'];
-        
+
         if (!$isEnrolled || !in_array($plan->statut, $allowedStatuses)) {
             abort(403, "Vous n'avez pas accès à cette formation.");
         }
 
         $plan->load([
-            'entite.secteur', 
+            'entite.secteur',
             'themes',
-            'seances' => function($q) {
+            'seances' => function ($q) {
                 $q->with(['site', 'seanceThemes.theme', 'seanceThemes.formateur'])->orderBy('date', 'asc');
             }
         ]);

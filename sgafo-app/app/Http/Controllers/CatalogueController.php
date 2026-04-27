@@ -58,7 +58,10 @@ class CatalogueController extends Controller
             'hebergements.hotel',
             'hebergements.user',
             'seances.themes',
-            'seances.site'
+            'seances.site',
+            'feedbackSubmissions' => function($q) {
+                $q->where('est_affiche_sur_plan', true)->with('participant');
+            }
         ]);
 
         return Inertia::render('Modules/Catalogue/Show', [
