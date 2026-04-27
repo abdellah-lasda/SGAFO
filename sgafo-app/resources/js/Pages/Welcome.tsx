@@ -352,10 +352,13 @@ export default function Welcome({
                             <div className="group bg-white p-12 rounded-[48px] border border-slate-200/60 shadow-xl shadow-slate-200/10 hover:border-blue-500/30 transition-all">
                                 <h4 className="text-2xl font-black mb-8 uppercase tracking-tighter">Documentation</h4>
                                 <div className="grid grid-cols-1 gap-4">
-                                    <button className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-900 hover:text-white transition-all group/btn">
-                                        <span className="text-[11px] font-black uppercase tracking-widest">Guide Intégral (PDF)</span>
+                                    <Link 
+                                        href={route('documentation')}
+                                        className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-900 hover:text-white transition-all group/btn"
+                                    >
+                                        <span className="text-[11px] font-black uppercase tracking-widest">Guide Intégral (Portail)</span>
                                         <svg className="w-5 h-5 text-slate-300 group-hover/btn:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5m0 0l5-5m-5 5V3" /></svg>
-                                    </button>
+                                    </Link>
                                     <button className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-900 hover:text-white transition-all group/btn">
                                         <span className="text-[11px] font-black uppercase tracking-widest">Tutoriel Vidéo CDC</span>
                                         <svg className="w-5 h-5 text-slate-300 group-hover/btn:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /></svg>
