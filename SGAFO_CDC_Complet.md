@@ -6,9 +6,9 @@
 | Champ | Valeur |
 |---|---|
 | **Référence** | SGAFO-CDC-v2.1 |
-| **Version** | 2.1 — Version révisée conforme à l'implémentation réelle |
-| **Date** | Avril 2026 |
-| **Statut** | Validé — Application déployée en Instance Production |
+| **Version** | 2.2 — Mise à jour avec les référentiels de données réelles |
+| **Date** | 28 Avril 2026 |
+| **Statut** | Validé — Application peuplée de données de production |
 | **Encadrant** | M. Zaher MECHBOUK |
 | **Année académique** | 2025 – 2026 |
 
@@ -32,6 +32,8 @@
 14. Glossaire
 15. Vision Future : La Bibliothèque d'Expériences
 16. Conclusion
+17. Modules Implémentés — État Réel du Système
+18. Référentiels et Catalogue Initial (Données Réelles)
 
 ---
 
@@ -1214,5 +1216,42 @@ admin.domaines.*                  → DomaineController
 
 ---
 
-*SGAFO — Cahier des Charges v2.1 — OFPPT 2025–2026*
-*Mis à jour le 27 Avril 2026 — Conforme à l'implémentation en Instance Production*
+## 18. RÉFÉRENTIELS ET CATALOGUE INITIAL (DONNÉES RÉELLES)
+
+Cette section présente les données métier réelles actuellement intégrées au système SGAFO, servant de base à la planification des formations pour l'année 2025–2026.
+
+### 18.1 Hiérarchie des CDCs et Secteurs Clés
+
+| Centre de Développement des Compétences (CDC) | Code | Secteurs de Formation | Exemples de Métiers |
+|---|---|---|---|
+| **Digital & Intelligence Artificielle** | DIG | Développement Digital, Infrastructure, IA, Cybersécurité, Design UX/UI | Full Stack, Cloud Computing, Machine Learning, Pentesting |
+| **Gestion & Commerce** | GES | Gestion PME, Commerce et Marketing, Finance, Logistique | RH, Marketing Digital, E-commerce, Comptabilité |
+| **Industrie** | IND | Électromécanique, Fabrication Mécanique, Génie Électrique, Automobile | Maintenance Industrielle, Usinage, Diagnostic Auto |
+| **Tourisme, Hôtellerie & Restauration** | THR | Art Culinaire, Management Touristique, Hébergement | Cuisine Internationale, Pâtisserie, Réception, Animation |
+| **Ingénierie Pédagogique** | PED | Formation des Formateurs, Soft Skills | Pédagogie Active, Leadership, Intelligence Émotionnelle |
+
+### 18.2 Catalogue Initial des Formations (Entités "Mes Modèles")
+
+| Titre de la Formation | Type | Mode | Secteur | Thèmes Clés |
+|---|---|---|---|---|
+| **Ingénierie Web Avancée (Laravel & React)** | Technique | Hybride | Développement Digital | Architecture Laravel 11, Inertia.js, Tests (Pest) |
+| **IA Générative dans l'Éducation** | Pédagogique | Distance | Intelligence Artificielle | Prompt Engineering, Évaluations IA, Éthique |
+| **Maintenance des Systèmes Automatisés** | Technique | Présentiel | Électromécanique | Automates Siemens, Diagnostic de pannes |
+| **Gastronomie Moléculaire & Tendances** | Technique | Présentiel | Art Culinaire | Sphérification, Gélification, Cuisson sous-vide |
+| **Leadership et Intelligence Émotionnelle** | Transversale | Présentiel | Soft Skills | Maîtrise de soi, Résolution de conflits |
+| **Business English for Trainers** | Transversale | Hybride | Soft Skills | Technical Vocabulary, Presentation Skills |
+
+### 18.3 Infrastructure et Logistique (Sites & Hôtels)
+
+| Région | Sites de Formation Pilotes | Hôtels Conventionnés (Exemples) |
+|---|---|---|
+| **Casablanca-Settat** | Siège OFPPT, CMC Nouaceur, ISGI Casa, NTIC Sidi Maârouf | Ibis City Center, Novotel, Kenzi Tower |
+| **Rabat-Salé-Kénitra** | ISTA Hay Riad, CMC Tamesna, ISTA Kénitra | Ibis Agdal, Sofitel Jardin des Roses |
+| **Marrakech-Safi** | Centre Multisectoriel, NTIC Marrakech | Mövenpick Mansour Eddahbi, Ibis Gare |
+| **Tanger-Tétouan** | ISTA Tanger, ISTA Tétouan | Hilton City Center, Ibis Tanger |
+| **Souss-Massa** | ISTA Agadir, CMC Agadir | Royal Atlas, Ibis Agadir |
+
+---
+
+*SGAFO — Cahier des Charges v2.2 — OFPPT 2025–2026*
+*Mis à jour le 28 Avril 2026 — Données réelles intégrées*
