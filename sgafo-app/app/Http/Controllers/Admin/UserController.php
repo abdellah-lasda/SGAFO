@@ -20,6 +20,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $role = $request->input('role');
 
         // Récupération paginée avec filtrage
         $users = User::with('roles', 'regions', 'instituts', 'secteurs', 'cdcs')
@@ -28,6 +29,11 @@ class UserController extends Controller
                     $sq->where('nom', 'like', "%{$search}%")
                       ->orWhere('prenom', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->when($role, function($q) use ($role) {
+                $q->whereHas('roles', function($rq) use ($role) {
+                    $rq->where('code', $role);
                 });
             })
             ->latest()
@@ -40,6 +46,15 @@ class UserController extends Controller
         $secteurs = Secteur::all();
         $cdcs = Cdc::all();
 
+        // Statistiques pour les badges
+        $roleCounts = [
+            'RF' => User::role('RF')->count(),
+            'CDC' => User::role('CDC')->count(),
+            'FORMATEUR' => User::role('FORMATEUR')->count(),
+            'DR' => User::role('DR')->count(),
+            'ADMIN' => User::role('ADMIN')->count(),
+        ];
+
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
             'roles' => $roles,
@@ -47,7 +62,8 @@ class UserController extends Controller
             'instituts' => $instituts,
             'secteurs' => $secteurs,
             'cdcs' => $cdcs,
-            'filters' => $request->only(['search']),
+            'roleCounts' => $roleCounts,
+            'filters' => $request->only(['search', 'role']),
         ]);
     }
 

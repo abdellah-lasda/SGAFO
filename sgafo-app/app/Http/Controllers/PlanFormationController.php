@@ -146,7 +146,7 @@ class PlanFormationController extends Controller
             }
         }
 
-        return DB::transaction(function () use ($validated) {
+        return DB::transaction(function () use ($validated, $request) {
             $plan = PlanFormation::create([
                 'entite_id' => $validated['entite_id'],
                 'titre' => $validated['titre'],
@@ -369,6 +369,10 @@ class PlanFormationController extends Controller
                 }
             }
 
+            if ($plan->cree_par !== auth()->id()) {
+                $plan->createur->notify(new PlanFormationDecision($plan, 'modifié'));
+            }
+
             return redirect()->back()->with('success', 'Plan mis à jour.');
         });
     }
@@ -552,6 +556,10 @@ class PlanFormationController extends Controller
             'commentaire' => 'Confirmation administrative du plan. Prêt pour la planification.',
         ]);
 
+        if ($plan->cree_par !== $user->id) {
+            $plan->createur->notify(new PlanFormationDecision($plan, 'confirmé'));
+        }
+
         return redirect()->route('modules.plans.show', $plan)
                        ->with('success', 'Plan confirmé administrativement. Vous pouvez maintenant gérer le planning.');
     }
@@ -634,6 +642,9 @@ class PlanFormationController extends Controller
     {
         \Illuminate\Support\Facades\Gate::authorize('delete', $plan);
 
+        $createur = clone $plan->createur;
+        $titre = $plan->titre;
+
         DB::transaction(function () use ($plan) {
             // Nettoyage manuel si non-cascade en DB
             $plan->seances()->delete();
@@ -645,6 +656,11 @@ class PlanFormationController extends Controller
             
             $plan->delete();
         });
+
+        if ($createur && $createur->id !== auth()->id()) {
+            $fakePlan = (object)['id' => null, 'titre' => $titre];
+            $createur->notify(new PlanFormationDecision($fakePlan, 'supprimé'));
+        }
 
         return redirect()->route('modules.plans.index')
                        ->with('success', 'Le plan de formation a été supprimé définitivement.');

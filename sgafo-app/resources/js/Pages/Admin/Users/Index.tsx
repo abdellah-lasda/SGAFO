@@ -17,15 +17,16 @@ interface Props {
     instituts: any[];
     secteurs: any[];
     cdcs: any[];
-    filters: { search?: string };
+    roleCounts: Record<string, number>;
+    filters: { search?: string; role?: string };
 }
 
-export default function Index({ users, roles, regions, instituts, secteurs, cdcs, filters }: Props) {
+export default function Index({ users, roles, regions, instituts, secteurs, cdcs, roleCounts, filters }: Props) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [search, setSearch] = useState(filters.search || '');
     const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
-    const [activeRole, setActiveRole] = useState<string>('');
+    const activeRole = filters.role || '';
 
     const roleFilters = [
         { code: '', label: 'Tous', color: 'bg-slate-900 text-white border-slate-900', inactive: 'bg-white text-slate-500 border-slate-200 hover:border-slate-400' },
@@ -36,10 +37,9 @@ export default function Index({ users, roles, regions, instituts, secteurs, cdcs
         { code: 'ADMIN', label: 'Admin', color: 'bg-rose-600 text-white border-rose-600', inactive: 'bg-rose-50 text-rose-600 border-rose-200 hover:border-rose-400' },
     ];
 
-    const filteredUsers = users.data.filter((user: any) => {
-        if (!activeRole) return true;
-        return user.roles.some((r: any) => r.code === activeRole);
-    });
+    const handleRoleFilter = (code: string) => {
+        router.get(route('admin.users.index'), { ...filters, role: code }, { preserveState: true });
+    };
 
     const handleCreate = () => {
         setEditingUser(null);
@@ -53,7 +53,7 @@ export default function Index({ users, roles, regions, instituts, secteurs, cdcs
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get(route('admin.users.index'), { search }, { preserveState: true });
+        router.get(route('admin.users.index'), { ...filters, search }, { preserveState: true });
     };
 
     const handleDelete = () => {
@@ -80,7 +80,7 @@ export default function Index({ users, roles, regions, instituts, secteurs, cdcs
                         <div>
                             <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Annuaire</h3>
                             <p className="text-[10px] text-slate-400 font-bold uppercase">
-                                {activeRole ? `${filteredUsers.length} résultat(s)` : `${users.total} Utilisateurs au total`}
+                                {filters.role ? `${users.total} résultat(s)` : `${users.total} Utilisateurs au total`}
                             </p>
                         </div>
                     </div>
@@ -113,14 +113,14 @@ export default function Index({ users, roles, regions, instituts, secteurs, cdcs
                     {roleFilters.map((rf) => (
                         <button
                             key={rf.code}
-                            onClick={() => setActiveRole(rf.code)}
+                            onClick={() => handleRoleFilter(rf.code)}
                             className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border-2 transition-all duration-200 active:scale-95 ${
                                 activeRole === rf.code ? rf.color : rf.inactive
                             }`}
                         >
                             {rf.label}
-                            {activeRole === rf.code && rf.code !== '' && (
-                                <span className="ml-1.5 opacity-70">({filteredUsers.length})</span>
+                            {rf.code !== '' && (
+                                <span className="ml-1.5 opacity-70">({roleCounts[rf.code] || 0})</span>
                             )}
                         </button>
                     ))}
@@ -140,7 +140,7 @@ export default function Index({ users, roles, regions, instituts, secteurs, cdcs
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {filteredUsers.map((user: any) => (
+                                {users.data.map((user: any) => (
                                     <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
                                         <td className="px-8 py-5">
                                             <div className="flex items-center gap-4">

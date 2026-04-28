@@ -36,4 +36,14 @@ trait HasRoles
     {
         return $this->roles()->first()?->code;
     }
+
+    /**
+     * Scope for filtering by role code
+     */
+    public function scopeRole($query, string $code)
+    {
+        return $query->whereHas('roles', function($q) use ($code) {
+            $q->where('code', $code);
+        });
+    }
 }

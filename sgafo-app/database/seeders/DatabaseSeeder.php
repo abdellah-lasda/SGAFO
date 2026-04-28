@@ -21,6 +21,9 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             AdminSeeder::class,
             CatalogueSeeder::class,
+            InstitutSeeder::class,
+            LogistiqueSeeder::class,
+            PlanFormationSeeder::class,
         ]);
     }
 }

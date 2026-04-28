@@ -42,16 +42,36 @@ class PlanFormationDecision extends Notification
      */
     public function toArray(object $notifiable): array
     {
-        $statusLabel = $this->decision === 'validé' ? 'validé' : 'rejeté';
+        $statusLabel = $this->decision;
+        $type = 'info';
+        
+        switch ($this->decision) {
+            case 'validé':
+                $type = 'success';
+                break;
+            case 'confirmé':
+                $type = 'blue';
+                break;
+            case 'rejeté':
+            case 'annulé':
+            case 'supprimé':
+                $type = 'danger';
+                break;
+            case 'modifié':
+                $type = 'warning';
+                break;
+        }
+        
+        $actionUrl = $this->decision === 'supprimé' ? null : route('modules.plans.show', $this->plan->id);
         
         return [
             'plan_id' => $this->plan->id,
             'plan_titre' => $this->plan->titre,
             'message' => "Votre plan de formation \"{$this->plan->titre}\" a été {$statusLabel}.",
-            'type' => $this->decision === 'validé' ? 'success' : 'danger',
+            'type' => $type,
             'decision' => $this->decision,
             'commentaire' => $this->commentaire,
-            'action_url' => route('modules.plans.show', $this->plan->id),
+            'action_url' => $actionUrl,
         ];
     }
 }
