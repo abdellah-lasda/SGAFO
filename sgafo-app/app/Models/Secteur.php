@@ -42,4 +42,12 @@ class Secteur extends Model
     {
         return $this->hasMany(EntiteFormation::class);
     }
+
+    /**
+     * Get the training plans for all entities in this sector.
+     */
+    public function plans()
+    {
+        return $this->hasManyThrough(PlanFormation::class, EntiteFormation::class, 'secteur_id', 'entite_id');
+    }
 }

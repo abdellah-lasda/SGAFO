@@ -43,12 +43,21 @@ class FeedbackAdminController extends Controller
             'avg_rating' => round($avgRating, 1) ?: 0,
         ];
 
+        $feedbackStats = DB::table('feedback_questions')
+            ->join('feedback_responses', 'feedback_questions.id', '=', 'feedback_responses.question_id')
+            ->select('feedback_questions.categorie', DB::raw('AVG(feedback_responses.rating) as average'))
+            ->groupBy('feedback_questions.categorie')
+            ->get();
+
+
         return Inertia::render('Modules/Admin/Feedback/FeedbackDashboard', [
             'submissions' => $submissions,
             'plans' => $plans,
             'filters' => $request->only(['plan_id']),
             'stats' => $stats,
+            'feedbackStats' => $feedbackStats,
         ]);
+
     }
 
     public function builder(Seance $seance)
@@ -69,8 +78,10 @@ class FeedbackAdminController extends Controller
             'questions' => 'required|array|min:1',
             'questions.*.question_text' => 'required|string',
             'questions.*.type' => 'required|in:rating,text',
+            'questions.*.categorie' => 'nullable|string',
             'questions.*.ordre' => 'required|integer',
         ]);
+
 
         DB::beginTransaction();
         try {
@@ -91,8 +102,10 @@ class FeedbackAdminController extends Controller
                     [
                         'question_text' => $qData['question_text'],
                         'type' => $qData['type'],
+                        'categorie' => $qData['categorie'] ?? null,
                         'ordre' => $qData['ordre'],
                     ]
+
                 );
                 $questionIdsToKeep[] = $question->id;
             }
@@ -153,11 +166,13 @@ class FeedbackAdminController extends Controller
             $form->questions()->delete();
             
             $defaultQuestions = [
-                ['question_text' => 'Qualité de l\'animation', 'type' => 'rating', 'ordre' => 1],
-                ['question_text' => 'Qualité des supports et documents', 'type' => 'rating', 'ordre' => 2],
-                ['question_text' => 'Organisation et logistique', 'type' => 'rating', 'ordre' => 3],
-                ['question_text' => 'Commentaires libres', 'type' => 'text', 'ordre' => 4],
+                ['question_text' => 'Qualité de l\'animation', 'type' => 'rating', 'categorie' => 'Animation', 'ordre' => 1],
+                ['question_text' => 'Qualité des supports et documents', 'type' => 'rating', 'categorie' => 'Supports', 'ordre' => 2],
+                ['question_text' => 'Organisation et logistique', 'type' => 'rating', 'categorie' => 'Logistique', 'ordre' => 3],
+                ['question_text' => 'Contenu et pertinence', 'type' => 'rating', 'categorie' => 'Contenu', 'ordre' => 4],
+                ['question_text' => 'Commentaires libres', 'type' => 'text', 'categorie' => 'Commentaires', 'ordre' => 5],
             ];
+
 
             foreach ($defaultQuestions as $q) {
                 $form->questions()->create($q);

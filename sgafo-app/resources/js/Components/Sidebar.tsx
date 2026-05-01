@@ -111,8 +111,20 @@ export default function Sidebar({ user }: SidebarProps) {
                                     Centre de Validation
                                 </Link>
                             )}
+                            {(isRF || isCDC) && (
+                                <Link
+                                    href={route('admin.analytics.index')}
+                                    className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('admin.analytics.index') ? activeClass : inactiveClass}`}
+                                >
+                                    <svg className="mr-3 h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                    Analyses Qualitatives
+                                </Link>
+                            )}
                             <Link
                                 href={route('modules.feedback.dashboard')}
+
                                 className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('modules.feedback.dashboard') ? activeClass : inactiveClass}`}
                             >
                                 <svg className="mr-3 h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -120,10 +132,6 @@ export default function Sidebar({ user }: SidebarProps) {
                                 </svg>
                                 Feedbacks & Avis
                             </Link>
-                            {/* <Link href="#" className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${inactiveClass}`}>
-                                <svg className="mr-3 h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                                Sessions
-                            </Link> */}
                         </div>
                     </div>
                 )}
@@ -197,7 +205,17 @@ export default function Sidebar({ user }: SidebarProps) {
                                 Pilotage Global
                             </Link>
                             <Link
+                                href={route('admin.analytics.index')}
+                                className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('admin.analytics.index') ? activeClass : inactiveClass}`}
+                            >
+                                <svg className="mr-3 h-5 w-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                Analyses & Qualité
+                            </Link>
+                            <Link
                                 href={route('admin.logistique.index')}
+
                                 className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('admin.logistique.*') ? activeClass : inactiveClass}`}
                             >
                                 <svg className="mr-3 h-5 w-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>

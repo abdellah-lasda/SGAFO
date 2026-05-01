@@ -4,6 +4,12 @@ import { PlanFormation, STATUT_CONFIG, PlanStatut } from '@/types/plan';
 import { PageProps } from '@/types';
 import { useState } from 'react';
 import ConfirmDialog from '@/Components/ConfirmDialog';
+import axios from 'axios';
+import { useEffect } from 'react';
+import FeedbackRadarChart from '@/Components/Analytics/FeedbackRadarChart';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { Star, Award, TrendingUp, Info } from 'lucide-react';
+
 
 interface Props extends PageProps {
     plan: PlanFormation;
@@ -25,6 +31,22 @@ export default function Show({ plan, isValidationContext }: Props) {
     const isADistance = plan.entite?.mode?.toLowerCase().includes('distance') || null ;
     const isHybride = plan.entite?.mode?.toLowerCase().includes('hybride') || null;
     const isPresentiel = plan.entite?.mode?.toLowerCase().includes('présentiel') || null ;
+    const [currentTab, setCurrentTab] = useState('infos');
+    const [analyticsData, setAnalyticsData] = useState<any>(null);
+    const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+
+    useEffect(() => {
+        if (currentTab === 'qualite' && !analyticsData) {
+            setLoadingAnalytics(true);
+            axios.get(route('modules.plans.analytics-data', plan.id))
+                .then(res => {
+                    setAnalyticsData(res.data);
+                    setLoadingAnalytics(false);
+                })
+                .catch(() => setLoadingAnalytics(false));
+        }
+    }, [currentTab, plan.id]);
+
 
     const handleValidate = () => {
         router.post(route('modules.plans.validate', plan.id));
@@ -139,6 +161,24 @@ export default function Show({ plan, isValidationContext }: Props) {
                     </div>
                 </div>
 
+                {/* Tabs Navigation */}
+                <div className="flex border-b border-slate-200">
+                    <button 
+                        onClick={() => setCurrentTab('infos')}
+                        className={`px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${currentTab === 'infos' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                    >
+                        Informations
+                    </button>
+                    <button 
+                        onClick={() => setCurrentTab('qualite')}
+                        className={`px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${currentTab === 'qualite' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                    >
+                        Analyse Qualité
+                    </button>
+                </div>
+
+                {currentTab === 'infos' ? (
+                    <>
                 {/* Cancellation/Rejection reason */}
                 {['rejeté', 'annulé'].includes(plan.statut) && plan.motif_rejet && (
                     <div className={`p-6 rounded-2xl border-2 flex items-start gap-4 ${plan.statut === 'rejeté' ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-200'}`}>
@@ -162,6 +202,7 @@ export default function Show({ plan, isValidationContext }: Props) {
                         </div>
                     </div>
                 )}
+
 
                 {/* Informations Générales */}
                 <div className="p-6 bg-white rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden">
@@ -475,6 +516,78 @@ export default function Show({ plan, isValidationContext }: Props) {
                         >
                             🤝 Confirmer le plan
                         </button>
+                    </div>
+                )}
+                    </>
+                ) : (
+                    <div className="space-y-8 animate-in fade-in duration-500">
+                        {loadingAnalytics ? (
+                            <div className="p-20 flex flex-col items-center justify-center space-y-4">
+                                <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Calcul des indicateurs...</p>
+                            </div>
+                        ) : analyticsData ? (
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* Radar Chart */}
+                                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
+                                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-6 flex items-center gap-2">
+                                            <Star className="w-4 h-4 text-amber-500" />
+                                            Satisfaction Participant
+                                        </h4>
+                                        <FeedbackRadarChart data={analyticsData.feedbackStats} />
+                                    </div>
+
+                                    {/* Bar Chart QCM */}
+                                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
+                                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-6 flex items-center gap-2">
+                                            <Award className="w-4 h-4 text-indigo-500" />
+                                            Performance QCM par Thème
+                                        </h4>
+                                        <div className="h-[300px] w-full">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart data={analyticsData.themePerformance}>
+                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                    <XAxis dataKey="theme" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} domain={[0, 100]} />
+                                                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                                                    <Bar dataKey="avg_score" radius={[4, 4, 0, 0]} barSize={30}>
+                                                        {analyticsData.themePerformance.map((entry: any, index: number) => (
+                                                            <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#6366f1' : '#8b5cf6'} />
+                                                        ))}
+                                                    </Bar>
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Summary Grid */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                    <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
+                                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Score Moyen</p>
+                                        <p className="text-3xl font-black text-emerald-700">
+                                            {Math.round(analyticsData.themePerformance.reduce((acc: any, curr: any) => acc + curr.avg_score, 0) / (analyticsData.themePerformance.length || 1))}%
+                                        </p>
+                                    </div>
+                                    <div className="p-6 bg-blue-50 rounded-3xl border border-blue-100">
+                                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Participation</p>
+                                        <p className="text-3xl font-black text-blue-700">100%</p>
+                                    </div>
+                                    <div className="p-6 bg-slate-900 rounded-3xl">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Avis Global</p>
+                                        <p className="text-3xl font-black text-white">4.5/5</p>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="p-20 text-center">
+                                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Info className="w-8 h-8 text-slate-400" />
+                                </div>
+                                <p className="text-sm font-bold text-slate-400">Aucune donnée analytique disponible pour le moment.</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

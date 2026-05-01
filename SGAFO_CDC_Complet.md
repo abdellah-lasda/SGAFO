@@ -168,7 +168,7 @@ Le système SGAFO utilise un contrôle d'accès basé sur les rôles à **deux n
 **Responsabilités :**
 - Peut créer ses propres entités et plans de formation
 - **Confirme directement** ses propres plans (sans validation externe)
-- **Valide ou rejette** (avec motif obligatoire) les plans soumis par les CDC
+- **Valide ou rejette** (avec motif obligatoire) les plans soumis par les CDC **relevant de ses secteurs d'attribution** (expertise sectorielle)
 - **Planifie les sessions** : dates, sites, capacité, animateurs, participants
 - **Upload les PDFs** de convocation après confirmation du plan
   - Document 1 : liste des participants (nom, prénom, ID, établissement, région, secteur, domaine)
@@ -1168,9 +1168,9 @@ Ce système permettra à l'OFPPT de passer d'une gestion fragmentée et manuelle
 | Espace Participant | ✅ Complet | Dashboard + Mes Formations (statuts `validé`+`terminée`, route `participant.*`) |
 | Export PDF du plan | ✅ Complet | Route `modules.plans.export-pdf` |
 | Notifications in-app | ✅ Complet | Laravel Notifications (canal : database) |
-| QCM par session | 🔄 Partiel | Structure BDD complète, interface passage QCM implémentée |
-| Présences / Absences | 🔄 Partiel | Modèle `Seance` en place, interface animateur en cours |
-| Feedback post-session | 📋 Planifié | Modèle prévu, non encore implémenté |
+| QCM par session | ✅ Complet | Structure BDD, Création par animateur, Passage par participant |
+| Présences / Absences | ✅ Complet | Saisie animateur, Verrouillage, Notifications absences, Exports PDF |
+| Feedback post-session | ✅ Complet | Formulaire dynamique, Soumission participant, Notifications |
 
 ### 17.2 Validations Métier Implémentées
 

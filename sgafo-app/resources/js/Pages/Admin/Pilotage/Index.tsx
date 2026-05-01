@@ -46,6 +46,8 @@ export default function Index({ stats, currentTab, recent_plans, entites, plans,
         { id: 'qcms', label: 'QCMs', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
     ];
 
+
+
     return (
         <AuthenticatedLayout header={<span className="font-bold text-slate-900 uppercase tracking-tight">Pilotage Global</span>}>
             <Head title="Pilotage Global" />
@@ -67,7 +69,8 @@ export default function Index({ stats, currentTab, recent_plans, entites, plans,
                         {tabs.map(tab => (
                             <Link
                                 key={tab.id}
-                                href={route('admin.pilotage.index', { tab: tab.id })}
+                                href={tab.id === 'analyse' ? route('admin.analytics.index') : route('admin.pilotage.index', { tab: tab.id })}
+
                                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all uppercase tracking-widest ${currentTab === tab.id
                                         ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20'
                                         : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'

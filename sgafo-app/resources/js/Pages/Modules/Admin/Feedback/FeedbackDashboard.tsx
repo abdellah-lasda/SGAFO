@@ -1,8 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import FeedbackRadarChart from '@/Components/Analytics/FeedbackRadarChart';
 
-export default function FeedbackDashboard({ submissions, plans, filters, stats }: any) {
+
+export default function FeedbackDashboard({ submissions, plans, filters, stats, feedbackStats }: any) {
+
     const [selectedPlan, setSelectedPlan] = useState(filters.plan_id || '');
 
     const handleFilter = (planId: string) => {
@@ -49,6 +52,31 @@ export default function FeedbackDashboard({ submissions, plans, filters, stats }
                         <h4 className="text-4xl font-black text-purple-600 tabular-nums relative">{stats.published_count}</h4>
                     </div>
                 </div>
+
+                {/* Qualitative Chart */}
+                <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Profil de Satisfaction</h3>
+                            <p className="text-sm text-slate-400 font-medium leading-relaxed mb-8">
+                                Cette visualisation agrège l'ensemble des réponses aux questionnaires d'évaluation. 
+                                Elle permet d'identifier rapidement les points forts et les axes d'amélioration pédagogique.
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {feedbackStats.map((stat: any, i: number) => (
+                                    <div key={i} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.categorie}</span>
+                                        <span className="text-lg font-black text-slate-900">{parseFloat(stat.average).toFixed(1)}/5</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="bg-slate-50/50 rounded-[2rem] p-4">
+                            <FeedbackRadarChart data={feedbackStats} />
+                        </div>
+                    </div>
+                </div>
+
 
                 {/* Filters & Content */}
                 <div className="bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden">

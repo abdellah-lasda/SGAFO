@@ -16,6 +16,8 @@ use App\Http\Controllers\Admin\PilotageController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\InstitutController;
 use App\Http\Controllers\Admin\LogistiqueController as AdminLogistiqueController;
+use App\Http\Controllers\Admin\AnalyticsController;
+
 use App\Models\User;
 use App\Models\PlanFormation;
 use App\Models\Secteur;
@@ -113,7 +115,11 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->name('admin.')->grou
     Route::post('logistique/hotels', [AdminLogistiqueController::class, 'storeHotel'])->name('logistique.hotels.store');
     Route::patch('logistique/hotels/{hotel}', [AdminLogistiqueController::class, 'updateHotel'])->name('logistique.hotels.update');
     Route::delete('logistique/hotels/{hotel}', [AdminLogistiqueController::class, 'destroyHotel'])->name('logistique.hotels.destroy');
+
+    // Analyse & Analytics
+    Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 });
+
 
 // Catalogue National
 Route::middleware(['auth'])->group(function () {
@@ -160,7 +166,11 @@ Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')-
     Route::post('feedback/quick-store/{seance}', [FeedbackAdminController::class, 'quickStore'])->name('feedback.quick-store');
     Route::get('feedback/results/{seance}', [FeedbackAdminController::class, 'results'])->name('feedback.results');
     Route::patch('feedback/submissions/{submission}/publish', [FeedbackAdminController::class, 'togglePublish'])->name('feedback.submissions.toggle-publish');
+
+    // Plan Analytics API
+    Route::get('plans/{plan}/analytics-data', [AnalyticsController::class, 'planAnalytics'])->name('plans.analytics-data');
 });
+
 
 // Espace Animateur
 Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('modules.animateur.')->group(function () {
