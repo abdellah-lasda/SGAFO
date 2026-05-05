@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\InstitutController;
 use App\Http\Controllers\Admin\LogistiqueController as AdminLogistiqueController;
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\AbsenceDashboardController;
 
 use App\Models\User;
 use App\Models\PlanFormation;
@@ -115,8 +116,10 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->name('admin.')->grou
     Route::post('logistique/hotels', [AdminLogistiqueController::class, 'storeHotel'])->name('logistique.hotels.store');
     Route::patch('logistique/hotels/{hotel}', [AdminLogistiqueController::class, 'updateHotel'])->name('logistique.hotels.update');
     Route::delete('logistique/hotels/{hotel}', [AdminLogistiqueController::class, 'destroyHotel'])->name('logistique.hotels.destroy');
+});
 
-    // Analyse & Analytics
+// Analyse & Analytics (Accessibles aux Admins, RF et CDC)
+Route::middleware(['auth', 'role:ADMIN,RF,CDC'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 });
 
@@ -134,6 +137,11 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')->group(function () {
     Route::resource('entites', EntiteFormationController::class);
     Route::get('entites/{entite}/export-pdf', [EntiteFormationController::class, 'exportPdf'])->name('entites.export-pdf');
+});
+
+Route::middleware(['auth', 'role:RF,CDC,ADMIN'])->prefix('modules')->name('modules.')->group(function () {
+    // Tableau de bord des absences
+    Route::get('absences', [AbsenceDashboardController::class, 'index'])->name('absences.dashboard');
 });
 
 Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')->group(function () {
@@ -216,6 +224,11 @@ Route::middleware(['auth', 'role:DR', 'readonly.dr'])->prefix('dr')->name('dr.')
     Route::get('/dashboard', [App\Http\Controllers\Modules\Dr\DrDashboardController::class, 'index'])->name('dashboard');
     Route::get('/plans', [App\Http\Controllers\Modules\Dr\DrDashboardController::class, 'plans'])->name('plans.index');
     Route::get('/plans/{plan}', [\App\Http\Controllers\CatalogueController::class, 'show'])->name('plans.show');
+    
+    // Documents et Reporting
+    Route::get('/documents', [App\Http\Controllers\Modules\Dr\DrDocumentController::class, 'index'])->name('documents.index');
+    Route::get('/documents/export-regional', [App\Http\Controllers\Modules\Dr\DrDocumentController::class, 'exportRegionalPlan'])->name('documents.export-regional');
+    Route::get('/documents/{plan}/convocation', [App\Http\Controllers\Modules\Dr\DrDocumentController::class, 'downloadConvocation'])->name('documents.convocation');
 });
 
 require __DIR__.'/auth.php';

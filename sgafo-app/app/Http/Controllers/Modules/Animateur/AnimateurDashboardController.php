@@ -4,12 +4,18 @@ namespace App\Http\Controllers\Modules\Animateur;
 
 use App\Http\Controllers\Controller;
 use App\Models\PlanFormation;
+use App\Models\Presence;
 use App\Models\Seance;
+use App\Models\User;
+use App\Notifications\AbsenceSeuilAtteint;
 use App\Notifications\FeedbackRequiredNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
+
+/** Nombre d'absences NJ dans un plan déclenchant l'alerte RF/CDC */
+const ABSENCE_SEUIL = 2;
 
 class AnimateurDashboardController extends Controller
 {
@@ -176,19 +182,35 @@ class AnimateurDashboardController extends Controller
                 ]
             );
 
-            // Gérer les notifications pour les absences non justifiées
+            // ── Notifications pour les absences non justifiées ──────────────
             if ($presence->statut === 'absent' && !$presence->est_justifie) {
-                $participant = \App\Models\User::find($pData['participant_id']);
-                $notification = new \App\Notifications\ParticipantAbsent($seance, $participant, $user);
-                
-                // Notifier le créateur du plan (CDC)
+                $participant = User::find($pData['participant_id']);
+
+                // 1) Notification simple d'absence (existante)
+                $absenceNotif = new \App\Notifications\ParticipantAbsent($seance, $participant, $user);
                 if ($seance->plan->createur) {
-                    $seance->plan->createur->notify($notification);
+                    $seance->plan->createur->notify($absenceNotif);
                 }
-                
-                // Notifier le validateur du plan (RF)
                 if ($seance->plan->validateur) {
-                    $seance->plan->validateur->notify($notification);
+                    $seance->plan->validateur->notify($absenceNotif);
+                }
+
+                // 2) Alerte seuil : déclencher EXACTEMENT quand le seuil est atteint
+                $nbAbsencesNJ = Presence::whereHas('seance', fn($q) => $q->where('plan_id', $seance->plan_id))
+                    ->where('participant_id', $pData['participant_id'])
+                    ->where('statut', 'absent')
+                    ->where('est_justifie', false)
+                    ->count();
+
+                if ($nbAbsencesNJ === ABSENCE_SEUIL) {
+                    $seancePlan = $seance->plan->load(['createur', 'validateur']);
+                    $seuilNotif = new AbsenceSeuilAtteint($seancePlan, $participant, $nbAbsencesNJ);
+                    if ($seancePlan->createur) {
+                        $seancePlan->createur->notify($seuilNotif);
+                    }
+                    if ($seancePlan->validateur) {
+                        $seancePlan->validateur->notify($seuilNotif);
+                    }
                 }
             }
         }

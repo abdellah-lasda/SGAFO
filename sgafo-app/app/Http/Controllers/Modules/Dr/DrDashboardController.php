@@ -39,11 +39,28 @@ class DrDashboardController extends Controller
             ->groupBy('statut')
             ->get();
 
+        // [NOUVEAU] Comparatif par Institut (Point 3)
+        // On récupère les instituts de la région
+        $institutsStats = \App\Models\Institut::whereIn('region_id', $regions->pluck('id'))
+            ->withCount(['formateurs', 'users'])
+            ->get()
+            ->map(function($inst) {
+                return [
+                    'nom' => $inst->nom,
+                    'formateurs_count' => $inst->formateurs_count,
+                    // On simule un taux de complétion pour la démo
+                    'plans_count' => PlanFormation::whereHas('siteFormation', function($q) use ($inst) {
+                        $q->where('ville', $inst->ville);
+                    })->count()
+                ];
+            });
+
         return Inertia::render('Modules/Dr/Dashboard', [
             'regionNames' => $regionNames,
             'stats' => $stats,
             'recentSeances' => $recentSeances,
             'plansByStatus' => $plansByStatus,
+            'institutsStats' => $institutsStats,
         ]);
     }
 

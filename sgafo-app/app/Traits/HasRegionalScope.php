@@ -55,16 +55,29 @@ trait HasRegionalScope
                 if (\Schema::hasColumn($table, 'region_id')) {
                     $builder->whereIn($table . '.region_id', $regionIds);
                 } elseif ($table === 'plans_formation') {
-                    $builder->whereHas('siteFormation', function ($query) use ($regionIds) {
-                        $query->whereIn('region_id', $regionIds);
+                    // Logique "Humaine et Géographique" (Point crucial demandé)
+                    $builder->where(function ($q) use ($regionIds) {
+                        // 1. Le lieu de formation est dans la région
+                        $q->whereHas('siteFormation', function ($sq) use ($regionIds) {
+                            $sq->whereIn('region_id', $regionIds);
+                        })
+                        // 2. OU au moins un participant est de la région
+                        ->orWhereHas('participants.instituts', function ($sq) use ($regionIds) {
+                            $sq->whereIn('region_id', $regionIds);
+                        })
+                        // 3. OU au moins un animateur (formateur) est de la région
+                        ->orWhereHas('seances.seanceThemes.formateur.instituts', function ($sq) use ($regionIds) {
+                            $sq->whereIn('region_id', $regionIds);
+                        });
                     });
                 } elseif ($table === 'seances') {
-                    $builder->whereHas('plan.siteFormation', function ($query) use ($regionIds) {
-                        $query->whereIn('region_id', $regionIds);
+                    $builder->whereHas('plan', function ($q) use ($regionIds) {
+                         // On réutilise la logique du plan pour les séances
+                         $q->whereHas('siteFormation', function($sq) use ($regionIds) { $sq->whereIn('region_id', $regionIds); });
                     });
                 } elseif ($table === 'feedback_submissions') {
-                    $builder->whereHas('plan.siteFormation', function ($query) use ($regionIds) {
-                        $query->whereIn('region_id', $regionIds);
+                    $builder->whereHas('plan', function ($q) use ($regionIds) {
+                        $q->whereHas('siteFormation', function($sq) use ($regionIds) { $sq->whereIn('region_id', $regionIds); });
                     });
                 }
             } finally {

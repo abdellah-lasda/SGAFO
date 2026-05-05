@@ -12,9 +12,10 @@ interface DashboardProps extends PageProps {
     };
     recentSeances: any[];
     plansByStatus: any[];
+    institutsStats: any[];
 }
 
-export default function Dashboard({ auth, regionNames, stats, recentSeances, plansByStatus }: DashboardProps) {
+export default function Dashboard({ auth, regionNames, stats, recentSeances, plansByStatus, institutsStats }: DashboardProps) {
     return (
         <AuthenticatedLayout
             header={<h2 className="font-black text-2xl text-slate-800 leading-tight">Tableau de Bord Régional — {regionNames}</h2>}
@@ -76,23 +77,54 @@ export default function Dashboard({ auth, regionNames, stats, recentSeances, pla
                         </div>
 
                         {/* Répartition par Statut */}
-                        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-                            <h3 className="text-lg font-black text-slate-800 tracking-tight mb-6">État des plans régionaux</h3>
-                            <div className="space-y-4">
-                                {plansByStatus.map((item) => (
-                                    <div key={item.statut} className="space-y-2">
-                                        <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider">
-                                            <span className="text-slate-500">{item.statut}</span>
-                                            <span className="text-slate-800">{item.total}</span>
+                        <div className="space-y-8">
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
+                                <h3 className="text-lg font-black text-slate-800 tracking-tight mb-6">État des plans régionaux</h3>
+                                <div className="space-y-4">
+                                    {plansByStatus.map((item) => (
+                                        <div key={item.statut} className="space-y-2">
+                                            <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider">
+                                                <span className="text-slate-500">{item.statut}</span>
+                                                <span className="text-slate-800">{item.total}</span>
+                                            </div>
+                                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                <div 
+                                                    className={`h-full rounded-full ${getStatusColor(item.statut)}`}
+                                                    style={{ width: `${(item.total / stats.total_plans) * 100}%` }}
+                                                ></div>
+                                            </div>
                                         </div>
-                                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                                            <div 
-                                                className={`h-full rounded-full ${getStatusColor(item.statut)}`}
-                                                style={{ width: `${(item.total / stats.total_plans) * 100}%` }}
-                                            ></div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* [NOUVEAU] Comparatif Instituts (Point 3) */}
+                            <div className="bg-[#0f172a] rounded-3xl shadow-xl p-6 text-white">
+                                <h3 className="text-lg font-black tracking-tight mb-6 flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                                    Activité par Institut
+                                </h3>
+                                <div className="space-y-6">
+                                    {institutsStats?.map((inst: any) => (
+                                        <div key={inst.nom} className="space-y-3">
+                                            <div className="flex justify-between items-end">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 truncate max-w-[150px]">{inst.nom}</span>
+                                                <span className="text-xs font-bold text-blue-400">{inst.formateurs_count} Animateurs</span>
+                                            </div>
+                                            <div className="relative h-4 bg-slate-800 rounded-lg overflow-hidden">
+                                                <div 
+                                                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-600 to-indigo-500 rounded-lg transition-all duration-1000"
+                                                    style={{ width: `${Math.min(100, (inst.formateurs_count / (stats.total_formateurs || 1)) * 100)}%` }}
+                                                ></div>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
+                                <div className="mt-8 pt-6 border-t border-slate-800">
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
+                                        Cette vue compare la force d'animation disponible par établissement au sein de votre juridiction régionale.
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
