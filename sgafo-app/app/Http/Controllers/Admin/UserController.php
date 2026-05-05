@@ -44,8 +44,12 @@ class UserController extends Controller
                 $q->where('is_externe', $isExterne === '1' || $isExterne === 'true');
             })
             ->when($regionId, function($q) use ($regionId) {
-                $q->whereHas('regions', function($rq) use ($regionId) {
-                    $rq->where('regions.id', $regionId);
+                $q->where(function($subQ) use ($regionId) {
+                    $subQ->whereHas('regions', function($rq) use ($regionId) {
+                        $rq->where('regions.id', $regionId);
+                    })->orWhereHas('instituts', function($iq) use ($regionId) {
+                        $iq->where('region_id', $regionId);
+                    });
                 });
             })
             ->when($secteurId, function($q) use ($secteurId) {

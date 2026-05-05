@@ -41,10 +41,7 @@ export default function Step5Logistics({
     lienVisio,
     setLienVisio
 }: Props) {
-    console.log('Step 5 - Hebergements:', hebergements);
-    console.log('Step 5 - Hotels:', hotels);
-    console.log('Step 5 - Sites:', sites);
-
+    console.log({animateurIds, participantIds, formateurs})   ;
     const isADistance = mode?.toLowerCase().includes('distance');
     const isHybride = mode?.toLowerCase().includes('hybride');
 
@@ -562,6 +559,7 @@ export default function Step5Logistics({
                                                 )}
                                             </th>
                                             <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase">Nom & Prénom</th>
+                                            <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase">Etablissement</th>
                                             <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase">Rôle</th>
                                             <th className="px-4 py-3 text-center text-[10px] font-black text-slate-400 uppercase">Statut</th>
                                         </tr>
@@ -580,6 +578,7 @@ export default function Step5Logistics({
                                                         </div>
                                                     </td>
                                                     <td className="px-4 py-3 font-bold text-slate-800">{p.user.prenom} {p.user.nom}</td>
+                                                    <td className="px-4 py-3 text-xs font-black text-slate-500 uppercase tracking-wider">{p.user.instituts && p.user.instituts.length > 0 ? p.user.instituts[0].nom : '-'}</td>
                                                     <td className="px-4 py-3 text-xs font-black text-slate-500 uppercase tracking-wider">{p.role}</td>
                                                     <td className="px-4 py-3 text-center">
                                                         {isAlreadyAssigned && (

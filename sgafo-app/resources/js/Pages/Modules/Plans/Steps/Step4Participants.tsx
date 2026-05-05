@@ -21,6 +21,7 @@ export default function Step4Participants({ formateurs, participantIds, setParti
     const [filterSecteur, setFilterSecteur] = useState('');
     const [filterEtablissement, setFilterEtablissement] = useState('');
     const [filterOrigine, setFilterOrigine] = useState('');
+    const [filterRegion, setFilterRegion] = useState('');
 
     // Available formateurs (excluding animators already assigned in step 3)
     const available = useMemo(() => {
@@ -37,6 +38,11 @@ export default function Step4Participants({ formateurs, participantIds, setParti
         return [...new Map(all.map((i: any) => [i.id, i])).values()];
     }, [available]);
 
+    const regionsList = useMemo(() => {
+        const all = available.flatMap((f: any) => f.instituts?.flatMap((i: any) => i.region ? [i.region] : []) || []);
+        return [...new Map(all.map((r: any) => [r.id, r])).values()];
+    }, [available]);
+
     const filtered = useMemo(() => {
         return available.filter(f => {
             if (search) {
@@ -51,13 +57,17 @@ export default function Step4Participants({ formateurs, participantIds, setParti
                 const sIds = (f.secteurs || []).map((s: any) => s.id.toString());
                 if (!sIds.includes(filterSecteur)) return false;
             }
+            if (filterRegion) {
+                const rIds = (f.instituts || []).map((i: any) => i.region?.id?.toString());
+                if (!rIds.includes(filterRegion)) return false;
+            }
             if (filterEtablissement) {
                 const iIds = (f.instituts || []).map((i: any) => i.id.toString());
                 if (!iIds.includes(filterEtablissement)) return false;
             }
             return true;
         });
-    }, [available, search, filterSecteur, filterEtablissement, filterOrigine]);
+    }, [available, search, filterSecteur, filterEtablissement, filterOrigine, filterRegion]);
 
     // Check Availability
     useMemo(() => {
@@ -220,7 +230,7 @@ export default function Step4Participants({ formateurs, participantIds, setParti
                 </h3>
 
                 {/* Filtres */}
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 grid grid-cols-1 md:grid-cols-5 gap-3">
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 grid grid-cols-1 md:grid-cols-6 gap-3">
                     <div className="md:col-span-1">
                         <input
                             type="text"
@@ -232,12 +242,22 @@ export default function Step4Participants({ formateurs, participantIds, setParti
                     </div>
                     <div>
                         <select
+                            value={filterRegion}
+                            onChange={(e) => setFilterRegion(e.target.value)}
+                            className="w-full text-xs font-medium border border-slate-200 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            <option value="">Toutes les Régions</option>
+                            {regionsList.map((r: any) => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <select
                             value={filterSecteur}
                             onChange={(e) => setFilterSecteur(e.target.value)}
                             className="w-full text-xs font-medium border border-slate-200 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                         >
                             <option value="">Tous les Secteurs</option>
-                            {secteursList.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
+                            {secteursList.map((s: any) => <option key={s.id} value={s.id}>{s.nom}</option>)}
                         </select>
                     </div>
                     <div>
@@ -247,7 +267,7 @@ export default function Step4Participants({ formateurs, participantIds, setParti
                             className="w-full text-xs font-medium border border-slate-200 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                         >
                             <option value="">Tous les Établissements</option>
-                            {institutsList.map(i => <option key={i.id} value={i.id}>{i.nom}</option>)}
+                            {institutsList.map((i: any) => <option key={i.id} value={i.id}>{i.nom}</option>)}
                         </select>
                     </div>
                     <div>

@@ -275,16 +275,44 @@ export default function UserModal({ isOpen, onClose, user, roles, regions, insti
                                         </div>
                                         
                                         <div className="space-y-4">
-                                            <select 
-                                                className={`block w-full rounded-md border-gray-300 focus:ring-${isRF ? 'blue' : 'orange'}-500 focus:border-${isRF ? 'blue' : 'orange'}-500`}
-                                                value={data.secteurs[0] ? String(data.secteurs[0]) : ''}
-                                                onChange={e => setData('secteurs', [parseInt(e.target.value)])}
-                                            >
-                                                <option value="">Sélectionnez le Métier / Secteur</option>
-                                                {secteurs.map((s: any) => (
-                                                    <option key={s.id} value={s.id}>{s.nom}</option>
-                                                ))}
-                                            </select>
+                                            <div className="space-y-2">
+                                                {/* Badges des secteurs sélectionnés */}
+                                                <div className="flex flex-wrap gap-2">
+                                                    {data.secteurs.map((secteurId: number) => {
+                                                        const secteur = secteurs.find((s: any) => s.id === secteurId);
+                                                        if (!secteur) return null;
+                                                        return (
+                                                            <span key={secteurId} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${isRF ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
+                                                                {secteur.nom}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setData('secteurs', data.secteurs.filter((id: number) => id !== secteurId))}
+                                                                    className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${isRF ? 'hover:bg-blue-200 text-blue-500 hover:text-blue-800' : 'hover:bg-orange-200 text-orange-500 hover:text-orange-800'}`}
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                            </span>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                {/* Select pour ajouter un secteur */}
+                                                <select 
+                                                    className={`block w-full rounded-md border-gray-300 focus:ring-${isRF ? 'blue' : 'orange'}-500 focus:border-${isRF ? 'blue' : 'orange'}-500`}
+                                                    value=""
+                                                    onChange={e => {
+                                                        const val = parseInt(e.target.value);
+                                                        if (val && !data.secteurs.includes(val)) {
+                                                            setData('secteurs', [...data.secteurs, val]);
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="">+ Ajouter un Secteur...</option>
+                                                    {secteurs.filter((s: any) => !data.secteurs.includes(s.id)).map((s: any) => (
+                                                        <option key={s.id} value={s.id}>{s.nom}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
 
                                             {isFormateur && (
                                                 <>
