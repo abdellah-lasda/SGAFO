@@ -200,6 +200,43 @@
         </table>
     </div>
 
+    @if($plan->seances && $plan->seances->count() > 0)
+    <div class="section">
+        <div class="section-title">Planning des Séances</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th style="width: 80px; text-align: center;">Horaires</th>
+                    <th>Thèmes abordés & Animateurs</th>
+                    <th>Lieu</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($plan->seances as $seance)
+                <tr>
+                    <td class="font-bold">{{ date('d/m/Y', strtotime($seance->date)) }}</td>
+                    <td class="text-center">{{ substr($seance->debut, 0, 5) }} - {{ substr($seance->fin, 0, 5) }}</td>
+                    <td>
+                        @foreach($seance->seanceThemes as $seanceTheme)
+                            <div style="margin-bottom: 4px;">
+                                <strong>{{ $seanceTheme->theme ? $seanceTheme->theme->nom : 'Thème inconnu' }}</strong>
+                                @if($seanceTheme->formateur)
+                                    <div style="font-size: 8px; color: #64748b;">Par: {{ $seanceTheme->formateur->prenom }} {{ $seanceTheme->formateur->nom }}</div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </td>
+                    <td>
+                        {{ $seance->site ? $seance->site->nom : ($plan->plateforme ? 'Virtuel ('.$plan->plateforme.')' : '-') }}
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    @endif
+
     @php
         $hebParticipants = $plan->hebergements->filter(function($h) use ($plan) {
             return $plan->participants->contains('id', $h->user_id);

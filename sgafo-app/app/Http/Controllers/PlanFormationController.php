@@ -625,6 +625,9 @@ class PlanFormationController extends Controller
             'siteFormation',
             'createur',
             'validateur',
+            'seances.site',
+            'seances.seanceThemes.theme',
+            'seances.seanceThemes.formateur'
         ]);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.plan_formation', compact('plan'));
