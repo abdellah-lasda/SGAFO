@@ -61,7 +61,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
             nom: t.nom,
             heures_planifiees: 0,
             reste: t.reste,
-            formateur_id: '',
+            formateur_id: t.animateurs?.length === 1 ? String(t.animateurs[0].id) : '',
             animateurs: t.animateurs || [],
             checked: false
         })),
@@ -714,7 +714,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                 onChange={e => setData('site_id', e.target.value)}
                                             >
                                                 <option value="">-- Sans site physique --</option>
-                                                {sites.map(s => (
+                                                {sites.filter(s => !plan.site_formation_id || s.id === plan.site_formation_id).map(s => (
                                                     <option key={s.id} value={s.id}>{s.nom} ({s.ville})</option>
                                                 ))}
                                             </select>
@@ -752,10 +752,10 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                     if (isNowChecked) {
                                                         const otherChecked = newThemes.filter((t, i) => i !== index && t.checked);
                                                         if (otherChecked.length === 0) {
-                                                            newThemes[index].heures_planifiees = sessionDuration;
+                                                            newThemes[index].heures_planifiees = Math.min(newThemes[index].reste, sessionDuration);
                                                         } else {
                                                             const alreadyAllocated = otherChecked.reduce((s, t) => s + t.heures_planifiees, 0);
-                                                            newThemes[index].heures_planifiees = Math.max(0, sessionDuration - alreadyAllocated);
+                                                            newThemes[index].heures_planifiees = Math.max(0, Math.min(newThemes[index].reste, sessionDuration - alreadyAllocated));
                                                         }
                                                     } else {
                                                         newThemes[index].heures_planifiees = 0;
@@ -806,20 +806,9 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                                         required
                                                                     >
                                                                         <option value="">Affecter un animateur...</option>
-                                                                        {/* Priorité aux animateurs déjà liés au thème */}
-                                                                        {theme.animateurs?.length > 0 ? (
-                                                                            <optgroup label="Animateurs du thème">
-                                                                                {theme.animateurs.map((f: any) => (
-                                                                                    <option key={f.id} value={f.id}>{f.nom} {f.prenom}</option>
-                                                                                ))}
-                                                                            </optgroup>
-                                                                        ) : (
-                                                                            <optgroup label="Tous les formateurs">
-                                                                                {formateurs.map((f: any) => (
-                                                                                    <option key={f.id} value={f.id}>{f.nom} {f.prenom}</option>
-                                                                                ))}
-                                                                            </optgroup>
-                                                                        )}
+                                                                        {theme.animateurs.map((f: any) => (
+                                                                            <option key={f.id} value={f.id}>{f.nom} {f.prenom}</option>
+                                                                        ))}                                                                       
                                                                     </select>
                                                                 </div>
                                                             </div>
