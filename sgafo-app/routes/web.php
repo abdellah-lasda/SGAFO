@@ -211,4 +211,11 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('participant')->name('part
     Route::post('/feedback/{seance}/submit', [App\Http\Controllers\Modules\Participant\FeedbackParticipantController::class, 'submit'])->name('feedback.submit');
 });
 
+// Espace Direction Régionale (Observateur)
+Route::middleware(['auth', 'role:DR', 'readonly.dr'])->prefix('dr')->name('dr.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Modules\Dr\DrDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/plans', [App\Http\Controllers\Modules\Dr\DrDashboardController::class, 'plans'])->name('plans.index');
+    Route::get('/plans/{plan}', [\App\Http\Controllers\CatalogueController::class, 'show'])->name('plans.show');
+});
+
 require __DIR__.'/auth.php';

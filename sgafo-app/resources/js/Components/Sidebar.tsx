@@ -188,7 +188,32 @@ export default function Sidebar({ user }: SidebarProps) {
                     </div>
                 </div>)}
 
-                
+                {/* Espace Direction Régionale */}
+                {isDR && (
+                    <div>
+                        <h3 className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Direction Régionale</h3>
+                        <div className="space-y-1.5">
+                            <Link
+                                href={route('dr.dashboard')}
+                                className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('dr.dashboard') ? activeClass : inactiveClass}`}
+                            >
+                                <svg className="mr-3 h-5 w-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                Tableau de bord régional
+                            </Link>
+                            <Link
+                                href={route('dr.plans.index')}
+                                className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('dr.plans.*') ? activeClass : inactiveClass}`}
+                            >
+                                <svg className="mr-3 h-5 w-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                                </svg>
+                                Plans de la région
+                            </Link>
+                        </div>
+                    </div>
+                )}
 
                 {/* Administration */}
                 {isAdmin && (

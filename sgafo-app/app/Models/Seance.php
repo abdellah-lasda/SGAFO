@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Seance extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HasRegionalScope;
 
     protected $fillable = [
         'plan_id',

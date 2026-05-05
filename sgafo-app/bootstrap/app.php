@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role.admin' => \App\Http\Middleware\IsAdmin::class,
             'role' => \App\Http\Middleware\CheckRole::class,
+            'readonly.dr' => \App\Http\Middleware\CheckReadOnlyDR::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

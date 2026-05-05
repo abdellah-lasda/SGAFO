@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class FeedbackSubmission extends Model
 {
+    use \App\Traits\HasRegionalScope;
+
     protected $fillable = [
         'feedback_form_id',
         'participant_id',

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PlanFormation extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HasRegionalScope;
 
     protected $table = 'plans_formation';
 

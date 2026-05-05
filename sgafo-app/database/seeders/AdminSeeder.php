@@ -125,5 +125,25 @@ class AdminSeeder extends Seeder
                 }
             }
         }
+
+        // 5. Responsables DR
+        $drRole = \App\Models\Role::where('code', 'DR')->first();
+        if ($drRole) {
+            $dr1 = \App\Models\User::firstOrCreate(
+                ['email' => 'dr.casa@ofppt.ma'],
+                ['nom' => 'Mansouri', 'prenom' => 'Ahmed', 'password' => bcrypt('password123'), 'statut' => 'actif']
+            );
+            $dr1->roles()->syncWithoutDetaching([$drRole->id]);
+            $regionCS = \App\Models\Region::where('code', 'CS')->first();
+            if ($regionCS) $dr1->regions()->syncWithoutDetaching([$regionCS->id]);
+
+            $dr2 = \App\Models\User::firstOrCreate(
+                ['email' => 'dr.rabat@ofppt.ma'],
+                ['nom' => 'Tazi', 'prenom' => 'Laila', 'password' => bcrypt('password123'), 'statut' => 'actif']
+            );
+            $dr2->roles()->syncWithoutDetaching([$drRole->id]);
+            $regionRK = \App\Models\Region::where('code', 'RK')->first();
+            if ($regionRK) $dr2->regions()->syncWithoutDetaching([$regionRK->id]);
+        }
     }
 }
