@@ -21,6 +21,10 @@ class UserController extends Controller
     {
         $search = $request->input('search');
         $role = $request->input('role');
+        $isExterne = $request->input('is_externe');
+        $regionId = $request->input('region_id');
+        $secteurId = $request->input('secteur_id');
+        $institutId = $request->input('institut_id');
 
         // Récupération paginée avec filtrage
         $users = User::with('roles', 'regions', 'instituts', 'secteurs', 'cdcs')
@@ -34,6 +38,24 @@ class UserController extends Controller
             ->when($role, function($q) use ($role) {
                 $q->whereHas('roles', function($rq) use ($role) {
                     $rq->where('code', $role);
+                });
+            })
+            ->when($isExterne !== null, function($q) use ($isExterne) {
+                $q->where('is_externe', $isExterne === '1' || $isExterne === 'true');
+            })
+            ->when($regionId, function($q) use ($regionId) {
+                $q->whereHas('regions', function($rq) use ($regionId) {
+                    $rq->where('regions.id', $regionId);
+                });
+            })
+            ->when($secteurId, function($q) use ($secteurId) {
+                $q->whereHas('secteurs', function($sq) use ($secteurId) {
+                    $sq->where('secteurs.id', $secteurId);
+                });
+            })
+            ->when($institutId, function($q) use ($institutId) {
+                $q->whereHas('instituts', function($iq) use ($institutId) {
+                    $iq->where('instituts.id', $institutId);
                 });
             })
             ->latest()
@@ -63,7 +85,7 @@ class UserController extends Controller
             'secteurs' => $secteurs,
             'cdcs' => $cdcs,
             'roleCounts' => $roleCounts,
-            'filters' => $request->only(['search', 'role']),
+            'filters' => $request->only(['search', 'role', 'is_externe', 'region_id', 'secteur_id', 'institut_id']),
         ]);
     }
 

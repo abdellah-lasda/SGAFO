@@ -18,7 +18,7 @@ interface Props {
     secteurs: any[];
     cdcs: any[];
     roleCounts: Record<string, number>;
-    filters: { search?: string; role?: string };
+    filters: { search?: string; role?: string; is_externe?: string; region_id?: string; secteur_id?: string; institut_id?: string; };
 }
 
 export default function Index({ users, roles, regions, instituts, secteurs, cdcs, roleCounts, filters }: Props) {
@@ -124,6 +124,46 @@ export default function Index({ users, roles, regions, instituts, secteurs, cdcs
                             )}
                         </button>
                     ))}
+                </div>
+
+                {/* Advanced Filters */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 px-1">
+                    <select 
+                        value={filters.is_externe || ''} 
+                        onChange={(e) => router.get(route('admin.users.index'), { ...filters, is_externe: e.target.value }, { preserveState: true })}
+                        className="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl px-3 py-2.5 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm cursor-pointer"
+                    >
+                        <option value="">Tous (Interne/Externe)</option>
+                        <option value="0">Interne (OFPPT)</option>
+                        <option value="1">Externe</option>
+                    </select>
+
+                    <select 
+                        value={filters.region_id || ''} 
+                        onChange={(e) => router.get(route('admin.users.index'), { ...filters, region_id: e.target.value }, { preserveState: true })}
+                        className="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl px-3 py-2.5 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm cursor-pointer"
+                    >
+                        <option value="">Toutes les régions</option>
+                        {regions.map((r: any) => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                    </select>
+
+                    <select 
+                        value={filters.secteur_id || ''} 
+                        onChange={(e) => router.get(route('admin.users.index'), { ...filters, secteur_id: e.target.value }, { preserveState: true })}
+                        className="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl px-3 py-2.5 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm cursor-pointer"
+                    >
+                        <option value="">Tous les secteurs</option>
+                        {secteurs.map((s: any) => <option key={s.id} value={s.id}>{s.nom}</option>)}
+                    </select>
+
+                    <select 
+                        value={filters.institut_id || ''} 
+                        onChange={(e) => router.get(route('admin.users.index'), { ...filters, institut_id: e.target.value }, { preserveState: true })}
+                        className="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl px-3 py-2.5 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm cursor-pointer"
+                    >
+                        <option value="">Tous les établissements</option>
+                        {instituts.map((i: any) => <option key={i.id} value={i.id}>{i.nom}</option>)}
+                    </select>
                 </div>
 
                 {/* Table Container */}
