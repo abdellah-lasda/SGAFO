@@ -17,9 +17,9 @@ class ParticipantDashboardController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Récupérer les plans auxquels le participant est inscrit (confirmés)
+        // 1. Récupérer les plans auxquels le participant est inscrit (validés ou terminés)
         $planIds = $user->plans()
-            ->whereIn('plans_formation.statut', ['confirmé', 'terminée'])
+            ->whereIn('plans_formation.statut', ['validé', 'terminée'])
             ->pluck('plans_formation.id')
             ->toArray();
 

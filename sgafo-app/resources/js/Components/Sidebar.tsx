@@ -34,7 +34,7 @@ export default function Sidebar({ user }: SidebarProps) {
             </div>
 
             {/* Action Button Section (Only for non-admins) */}
-            {!isAdmin && (
+            {isAdmin && (
                 <div className="px-4 mb-8">
                     <button className="w-full flex items-center justify-between px-5 py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-all shadow-xl shadow-blue-600/20 group">
                         <span className="flex items-center gap-3">

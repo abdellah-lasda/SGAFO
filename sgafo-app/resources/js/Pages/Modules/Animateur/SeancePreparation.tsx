@@ -97,7 +97,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
         }
 
         setClientErrors({});
-        postRes(route('modules.animateur.seances.add-resource', seance.id), {
+        postRes(route('modules.animateur.seances.ressources.store', seance.id), {
             onSuccess: () => {
                 resetRes();
                 setShowAddModal(false);
@@ -145,7 +145,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
     const handleUpdateResource = (e: React.FormEvent) => {
         e.preventDefault();
         if (!editResTarget) return;
-        putRes(route('modules.animateur.ressources.update', editResTarget.id), {
+        putRes(route('modules.animateur.seances.ressources.update', editResTarget.id), {
             preserveScroll: true,
             onSuccess: () => {
                 setEditResTarget(null);
@@ -618,7 +618,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                 isDanger={true}
                 onConfirm={() => {
                     if (deleteTarget) {
-                        router.delete(route('modules.animateur.ressources.delete', deleteTarget), {
+                        router.delete(route('modules.animateur.seances.ressources.destroy', deleteTarget), {
                             preserveScroll: true,
                             onSuccess: () => setDeleteTarget(null),
                         });
