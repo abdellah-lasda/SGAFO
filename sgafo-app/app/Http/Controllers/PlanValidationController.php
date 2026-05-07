@@ -81,7 +81,7 @@ class PlanValidationController extends Controller
             'createur',
             'validateur',
             'validationLogs.user',
-            'seances'
+            'seances.feedbackForm'
         ]);
 
         return Inertia::render('Modules/Plans/Show', [

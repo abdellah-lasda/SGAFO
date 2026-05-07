@@ -593,6 +593,32 @@ export default function Show({ plan, isValidationContext }: Props) {
                                             )}
 
                                             <div className="flex items-center gap-2">
+                                                {/* Actions de Feedback */}
+                                                {seance.feedback_form ? (
+                                                    <Link 
+                                                        href={route('modules.feedback.results', seance.id)}
+                                                        className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
+                                                        title="Voir les résultats de l'évaluation"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                    </Link>
+                                                ) : (
+                                                    <button 
+                                                        onClick={() => router.post(route('modules.feedback.quick-store', seance.id))}
+                                                        className="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
+                                                        title="Activer l'évaluation standard (1-clic)"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                                    </button>
+                                                )}
+                                                <Link 
+                                                    href={route('modules.feedback.builder', seance.id)}
+                                                    className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+                                                    title="Personnaliser le questionnaire"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                </Link>
+
                                                 {seance.statut === 'terminée' && (
                                                     <a 
                                                         href={route('modules.animateur.seances.export-absences', seance.id)}

@@ -391,7 +391,7 @@ class PlanFormationController extends Controller
             'createur',
             'validateur',
             'seances' => function($q) {
-                $q->with(['site', 'themes'])->withCount(['presences as absents_count' => function($sq) {
+                $q->with(['site', 'themes', 'feedbackForm'])->withCount(['presences as absents_count' => function($sq) {
                     $sq->where('statut', 'absent');
                 }]);
             },
