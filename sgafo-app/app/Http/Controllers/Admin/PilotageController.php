@@ -66,7 +66,7 @@ class PilotageController extends Controller
                     ->withQueryString();
                 break;
             case 'qcms':
-                $data['qcms'] = Qcm::with(['seance.plan.entite'])
+                $data['qcms'] = Qcm::with(['seance.plan.entite','questions'])
                     ->when($search, fn($q) => $q->where('titre', 'like', "%{$search}%"))
                     ->latest()
                     ->paginate(10)

@@ -13,7 +13,6 @@ interface Props extends PageProps {
 
 export default function FormationDetails({ plan }: Props) {
     const [activeTab, setActiveTab] = useState<'aperçu' | 'planning' | 'documents' | 'qcm'>('aperçu');
-
     // States for Documents
     const [showAddModal, setShowAddModal] = useState(false);
     const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
@@ -241,12 +240,16 @@ export default function FormationDetails({ plan }: Props) {
                                                     >
                                                         ✍️ Préparer
                                                     </Link>
-                                                    <Link 
+                                                    { new Date(seance.date).toDateString() == new Date().toDateString() && (
+                                                        <Link 
                                                         href={route('modules.animateur.seances.attendance', seance.id)}
                                                         className="px-4 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-600 transition-all shadow-sm"
-                                                    >
-                                                        Appel
-                                                    </Link>
+                                                        >
+                                                            Appel
+                                                        </Link> 
+                                                    )}
+                                                    
+                                                    
                                                 </div>
                                             </td>
                                         </tr>

@@ -111,4 +111,14 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Seance::class, 'seance_themes', 'formateur_id', 'seance_id');
     }
+
+    public function presences()
+    {
+        return $this->hasMany(Presence::class, 'participant_id');
+    }
+
+    public function qcmAttempts()
+    {
+        return $this->hasMany(QcmTentative::class, 'user_id');
+    }
 }

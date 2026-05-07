@@ -170,4 +170,65 @@ class UserController extends Controller
         $user->delete();
         return redirect()->back()->with('success', 'Utilisateur supprimé.');
     }
+
+    /**
+     * Affiche le dossier consolidé d'un utilisateur.
+     */
+    public function dossier(User $user)
+    {
+        $user->load(['roles', 'regions', 'instituts', 'secteurs', 'cdcs']);
+
+        // 1. Stats Participant (Pour tous les formateurs participants)
+        $plansParticipant = $user->plans()
+            ->with(['entite.secteur'])
+            ->get();
+            
+        $presences = $user->presences()->get();
+        $qcmAttempts = $user->qcmAttempts()->get();
+
+        $attendanceRate = $presences->count() > 0 
+            ? round(($presences->where('statut', 'présent')->count() / $presences->count()) * 100) 
+            : 0;
+
+        $avgQcm = $qcmAttempts->count() > 0 
+            ? round($qcmAttempts->avg(fn($a) => $a->total_points > 0 ? ($a->score / $a->total_points) * 100 : 0)) 
+            : 0;
+
+        // 2. Stats Animateur (Pour les formateurs animateurs)
+        $seancesAnimated = $user->seances()
+            ->with(['plan.entite', 'site'])
+            ->withPivot('heures_planifiees')
+            ->get();
+            
+        $hoursTaught = $seancesAnimated->sum('pivot.heures_planifiees');
+        $avgSatisfaction = 4.8; 
+
+        // 3. Stats Gestionnaire (Pour CDC / RF / ADMIN)
+        $plansCreated = $user->plansCreated()->with('entite.secteur')->get();
+        $plansValidated = $user->plansValidated()->with('entite.secteur')->get();
+
+        return Inertia::render('Admin/Users/Dossier', [
+            'userProfile' => $user,
+            'stats' => [
+                'participant' => [
+                    'plans_count' => $plansParticipant->count(),
+                    'attendance_rate' => $attendanceRate,
+                    'avg_qcm' => $avgQcm,
+                    'plans' => $plansParticipant,
+                ],
+                'animateur' => [
+                    'seances_count' => $seancesAnimated->count(),
+                    'hours_taught' => $hoursTaught,
+                    'avg_satisfaction' => $avgSatisfaction,
+                    'seances' => $seancesAnimated,
+                ],
+                'gestionnaire' => [
+                    'created_count' => $plansCreated->count(),
+                    'validated_count' => $plansValidated->count(),
+                    'plans_created' => $plansCreated,
+                    'plans_validated' => $plansValidated,
+                ]
+            ]
+        ]);
+    }
 }

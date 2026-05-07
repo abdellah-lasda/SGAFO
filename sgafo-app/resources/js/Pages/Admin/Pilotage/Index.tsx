@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Pagination from '@/Components/Pagination';
 import ConfirmDialog from '@/Components/ConfirmDialog';
+import { Console } from 'console';
 
 interface Props {
     stats: any;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function Index({ stats, currentTab, recent_plans, entites, plans, sessions, qcms, filters }: Props) {
+    console.log(qcms)
     const [search, setSearch] = useState(filters.search || '');
 
     const [confirmDelete, setConfirmDelete] = useState<{ id: number, type: 'plan' | 'entite' | 'session', title: string } | null>(null);
@@ -294,6 +296,7 @@ function SessionsTable({ data, onDelete }: any) {
 }
 
 function QcmsTable({ data }: any) {
+    console.log(data);
     return (
         <TableContainer data={data}>
             <thead className="bg-slate-50/50">

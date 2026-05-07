@@ -445,13 +445,7 @@ export default function Formations({ plans, allSeances, stats }: Props) {
                                                 href={route('modules.animateur.formations.show', plan.id)}
                                                 className="flex-1 px-4 py-3 bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm text-center"
                                             >
-                                                📁 Ressources
-                                            </Link>
-                                            <Link 
-                                                href={route('modules.animateur.formations.show', plan.id)}
-                                                className="flex-1 px-4 py-3 bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm text-center"
-                                            >
-                                                ✍️ QCM
+                                                📁 Détailles
                                             </Link>
                                         </div>
                                     </div>

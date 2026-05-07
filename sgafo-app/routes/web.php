@@ -93,6 +93,7 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->name('admin.')->grou
     Route::delete('pilotage/sessions/{seance}', [PilotageController::class, 'destroySession'])->name('pilotage.sessions.destroy');
 
     // Modules Dédiés
+    Route::get('users/{user}/dossier', [UserController::class, 'dossier'])->name('users.dossier');
     Route::resource('users', UserController::class);
     Route::resource('instituts', InstitutController::class);
     
@@ -203,6 +204,13 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
     Route::post('/seances/{seance}/attendance', [AnimateurDashboardController::class, 'submitAttendance'])->name('seances.attendance.submit');
     Route::get('/seances/{seance}/print-sheet', [AnimateurDashboardController::class, 'printSheet'])->name('seances.print-sheet');
     Route::get('/seances/{seance}/export-absences', [AnimateurDashboardController::class, 'exportAbsences'])->name('seances.export-absences');
+
+    // QCM Management
+    Route::post('/seances/{seance}/qcms', [QcmAnimateurController::class, 'store'])->name('qcms.store');
+    Route::get('/qcms/{qcm}/edit', [QcmAnimateurController::class, 'edit'])->name('qcms.edit');
+    Route::put('/qcms/{qcm}', [QcmAnimateurController::class, 'update'])->name('qcms.update');
+    Route::delete('/qcms/{qcm}', [QcmAnimateurController::class, 'destroy'])->name('qcms.destroy');
+    Route::post('/qcms/{qcm}/structure', [QcmAnimateurController::class, 'saveStructure'])->name('qcms.structure.save');
 });
 
 // Espace Participant
