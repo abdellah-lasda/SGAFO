@@ -54,17 +54,11 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
     const { data, setData, post, processing, reset, errors, transform } = useForm({
         date: selectedDate,
         debut: '08:30',
-        fin: '12:30',
+        fin: '13:00',
         site_id: plan.site_formation_id || '',
-        themes: themesStats.map(t => ({
-            plan_theme_id: t.id,
-            nom: t.nom,
-            heures_planifiees: 0,
-            reste: t.reste,
-            formateur_id: t.animateurs?.length === 1 ? String(t.animateurs[0].id) : '',
-            animateurs: t.animateurs || [],
-            checked: false
-        })),
+        selected_theme_id: null as number | null,
+        heures_planifiees: 0,
+        formateur_id: '',
         recurrence: {
             active: false,
             type: 'quotidien',
@@ -99,9 +93,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
     }, [data.debut, data.fin]);
 
     // CALCUL DES HEURES ALLOUÉES
-    const allocatedHours = useMemo(() => {
-        return data.themes.reduce((sum, t) => sum + (t.checked ? t.heures_planifiees : 0), 0);
-    }, [data.themes]);
+    const allocatedHours = data.heures_planifiees;
 
     const remainingTime = sessionDuration - allocatedHours;
     const isDurationValid = sessionDuration > 0 && allocatedHours > 0 && allocatedHours <= sessionDuration;
@@ -127,19 +119,36 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
 
         setTimeError(null);
 
-        if (!isDurationValid) return;
+        if (!data.selected_theme_id) {
+            setTimeError('Veuillez sélectionner un thème.');
+            return;
+        }
 
-        const selectedThemes = data.themes.filter(t => t.checked && t.heures_planifiees > 0);
-        const missingFormateur = selectedThemes.some(t => !t.formateur_id);
-        if (missingFormateur) {
-            setTimeError('Veuillez affecter un animateur à chaque thème sélectionné.');
+        if (data.heures_planifiees <= 0) {
+            setTimeError('La durée doit être supérieure à 0.');
+            return;
+        }
+
+        if (data.heures_planifiees > sessionDuration) {
+            setTimeError('La durée du thème ne peut pas dépasser la durée de la séance.');
+            return;
+        }
+
+        if (!data.formateur_id) {
+            setTimeError('Veuillez affecter un animateur.');
             return;
         }
 
         transform((data) => ({
             ...data,
             date: selectedDate,
-            themes: selectedThemes
+            themes: [
+                {
+                    plan_theme_id: data.selected_theme_id,
+                    heures_planifiees: data.heures_planifiees,
+                    formateur_id: data.formateur_id
+                }
+            ]
         }));
 
         post(route('modules.validations.planning.store', plan.id), {
@@ -153,7 +162,10 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
 
     const isLocked = plan.statut === 'validé';
 
+    const canFinalize = seances.length > 0 && stats.progression >= 25;
+
     const handleCloture = () => {
+        if (!canFinalize) return;
         setConfirmCloture(true);
     };
 
@@ -168,13 +180,12 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
 
     const openPlanningForTheme = (theme: any) => {
         setThemeToPlan(theme);
-        // On pré-coche ce thème et on met à zéro les autres
-        const newThemes = data.themes.map(t => ({
-            ...t,
-            checked: t.plan_theme_id === theme.id,
-            heures_planifiees: t.plan_theme_id === theme.id ? (theme.reste > 4 ? 4 : theme.reste) : 0
+        setData(d => ({
+            ...d,
+            selected_theme_id: theme.id,
+            heures_planifiees: Math.min(theme.reste, sessionDuration),
+            formateur_id: theme.animateurs?.length === 1 ? String(theme.animateurs[0].id) : ''
         }));
-        setData('themes', newThemes);
         setIsAdding(true);
     };
 
@@ -274,17 +285,24 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
 
                     {/* Action/Validation Card */}
                     {!isLocked ? (
-                        <div className="md:col-span-1 bg-slate-900 p-6 rounded-[2rem] shadow-2xl shadow-slate-900/40 flex flex-col justify-center relative overflow-hidden group transform hover:-translate-y-1 transition-all">
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent" />
+                        <div className={`md:col-span-1 p-6 rounded-[2rem] shadow-2xl flex flex-col justify-center relative overflow-hidden group transition-all ${canFinalize ? 'bg-slate-900 shadow-slate-900/40 hover:-translate-y-1' : 'bg-slate-100 shadow-none border border-slate-200'}`}>
+                            {canFinalize && <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent" />}
                             <div className="relative">
                                 <button
                                     onClick={handleCloture}
-                                    className="w-full py-4 bg-emerald-500 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-400 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 mb-2"
+                                    disabled={!canFinalize}
+                                    className={`w-full py-4 text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 mb-2 ${
+                                        canFinalize 
+                                            ? 'bg-emerald-500 text-white hover:bg-emerald-400' 
+                                            : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                                    }`}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                                     Finaliser
                                 </button>
-                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center">Clôturer le planning</p>
+                                <p className={`text-[8px] font-bold uppercase tracking-widest text-center ${canFinalize ? 'text-slate-400' : 'text-slate-400'}`}>
+                                    {canFinalize ? 'Clôturer le planning' : 'Planification insuffisante'}
+                                </p>
                             </div>
                         </div>
                     ) : (
@@ -739,83 +757,78 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-3 text-slate-400">
                                                 <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-black">02</span>
-                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">Thèmes de la séance</h4>
+                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">Thème de la séance</h4>
                                             </div>
                                         </div>
                                         <div className="space-y-3">
-                                            {data.themes.map((theme, index) => (
-                                                <div key={theme.plan_theme_id} className={`p-5 rounded-3xl border-2 transition-all cursor-pointer ${theme.checked ? 'border-blue-500 bg-blue-50/30' : 'border-slate-50 bg-slate-50/50 hover:border-slate-200'}`} onClick={() => {
-                                                    const newThemes = [...data.themes];
-                                                    const isNowChecked = !newThemes[index].checked;
-                                                    newThemes[index].checked = isNowChecked;
-                                                    
-                                                    if (isNowChecked) {
-                                                        const otherChecked = newThemes.filter((t, i) => i !== index && t.checked);
-                                                        if (otherChecked.length === 0) {
-                                                            newThemes[index].heures_planifiees = Math.min(newThemes[index].reste, sessionDuration);
-                                                        } else {
-                                                            const alreadyAllocated = otherChecked.reduce((s, t) => s + t.heures_planifiees, 0);
-                                                            newThemes[index].heures_planifiees = Math.max(0, Math.min(newThemes[index].reste, sessionDuration - alreadyAllocated));
-                                                        }
-                                                    } else {
-                                                        newThemes[index].heures_planifiees = 0;
-                                                    }
-                                                    setData('themes', newThemes);
-                                                }}>
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={`w-7 h-7 rounded-xl flex items-center justify-center border-2 transition-all ${theme.checked ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-white border-slate-200 text-transparent'}`}>
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className={`text-xs font-black truncate ${theme.checked ? 'text-blue-900' : 'text-slate-600'}`}>{theme.nom}</p>
-                                                            <div className="flex items-center gap-2 mt-0.5">
-                                                                <span className="text-[9px] font-bold text-slate-400">Reste à planifier: {theme.reste}h</span>
+                                            {themesStats.map((theme) => {
+                                                const isSelected = data.selected_theme_id === theme.id;
+                                                const isDone = theme.reste === 0;
+                                                if (isDone && !isSelected) return null;
+
+                                                return (
+                                                    <div 
+                                                        key={theme.id} 
+                                                        className={`p-5 rounded-3xl border-2 transition-all cursor-pointer ${isSelected ? 'border-blue-500 bg-blue-50/30' : 'border-slate-50 bg-slate-50/50 hover:border-slate-200 opacity-60 hover:opacity-100'}`} 
+                                                        onClick={() => {
+                                                            setData(d => ({
+                                                                ...d,
+                                                                selected_theme_id: theme.id,
+                                                                heures_planifiees: Math.min(theme.reste, sessionDuration),
+                                                                formateur_id: theme.animateurs?.length === 1 ? String(theme.animateurs[0].id) : ''
+                                                            }));
+                                                        }}
+                                                    >
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`w-7 h-7 rounded-xl flex items-center justify-center border-2 transition-all ${isSelected ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-white border-slate-200 text-transparent'}`}>
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>
                                                             </div>
-                                                        </div>
-                                                        {theme.checked && (
-                                                            <div className="flex flex-col gap-4 items-end animate-in fade-in slide-in-from-right-2 duration-300" onClick={(e) => e.stopPropagation()}>
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="relative">
-                                                                        <input 
-                                                                            type="number" 
-                                                                            step="0.5" 
-                                                                            min="0.5"
-                                                                            max={sessionDuration}
-                                                                            className="w-20 bg-white border-2 border-blue-100 rounded-lg py-2 px-3 text-xs font-black text-blue-600 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 text-center"
-                                                                            value={theme.heures_planifiees}
-                                                                            onChange={e => {
-                                                                                const val = parseFloat(e.target.value) || 0;
-                                                                                const newThemes = [...data.themes];
-                                                                                newThemes[index].heures_planifiees = val;
-                                                                                setData('themes', newThemes);
-                                                                            }}
-                                                                        />
-                                                                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-blue-300">h</span>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className={`text-xs font-black truncate ${isSelected ? 'text-blue-900' : 'text-slate-600'}`}>{theme.nom}</p>
+                                                                <div className="flex items-center gap-2 mt-0.5">
+                                                                    <span className="text-[9px] font-bold text-slate-400">Reste à planifier: {theme.reste}h</span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            {isSelected && (
+                                                                <div className="flex flex-col gap-3 items-end animate-in fade-in slide-in-from-right-2 duration-300" onClick={(e) => e.stopPropagation()}>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="relative">
+                                                                            <input 
+                                                                                type="number" 
+                                                                                step="0.5" 
+                                                                                min="0.5"
+                                                                                max={sessionDuration}
+                                                                                className="w-20 bg-white border-2 border-blue-100 rounded-lg py-2 px-3 text-xs font-black text-blue-600 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 text-center"
+                                                                                value={data.heures_planifiees}
+                                                                                onChange={e => {
+                                                                                    const val = parseFloat(e.target.value) || 0;
+                                                                                    setData('heures_planifiees', val);
+                                                                                }}
+                                                                            />
+                                                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-blue-300">h</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <div className="w-full min-w-[180px]">
+                                                                        <select
+                                                                            className="w-full bg-blue-50/50 border-2 border-blue-100 rounded-xl py-2 px-4 text-[10px] font-black text-slate-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 appearance-none"
+                                                                            value={data.formateur_id}
+                                                                            onChange={e => setData('formateur_id', e.target.value)}
+                                                                            required
+                                                                        >
+                                                                            <option value="">Affecter un animateur...</option>
+                                                                            {theme.animateurs.map((f: any) => (
+                                                                                <option key={f.id} value={f.id}>{f.prenom} {f.nom}</option>
+                                                                            ))}                                                                       
+                                                                        </select>
                                                                     </div>
                                                                 </div>
-                                                                
-                                                                <div className="w-full">
-                                                                    <select
-                                                                        className="w-full bg-blue-50/50 border-2 border-blue-100 rounded-xl py-2 px-4 text-[10px] font-black text-slate-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 appearance-none"
-                                                                        value={theme.formateur_id}
-                                                                        onChange={e => {
-                                                                            const newThemes = [...data.themes];
-                                                                            newThemes[index].formateur_id = e.target.value;
-                                                                            setData('themes', newThemes);
-                                                                        }}
-                                                                        required
-                                                                    >
-                                                                        <option value="">Affecter un animateur...</option>
-                                                                        {theme.animateurs.map((f: any) => (
-                                                                            <option key={f.id} value={f.id}>{f.nom} {f.prenom}</option>
-                                                                        ))}                                                                       
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                        )}
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     </div>
 
@@ -939,7 +952,21 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
             <ConfirmDialog
                 isOpen={confirmCloture}
                 title="Clôturer le planning ?"
-                message="Le planning sera officiellement verrouillé pour exécution. Les séances ne pourront plus être ajoutées ou supprimées."
+                message={
+                    <div className="space-y-4">
+                        <p>Le planning sera officiellement verrouillé pour exécution. Les séances ne pourront plus être ajoutées ou supprimées.</p>
+                        <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">Récapitulatif de validation</p>
+                            <div className="flex items-center justify-between text-xs font-bold text-blue-900">
+                                <span className="flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                    {seances.length} séance(s) planifiée(s)
+                                </span>
+                                <span>{stats.progression}% du volume horaire</span>
+                            </div>
+                        </div>
+                    </div>
+                }
                 confirmLabel="Oui, clôturer"
                 isDanger={false}
                 onConfirm={() => {
