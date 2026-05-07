@@ -97,7 +97,7 @@ export default function FormationDetails({ plan }: Props) {
                         { id: 'aperçu', label: '📊 Aperçu', color: 'blue' },
                         { id: 'planning', label: '📅 Planning', color: 'indigo' },
                         { id: 'documents', label: '📁 Documents', color: 'emerald' },
-                        { id: 'qcm', label: '✍️ QCM & Évals', color: 'purple' },
+                        // { id: 'qcm', label: '✍️ QCM & Évals', color: 'purple' },
                     ].map((tab) => (
                         <button
                             key={tab.id}
@@ -240,16 +240,60 @@ export default function FormationDetails({ plan }: Props) {
                                                     >
                                                         ✍️ Préparer
                                                     </Link>
-                                                    { new Date(seance.date).toDateString() == new Date().toDateString() && (
-                                                        <Link 
-                                                        href={route('modules.animateur.seances.attendance', seance.id)}
-                                                        className="px-4 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-600 transition-all shadow-sm"
-                                                        >
-                                                            Appel
-                                                        </Link> 
-                                                    )}
-                                                    
-                                                    
+                                                    {/* Bouton Appel / Déverrouillage */}
+                                                    {(() => {
+                                                        const sessionDate = new Date(seance.date);
+                                                        const today = new Date();
+                                                        today.setHours(0, 0, 0, 0);
+                                                        sessionDate.setHours(0, 0, 0, 0);
+
+                                                        const isToday = sessionDate.getTime() === today.getTime();
+                                                        const isPast = sessionDate.getTime() < today.getTime();
+                                                        const isFuture = sessionDate.getTime() > today.getTime();
+
+                                                        if (seance.statut === 'terminée') {
+                                                            // Si moins de 48h (approximatif côté client, le serveur valide)
+                                                            const diffDays = Math.ceil(Math.abs(today.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
+                                                            
+                                                            if (diffDays <= 2) {
+                                                                return (
+                                                                    <button 
+                                                                        onClick={() => {
+                                                                            if (confirm('Voulez-vous déverrouiller cette séance pour corriger les présences ?')) {
+                                                                                router.post(route('modules.animateur.seances.reopen', seance.id));
+                                                                            }
+                                                                        }}
+                                                                        className="px-4 py-2 bg-amber-50 text-amber-700 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-amber-100 transition-all border border-amber-200"
+                                                                    >
+                                                                        🔓 Déverrouiller
+                                                                    </button>
+                                                                );
+                                                            }
+                                                            return (
+                                                                <span className="text-[9px] font-bold text-slate-400 italic">Clôturée</span>
+                                                            );
+                                                        }
+
+                                                        // Si pas encore terminée et c'est aujourd'hui ou hier
+                                                        if (isToday || (isPast && Math.ceil(Math.abs(today.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24)) <= 1)) {
+                                                            return (
+                                                                <Link 
+                                                                    href={route('modules.animateur.seances.attendance', seance.id)}
+                                                                    className="px-4 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-600 transition-all shadow-sm"
+                                                                >
+                                                                    {seance.presences_count > 0 ? '📝 Modifier' : 'Appel'}
+                                                                </Link>
+                                                            );
+                                                        }
+
+                                                        if (isFuture) {
+                                                            return <span 
+                                                            className="px-4 py-2 bg-white font-bold text-slate-400 italic text-[9px] uppercase tracking-widest"
+                                                            >Prévue</span>;                                                      
+                                                        }
+
+                                                        return null;
+                                                    })()}
                                                 </div>
                                             </td>
                                         </tr>
@@ -330,7 +374,7 @@ export default function FormationDetails({ plan }: Props) {
                         </div>
                     )}
 
-                    {activeTab === 'qcm' && (
+                    {/* {activeTab === 'qcm' && (
                         <div className="bg-white p-12 rounded-[3rem] border border-dashed border-slate-200 text-center">
                             <div className="w-20 h-20 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
@@ -341,7 +385,7 @@ export default function FormationDetails({ plan }: Props) {
                                 Créer un nouveau QCM
                             </button>
                         </div>
-                    )}
+                    )} */}
                 </div>
             </div>
 

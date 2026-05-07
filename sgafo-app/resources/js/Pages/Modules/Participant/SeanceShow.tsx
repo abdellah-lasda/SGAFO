@@ -67,6 +67,7 @@ interface Props extends PageProps {
 }
 
 export default function SeanceShow({ auth, seance, canPassQcm, qcms, hasFeedbackForm, hasSubmittedFeedback }: Props) {
+    console.log(seance)
     return (
         <AuthenticatedLayout header={<div className="flex items-center gap-2">
             <Link href={route('participant.formations')} className="text-slate-400 hover:text-blue-600 transition-colors font-bold">Mes formations</Link>

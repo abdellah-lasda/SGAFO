@@ -204,6 +204,7 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
     Route::post('/seances/{seance}/attendance', [AnimateurDashboardController::class, 'submitAttendance'])->name('seances.attendance.submit');
     Route::get('/seances/{seance}/print-sheet', [AnimateurDashboardController::class, 'printSheet'])->name('seances.print-sheet');
     Route::get('/seances/{seance}/export-absences', [AnimateurDashboardController::class, 'exportAbsences'])->name('seances.export-absences');
+    Route::post('/seances/{seance}/reopen', [AnimateurDashboardController::class, 'reopenAttendance'])->name('seances.reopen');
 
     // QCM Management
     Route::post('/seances/{seance}/qcms', [QcmAnimateurController::class, 'store'])->name('qcms.store');

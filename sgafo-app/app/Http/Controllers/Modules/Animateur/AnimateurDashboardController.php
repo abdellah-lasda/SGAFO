@@ -121,7 +121,7 @@ class AnimateurDashboardController extends Controller
             'seances' => function($q) use ($user) {
                 $q->whereHas('themes', function($t) use ($user) {
                     $t->where('seance_themes.formateur_id', $user->id);
-                })->with('site', 'themes');
+                })->with('site', 'themes')->withCount('presences');
             },
             'participants',
             'ressources'
@@ -136,11 +136,24 @@ class AnimateurDashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Vérifier que cet animateur est bien assigné à cette séance
+        // 1. Vérification assignation
         $isAssigned = $seance->themes()->where('seance_themes.formateur_id', $user->id)->exists();
         if (!$isAssigned) {
             abort(403, "Vous n'êtes pas assigné à cette séance.");
         }
+
+        // 2. Vérification Temporelle (+/- 24h)
+        $sessionDate = \Carbon\Carbon::parse($seance->date);
+        $now = now();
+        $isTooEarly = $now->lt($sessionDate->startOfDay()); // Trop tôt (avant le jour J)
+        $isTooLate = $now->gt($sessionDate->addDay()->endOfDay()); // Trop tard (> 24h après le jour J)
+
+        if ($isTooEarly) {
+            return back()->with('error', "L'appel ne sera disponible que le " . $sessionDate->format('d/m/Y') . ".");
+        }
+
+        // 3. Vérification Clôture
+        $isClosed = $seance->statut === 'terminée';
 
         // Charger le plan et ses participants
         $seance->load(['plan.entite', 'plan.participants.instituts', 'site', 'presences']);
@@ -148,7 +161,30 @@ class AnimateurDashboardController extends Controller
         return Inertia::render('Modules/Animateur/AttendanceSheet', [
             'seance' => $seance,
             'participants' => $seance->plan->participants,
+            'isClosed' => $isClosed,
+            'isTooLate' => $isTooLate
         ]);
+    }
+
+    /**
+     * Réouvrir une séance clôturée pour correction (Exceptionnel)
+     */
+    public function reopenAttendance(Seance $seance)
+    {
+        $user = Auth::user();
+        $isAssigned = $seance->themes()->where('seance_themes.formateur_id', $user->id)->exists();
+        
+        if (!$isAssigned) abort(403);
+
+        // Autoriser la réouverture seulement si la séance a moins de 48h
+        $sessionDate = \Carbon\Carbon::parse($seance->date);
+        if (now()->gt($sessionDate->addDays(2)->endOfDay())) {
+            return back()->with('error', "Délai de correction expiré (max 48h). Veuillez contacter un administrateur.");
+        }
+
+        $seance->update(['statut' => 'en_cours']);
+
+        return back()->with('success', "La séance a été réouverte. Vous pouvez maintenant modifier l'appel.");
     }
 
     public function submitAttendance(Request $request, Seance $seance)
@@ -157,6 +193,11 @@ class AnimateurDashboardController extends Controller
         $isAssigned = $seance->themes()->where('seance_themes.formateur_id', $user->id)->exists();
         if (!$isAssigned) {
             abort(403);
+        }
+
+        // Sécurité : Empêcher la modification si la séance est déjà clôturée
+        if ($seance->statut === 'terminée') {
+            return back()->with('error', "Cette séance est clôturée. Déverrouillez-la pour faire des modifications.");
         }
 
         $validated = $request->validate([
