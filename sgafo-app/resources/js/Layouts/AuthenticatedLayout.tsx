@@ -1,6 +1,7 @@
 import { useState, PropsWithChildren, ReactNode } from 'react';
 import Sidebar from '@/Components/Sidebar';
 import NotificationCenter from '@/Components/NotificationCenter';
+import Toast from '@/Components/Toast';
 import { usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 
@@ -13,7 +14,9 @@ export default function Authenticated({
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     return (
-        <div className="h-screen bg-[#f8fafc] flex overflow-hidden">
+        <div className="h-screen bg-[#f8fafc] flex overflow-hidden relative">
+            <Toast />
+            
             {/* Sidebar Component */}
             <div className={`${isSidebarOpen ? 'w-64' : 'w-0'} h-full transition-all duration-300 overflow-hidden flex-shrink-0`}>
                 <Sidebar user={user} />

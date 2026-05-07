@@ -25,7 +25,7 @@ export default function Resultat({ tentative, auth }: Props) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Résultats du QCM</h2>}
+            header={<span className="font-semibold text-gray-800 leading-tight">Résultats du QCM</span>}
         >
             <Head title="Résultats QCM" />
 

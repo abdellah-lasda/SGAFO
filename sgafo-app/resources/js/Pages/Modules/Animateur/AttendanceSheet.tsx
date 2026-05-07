@@ -1,5 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
+import ConfirmDialog from '@/Components/ConfirmDialog';
 import { PageProps } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -23,7 +25,7 @@ interface Props extends PageProps {
     participants: Participant[];
 }
 
-export default function AttendanceSheet({ seance, participants }: Props) {
+export default function AttendanceSheet({ seance, participants, flash }: Props) {
     const initialPresences = participants.map(p => {
         const existing = seance.presences.find((pr: any) => pr.participant_id === p.id);
         return {
@@ -34,10 +36,13 @@ export default function AttendanceSheet({ seance, participants }: Props) {
         };
     });
 
-    const { data, setData, post, processing } = useForm({
+    const { data, setData, post, processing, transform } = useForm({
         presences: initialPresences,
         is_closing: false,
     });
+
+    const [confirmSave, setConfirmSave] = useState(false);
+    const [confirmClose, setConfirmClose] = useState(false);
 
     const updateStatus = (index: number, status: 'présent' | 'absent' | 'retard') => {
         const newPresences = [...data.presences];
@@ -62,7 +67,22 @@ export default function AttendanceSheet({ seance, participants }: Props) {
     };
 
     const handleSubmit = (isClosing = false) => {
-        setData('is_closing', isClosing);
+        if (isClosing) {
+            setConfirmClose(true);
+        } else {
+            setConfirmSave(true);
+        }
+    };
+
+    const executeSubmit = (isClosing: boolean) => {
+        setConfirmSave(false);
+        setConfirmClose(false);
+        
+        transform((data) => ({
+            ...data,
+            is_closing: isClosing
+        }));
+
         post(route('modules.animateur.seances.submit-attendance', seance.id), {
             preserveScroll: true,
         });
@@ -79,6 +99,7 @@ export default function AttendanceSheet({ seance, participants }: Props) {
             <Head title="Feuille d'appel" />
 
             <div className="max-w-5xl mx-auto space-y-8 pb-32 animate-in fade-in duration-700">
+
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
@@ -240,6 +261,26 @@ export default function AttendanceSheet({ seance, participants }: Props) {
                     </div>
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={confirmSave}
+                title="Enregistrer les présences ?"
+                message="Les modifications seront enregistrées mais la séance restera ouverte pour d'éventuelles corrections."
+                confirmLabel="Oui, enregistrer"
+                isDanger={false}
+                onConfirm={() => executeSubmit(false)}
+                onCancel={() => setConfirmSave(false)}
+            />
+
+            <ConfirmDialog
+                isOpen={confirmClose}
+                title="Clôturer définitivement la séance ?"
+                message="Une fois clôturée, la feuille d'appel ne pourra plus être modifiée sans intervention d'un administrateur."
+                confirmLabel="Oui, clôturer"
+                isDanger={true}
+                onConfirm={() => executeSubmit(true)}
+                onCancel={() => setConfirmClose(false)}
+            />
         </AuthenticatedLayout>
     );
 }

@@ -40,10 +40,14 @@ trait HasRoles
     /**
      * Scope for filtering by role code
      */
-    public function scopeRole($query, string $code)
+    public function scopeRole($query, $code)
     {
         return $query->whereHas('roles', function($q) use ($code) {
-            $q->where('code', $code);
+            if (is_array($code)) {
+                $q->whereIn('code', $code);
+            } else {
+                $q->where('code', $code);
+            }
         });
     }
 }

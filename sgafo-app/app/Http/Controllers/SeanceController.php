@@ -156,6 +156,40 @@ class SeanceController extends Controller
     }
 
     /**
+     * Met à jour une séance existante.
+     */
+    public function update(UpdateSeanceRequest $request, Seance $seance)
+    {
+        $validated = $request->validated();
+
+        if ($seance->plan->statut === 'validé') {
+            return redirect()->back()->with('error', 'Le planning est validé définitivement et ne peut plus être modifié.');
+        }
+
+        DB::transaction(function () use ($validated, $seance) {
+            $seance->update([
+                'site_id' => $validated['site_id'],
+                'date' => $validated['date'],
+                'debut' => $validated['debut'],
+                'fin' => $validated['fin'],
+                'statut' => $validated['statut'] ?? $seance->statut,
+            ]);
+
+            // Synchronisation des thèmes
+            $syncData = [];
+            foreach ($validated['themes'] as $themeData) {
+                $syncData[$themeData['plan_theme_id']] = [
+                    'heures_planifiees' => $themeData['heures_planifiees'],
+                    'formateur_id' => $themeData['formateur_id']
+                ];
+            }
+            $seance->themes()->sync($syncData);
+        });
+
+        return redirect()->route('modules.validations.planning.index', $seance->plan_id)->with('success', 'Séance mise à jour avec succès.');
+    }
+
+    /**
      * Clôture le planning (statut confirmé).
      */
     public function cloturer(PlanFormation $plan)

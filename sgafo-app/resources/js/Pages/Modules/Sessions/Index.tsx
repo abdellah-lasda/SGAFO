@@ -34,7 +34,9 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
     const [themeToPlan, setThemeToPlan] = useState<any>(null);
     const [confirmCloture, setConfirmCloture] = useState(false);
     const [confirmReouverture, setConfirmReouverture] = useState(false);
+    const [confirmSaveSeance, setConfirmSaveSeance] = useState(false);
     const [deleteSeanceId, setDeleteSeanceId] = useState<number | null>(null);
+    const [editingSeanceId, setEditingSeanceId] = useState<number | null>(null);
     const [timeError, setTimeError] = useState<string | null>(null);
 
     // STATS CALCULATIONS
@@ -51,14 +53,15 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
         };
     }, [themesStats]);
 
-    const { data, setData, post, processing, reset, errors, transform } = useForm({
+    const { data, setData, post, put, processing, reset, errors, transform } = useForm({
         date: selectedDate,
         debut: '08:30',
-        fin: '13:00',
+        fin: '12:30',
         site_id: plan.site_formation_id || '',
         selected_theme_id: null as number | null,
         heures_planifiees: 0,
         formateur_id: '',
+        statut: 'planifiée',
         recurrence: {
             active: false,
             type: 'quotidien',
@@ -105,8 +108,9 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
         const timeErr = validateTimeRange(data.debut, data.fin);
         if (timeErr) { setTimeError(timeErr); return; }
 
-        // Chevauchement local visuel
+        // Chevauchement local visuel (on ignore la séance en cours d'édition)
         const hasOverlap = dailySeances.some(s => {
+            if (editingSeanceId && s.id === editingSeanceId) return false;
             const existingStart = s.debut.substring(0, 5);
             const existingEnd = s.fin.substring(0, 5);
             return (existingStart < data.fin && existingEnd > data.debut);
@@ -151,10 +155,26 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
             ]
         }));
 
-        post(route('modules.validations.planning.store', plan.id), {
+        if (editingSeanceId) {
+            setConfirmSaveSeance(true);
+        } else {
+            post(route('modules.validations.planning.store', plan.id), {
+                onSuccess: () => {
+                    reset();
+                    setThemeToPlan(null);
+                    setIsAdding(false);
+                }
+            });
+        }
+    };
+
+    const executeUpdate = () => {
+        if (!editingSeanceId) return;
+        setConfirmSaveSeance(false);
+        put(route('modules.seances.update', editingSeanceId), {
             onSuccess: () => {
                 reset();
-                setThemeToPlan(null);
+                setEditingSeanceId(null);
                 setIsAdding(false);
             }
         });
@@ -180,13 +200,35 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
 
     const openPlanningForTheme = (theme: any) => {
         setThemeToPlan(theme);
+        setEditingSeanceId(null);
         setData(d => ({
             ...d,
             selected_theme_id: theme.id,
             heures_planifiees: Math.min(theme.reste, sessionDuration),
             formateur_id: theme.animateurs?.length === 1 ? String(theme.animateurs[0].id) : ''
         }));
-        setIsAdding(true);
+    };
+
+    const openEditSeance = (seance: any) => {
+        setEditingSeanceId(seance.id);
+        const mainTheme = seance.themes[0]; // Puisque nous sommes en modèle mono-thème
+        setData({
+            date: seance.date.split('T')[0],
+            debut: seance.debut.substring(0, 5),
+            fin: seance.fin.substring(0, 5),
+            site_id: seance.site_id || '',
+            selected_theme_id: mainTheme?.id || null,
+            heures_planifiees: mainTheme?.pivot?.heures_planifiees || 0,
+            formateur_id: mainTheme?.pivot?.formateur_id || '',
+            statut: seance.statut || 'planifiée',
+            recurrence: {
+                active: false,
+                type: 'quotidien',
+                date_fin: seance.date.split('T')[0],
+                skip_saturday: true,
+                skip_sunday: true
+            }
+        });
     };
 
     return (
@@ -385,13 +427,25 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                 )}
                                 
                                 {!isLocked ? (
-                                    <button 
-                                        onClick={() => setIsAdding(true)}
-                                        className="px-6 py-3 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
-                                        Ajouter une séance
-                                    </button>
+                                <button 
+                                    onClick={() => { 
+                                        setEditingSeanceId(null); 
+                                        setThemeToPlan(null); 
+                                        setIsAdding(true);
+                                        setData(d => ({
+                                            ...d,
+                                            date: selectedDate,
+                                            selected_theme_id: null,
+                                            heures_planifiees: 0,
+                                            formateur_id: '',
+                                            recurrence: { ...d.recurrence, active: false, date_fin: selectedDate }
+                                        }));
+                                    }}
+                                    className="px-6 py-3 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                                    Ajouter une séance
+                                </button>
                                 ) : (
                                     <div className="px-6 py-3 bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl border border-slate-200 flex items-center gap-2 cursor-not-allowed">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
@@ -402,7 +456,23 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                         </div>
 
                         {dailySeances.length === 0 ? (
-                            <div className={`bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] p-24 text-center group transition-all ${!isLocked ? 'cursor-pointer hover:bg-slate-100' : 'cursor-default'}`} onClick={() => !isLocked && setIsAdding(true)}>
+                            <div className={`bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] p-24 text-center group transition-all ${!isLocked ? 'cursor-pointer hover:bg-slate-100' : 'cursor-default'}`} 
+                                onClick={() => {
+                                    if (!isLocked) {
+                                        setEditingSeanceId(null);
+                                        setThemeToPlan(null);
+                                        setIsAdding(true);
+                                        setData(d => ({
+                                            ...d,
+                                            date: selectedDate,
+                                            selected_theme_id: null,
+                                            heures_planifiees: 0,
+                                            formateur_id: '',
+                                            recurrence: { ...d.recurrence, active: false, date_fin: selectedDate }
+                                        }));
+                                    }
+                                }}
+                            >
                                 <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
                                     <svg className="w-10 h-10 text-slate-300 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
                                 </div>
@@ -418,7 +488,15 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                 {dailySeances.map((seance) => (
                                     <div key={seance.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-blue-200 transition-all">
                                         {!isLocked && (
-                                            <div className="absolute top-0 right-0 p-6 flex gap-2 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all">
+                                            <div className="absolute top-0 right-0 p-6 flex gap-2 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all z-10">
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => openEditSeance(seance)}
+                                                    className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                                    title="Modifier la séance"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                </button>
                                                 <button 
                                                     type="button"
                                                     onClick={() => deleteSeance(seance.id)}
@@ -470,7 +548,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                             </div>
 
                                             <div className="flex-1 space-y-3">
-                                                {seance.themes.map((t: any) => {
+                                                {seance?.themes.map((t: any) => {
                                                     const formateur = formateurs.find(f => f.id === t.pivot.formateur_id);
                                                     return (
                                                         <div key={t.id} className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-2 group/theme hover:border-blue-200 transition-all">
@@ -629,7 +707,8 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                         </button>
                                                     )}
 
-                                                    <button 
+
+                                                    {/* <button 
                                                         onClick={() => {
                                                             const normalizedDate = seance.date.split('T')[0];
                                                             setSelectedDate(normalizedDate);
@@ -638,11 +717,24 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                         className="px-6 py-2.5 bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-xl border-2 border-slate-100 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all shadow-sm"
                                                     >
                                                         Accéder
-                                                    </button>
+                                                    </button> */}
+                                                    
                                                     {!isLocked && (
-                                                        <button type="button" onClick={() => deleteSeance(seance.id)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all shadow-sm cursor-pointer">
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                        </button>
+                                                        <>
+                                                            <button 
+                                                                type="button"
+                                                                onClick={() => deleteSeance(seance.id)}
+                                                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all shadow-sm cursor-pointer">
+                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                            </button>
+                                                            <button 
+                                                                type="button"
+                                                                onClick={() => openEditSeance(seance)}
+                                                                className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                                                title="Modifier la séance">
+                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                            </button>
+                                                        </>
                                                     )}
                                                 </div>
                                             </td>
@@ -654,25 +746,40 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                     )}
                 </div>
                 
-                {/* ─── ZONE 6 : MODALE D'AJOUT DE SÉANCE ─── */}
-                {isAdding && (
+                {/* ─── ZONE 6 : MODALE D'AJOUT/MODIF DE SÉANCE ─── */}
+                {(themeToPlan || editingSeanceId !== null || isAdding) && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-500" onClick={() => { setIsAdding(false); reset(); }}/>
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-500" 
+                            onClick={() => { 
+                                setEditingSeanceId(null); 
+                                setThemeToPlan(null); 
+                                setIsAdding(false); 
+                                setTimeError(null); 
+                            }}
+                        />
                         <div className="relative w-full max-w-xl bg-white shadow-2xl flex flex-col max-h-[92vh] rounded-[3rem] animate-in zoom-in-95 duration-300 border border-slate-200 overflow-hidden">
                             <div className="p-8 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-10">
                                 <div className="flex justify-between items-center">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={editingSeanceId ? "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5" : "M12 6v6m0 0v6m0-6h6m-6 0H6"} /></svg>
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-black text-slate-900 tracking-tight">Nouvelle Séance</h3>
+                                            <h3 className="text-xl font-black text-slate-900 tracking-tight">{editingSeanceId ? 'Modifier la Séance' : 'Nouvelle Séance'}</h3>
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">
                                                 {new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                                             </p>
                                         </div>
                                     </div>
-                                    <button onClick={() => { setIsAdding(false); reset(); }} className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">
+                                    <button 
+                                        onClick={() => { 
+                                            setEditingSeanceId(null); 
+                                            setThemeToPlan(null); 
+                                            setIsAdding(false);
+                                            setTimeError(null);
+                                        }} 
+                                        className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                                    >
                                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                                     </button>
                                 </div>
@@ -763,7 +870,16 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                         <div className="space-y-3">
                                             {themesStats.map((theme) => {
                                                 const isSelected = data.selected_theme_id === theme.id;
-                                                const isDone = theme.reste === 0;
+                                                
+                                                // Pour l'édition, on rajoute les heures de la séance actuelle au reste disponible
+                                                // si le thème sélectionné est celui de la séance éditée
+                                                const currentSeanceHoursForThisTheme = (editingSeanceId && isSelected) 
+                                                    ? seances.find(s => s.id === editingSeanceId)?.themes.find((t: any) => t.id === theme.id)?.pivot.heures_planifiees || 0
+                                                    : 0;
+                                                
+                                                const adjustedReste = Number(theme.reste) + Number(currentSeanceHoursForThisTheme);
+                                                const isDone = adjustedReste === 0;
+
                                                 if (isDone && !isSelected) return null;
 
                                                 return (
@@ -774,7 +890,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                             setData(d => ({
                                                                 ...d,
                                                                 selected_theme_id: theme.id,
-                                                                heures_planifiees: Math.min(theme.reste, sessionDuration),
+                                                                heures_planifiees: Math.min(adjustedReste, sessionDuration),
                                                                 formateur_id: theme.animateurs?.length === 1 ? String(theme.animateurs[0].id) : ''
                                                             }));
                                                         }}
@@ -786,7 +902,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                             <div className="flex-1 min-w-0">
                                                                 <p className={`text-xs font-black truncate ${isSelected ? 'text-blue-900' : 'text-slate-600'}`}>{theme.nom}</p>
                                                                 <div className="flex items-center gap-2 mt-0.5">
-                                                                    <span className="text-[9px] font-bold text-slate-400">Reste à planifier: {theme.reste}h</span>
+                                                                    <span className="text-[9px] font-bold text-slate-400">Reste à planifier: {adjustedReste}h</span>
                                                                 </div>
                                                             </div>
                                                             
@@ -832,102 +948,116 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                         </div>
                                     </div>
 
-                                    {/* Section : Récurrence */}
-                                    <div className="space-y-6 pb-10">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-3 text-slate-400">
-                                                <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-black">03</span>
-                                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">Options de Récurrence</h4>
+                                    {!editingSeanceId && (
+                                        <div className="space-y-6 pb-10">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-3 text-slate-400">
+                                                    <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-black">03</span>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">Options de Récurrence</h4>
+                                                </div>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setData('recurrence', { ...data.recurrence, active: !data.recurrence.active })}
+                                                    className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                                                        data.recurrence.active 
+                                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
+                                                            : 'bg-slate-100 text-slate-400'
+                                                    }`}
+                                                >
+                                                    {data.recurrence.active ? 'Activée' : 'Désactivée'}
+                                                </button>
                                             </div>
-                                            <button 
-                                                type="button"
-                                                onClick={() => setData('recurrence', { ...data.recurrence, active: !data.recurrence.active })}
-                                                className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
-                                                    data.recurrence.active 
-                                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
-                                                        : 'bg-slate-100 text-slate-400'
-                                                }`}
-                                            >
-                                                {data.recurrence.active ? 'Activée' : 'Désactivée'}
-                                            </button>
-                                        </div>
 
-                                        {data.recurrence.active && (
-                                            <div className="animate-in slide-in-from-top-4 duration-300 space-y-6 bg-slate-50 p-7 rounded-[2.5rem] border border-slate-100">
-                                                <div className="grid grid-cols-2 gap-6">
-                                                    <div className="space-y-2">
-                                                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Fréquence</label>
-                                                        <div className="flex p-1 bg-white border-2 border-slate-100 rounded-xl">
+                                            {data.recurrence.active && (
+                                                <div className="animate-in slide-in-from-top-4 duration-300 space-y-6 bg-slate-50 p-7 rounded-[2.5rem] border border-slate-100">
+                                                    <div className="grid grid-cols-2 gap-6">
+                                                        <div className="space-y-2">
+                                                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Fréquence</label>
+                                                            <div className="flex p-1 bg-white border-2 border-slate-100 rounded-xl">
+                                                                <button 
+                                                                    type="button"
+                                                                    onClick={() => setData('recurrence', { ...data.recurrence, type: 'quotidien' })}
+                                                                    className={`flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${data.recurrence.type === 'quotidien' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}
+                                                                >
+                                                                    Quotidien
+                                                                </button>
+                                                                <button 
+                                                                    type="button"
+                                                                    onClick={() => setData('recurrence', { ...data.recurrence, type: 'hebdomadaire' })}
+                                                                    className={`flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${data.recurrence.type === 'hebdomadaire' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}
+                                                                >
+                                                                    Hebdo
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Date de fin</label>
+                                                            <input 
+                                                                type="date" 
+                                                                className="w-full bg-white border-2 border-slate-100 rounded-xl py-3 px-4 text-xs font-black focus:border-blue-500 transition-all"
+                                                                value={data.recurrence.date_fin}
+                                                                onChange={e => setData('recurrence', { ...data.recurrence, date_fin: e.target.value })}
+                                                                min={selectedDate}
+                                                                max={plan.date_fin ? plan.date_fin.toString() : undefined}
+                                                                required
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-3">
+                                                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Sauter les jours :</label>
+                                                        <div className="grid grid-cols-2 gap-3">
                                                             <button 
                                                                 type="button"
-                                                                onClick={() => setData('recurrence', { ...data.recurrence, type: 'quotidien' })}
-                                                                className={`flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${data.recurrence.type === 'quotidien' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}
+                                                                onClick={() => setData('recurrence', { ...data.recurrence, skip_saturday: !data.recurrence.skip_saturday })}
+                                                                className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all group ${data.recurrence.skip_saturday ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
                                                             >
-                                                                Quotidien
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all ${data.recurrence.skip_saturday ? 'bg-amber-500 text-white' : 'bg-slate-100'}`}>
+                                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                                                    </div>
+                                                                    <span className="text-[10px] font-black uppercase tracking-widest">Samedi</span>
+                                                                </div>
                                                             </button>
+
                                                             <button 
                                                                 type="button"
-                                                                onClick={() => setData('recurrence', { ...data.recurrence, type: 'hebdomadaire' })}
-                                                                className={`flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${data.recurrence.type === 'hebdomadaire' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}
+                                                                onClick={() => setData('recurrence', { ...data.recurrence, skip_sunday: !data.recurrence.skip_sunday })}
+                                                                className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all group ${data.recurrence.skip_sunday ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
                                                             >
-                                                                Hebdo
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all ${data.recurrence.skip_sunday ? 'bg-red-500 text-white' : 'bg-slate-100'}`}>
+                                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                                                    </div>
+                                                                    <span className="text-[10px] font-black uppercase tracking-widest">Dimanche</span>
+                                                                </div>
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Date de fin</label>
-                                                        <input 
-                                                            type="date" 
-                                                            className="w-full bg-white border-2 border-slate-100 rounded-xl py-3 px-4 text-xs font-black focus:border-blue-500 transition-all"
-                                                            value={data.recurrence.date_fin}
-                                                            onChange={e => setData('recurrence', { ...data.recurrence, date_fin: e.target.value })}
-                                                            min={selectedDate}
-                                                            max={plan.date_fin ? plan.date_fin.toString() : undefined}
-                                                            required
-                                                        />
-                                                    </div>
                                                 </div>
-
-                                                <div className="space-y-3">
-                                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Sauter les jours :</label>
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => setData('recurrence', { ...data.recurrence, skip_saturday: !data.recurrence.skip_saturday })}
-                                                            className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all group ${data.recurrence.skip_saturday ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                <div className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all ${data.recurrence.skip_saturday ? 'bg-amber-500 text-white' : 'bg-slate-100'}`}>
-                                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                                                                </div>
-                                                                <span className="text-[10px] font-black uppercase tracking-widest">Samedi</span>
-                                                            </div>
-                                                        </button>
-
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => setData('recurrence', { ...data.recurrence, skip_sunday: !data.recurrence.skip_sunday })}
-                                                            className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all group ${data.recurrence.skip_sunday ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                <div className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all ${data.recurrence.skip_sunday ? 'bg-red-500 text-white' : 'bg-slate-100'}`}>
-                                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                                                                </div>
-                                                                <span className="text-[10px] font-black uppercase tracking-widest">Dimanche</span>
-                                                            </div>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </form>
                             </div>
 
                             <div className="p-8 border-t border-slate-100 bg-slate-50/30 sticky bottom-0 z-10">
                                 <div className="flex items-center gap-4">
-                                    <button onClick={() => { setIsAdding(false); reset(); }} className="flex-1 py-4 bg-white border-2 border-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl">Annuler</button>
-                                    <button form="session-form" type="submit" disabled={processing || !isDurationValid} className="flex-[2] py-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-blue-600 transition-all disabled:opacity-50">Confirmer</button>
+                                    <button 
+                                        type="button"
+                                        onClick={() => { 
+                                            setEditingSeanceId(null); 
+                                            setThemeToPlan(null); 
+                                            setIsAdding(false); 
+                                            setTimeError(null); 
+                                        }} 
+                                        className="flex-1 py-4 bg-white border-2 border-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-50 transition-colors"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button form="session-form" type="submit" disabled={processing || !isDurationValid} className="flex-[2] py-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-blue-600 transition-all disabled:opacity-50">
+                                        {editingSeanceId ? 'Enregistrer les modifications' : 'Confirmer la création'}
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -938,7 +1068,19 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
             {/* Bouton d'ajout flottant */}
             {!isLocked && (
                 <button
-                    onClick={() => setIsAdding(true)}
+                    onClick={() => {
+                        setEditingSeanceId(null);
+                        setThemeToPlan(null);
+                        setIsAdding(true);
+                        setData(d => ({
+                            ...d,
+                            date: selectedDate,
+                            selected_theme_id: null,
+                            heures_planifiees: 0,
+                            formateur_id: '',
+                            recurrence: { ...d.recurrence, active: false, date_fin: selectedDate }
+                        }));
+                    }}
                     className="fixed bottom-10 right-10 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-blue-500 hover:scale-110 active:scale-95 transition-all z-20 group"
                 >
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" /></svg>
@@ -1004,6 +1146,15 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                     }
                 }}
                 onCancel={() => setDeleteSeanceId(null)}
+            />
+            <ConfirmDialog
+                isOpen={confirmSaveSeance}
+                title="Enregistrer les modifications ?"
+                message="Voulez-vous vraiment appliquer ces changements à la séance ?"
+                confirmLabel="Oui, enregistrer"
+                isDanger={false}
+                onConfirm={executeUpdate}
+                onCancel={() => setConfirmSaveSeance(false)}
             />
         </AuthenticatedLayout>
     );

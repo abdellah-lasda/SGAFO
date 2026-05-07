@@ -163,7 +163,7 @@ Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')-
         Route::post('plans/{plan}/reouvrir', [PlanFormationController::class, 'reouvrirPlanning'])->name('planning.reouvrir');
     });
     
-    Route::resource('seances', SeanceController::class)->only(['destroy']);
+    Route::resource('seances', SeanceController::class)->only(['destroy', 'update']);
     
     // Logistique (Utilisée par les coordinateurs pour consultation)
     Route::get('logistique', [LogistiqueController::class, 'index'])->name('logistique.index');
@@ -201,7 +201,7 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
 
     // Attendance (Appel & Rapports)
     Route::get('/seances/{seance}/attendance', [AnimateurDashboardController::class, 'attendance'])->name('seances.attendance');
-    Route::post('/seances/{seance}/attendance', [AnimateurDashboardController::class, 'submitAttendance'])->name('seances.attendance.submit');
+    Route::post('/seances/{seance}/attendance', [AnimateurDashboardController::class, 'submitAttendance'])->name('seances.submit-attendance');
     Route::get('/seances/{seance}/print-sheet', [AnimateurDashboardController::class, 'printSheet'])->name('seances.print-sheet');
     Route::get('/seances/{seance}/export-absences', [AnimateurDashboardController::class, 'exportAbsences'])->name('seances.export-absences');
     Route::post('/seances/{seance}/reopen', [AnimateurDashboardController::class, 'reopenAttendance'])->name('seances.reopen');
@@ -222,6 +222,7 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('participant')->name('part
     Route::get('/seance/{seance}', [App\Http\Controllers\Modules\Participant\SeanceController::class, 'show'])->name('seance.show');
     Route::get('/qcm/{qcm}', [App\Http\Controllers\Modules\Participant\QcmController::class, 'show'])->name('qcm.passage');
     Route::post('/qcm/{qcm}/submit', [App\Http\Controllers\Modules\Participant\QcmController::class, 'submit'])->name('qcm.submit');
+    Route::get('/qcm/resultat/{tentative}', [App\Http\Controllers\Modules\Participant\QcmController::class, 'resultat'])->name('qcm.resultat');
     
     // Feedback Participant
     Route::get('/feedback/{seance}', [App\Http\Controllers\Modules\Participant\FeedbackParticipantController::class, 'show'])->name('feedback.show');

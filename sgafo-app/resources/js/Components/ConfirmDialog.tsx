@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 interface ConfirmDialogProps {
     isOpen: boolean;
     title: string;
-    message: string;
+    message: React.ReactNode;
     confirmLabel?: string;
     cancelLabel?: string;
     isDanger?: boolean;
