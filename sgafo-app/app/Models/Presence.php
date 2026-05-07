@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Presence extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HasRegionalScope;
 
     protected $fillable = [
         'seance_id',

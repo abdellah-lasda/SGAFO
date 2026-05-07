@@ -112,6 +112,11 @@ class User extends Authenticatable
         return $this->belongsToMany(Seance::class, 'seance_themes', 'formateur_id', 'seance_id');
     }
 
+    public function planThemes()
+    {
+        return $this->belongsToMany(PlanTheme::class, 'plan_theme_animateurs', 'animateur_id', 'theme_id');
+    }
+
     public function presences()
     {
         return $this->hasMany(Presence::class, 'participant_id');

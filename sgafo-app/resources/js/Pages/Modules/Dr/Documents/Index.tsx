@@ -9,7 +9,6 @@ interface DocumentIndexProps extends PageProps {
 export default function Index({ auth, plans }: DocumentIndexProps) {
     return (
         <AuthenticatedLayout
-            user={auth.user}
             header={<h2 className="font-black text-2xl text-slate-800 leading-tight">Documents Officiels & Reporting</h2>}
         >
             <Head title="Documents DR" />
@@ -54,7 +53,15 @@ export default function Index({ auth, plans }: DocumentIndexProps) {
                                         <tr key={plan.id} className="hover:bg-slate-50/30 transition-colors group">
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm font-bold text-slate-800">{plan.entite?.titre}</span>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-sm font-bold text-slate-800">{plan.entite?.titre}</span>
+                                                        <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                                                            plan.statut === 'validé' ? 'bg-emerald-100 text-emerald-700' : 
+                                                            plan.statut === 'soumis' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
+                                                        }`}>
+                                                            {plan.statut}
+                                                        </span>
+                                                    </div>
                                                     <span className="text-[10px] text-slate-400 uppercase font-black">{plan.titre}</span>
                                                 </div>
                                             </td>

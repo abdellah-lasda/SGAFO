@@ -76,8 +76,16 @@ trait HasRegionalScope
                          $q->whereHas('siteFormation', function($sq) use ($regionIds) { $sq->whereIn('region_id', $regionIds); });
                     });
                 } elseif ($table === 'feedback_submissions') {
-                    $builder->whereHas('plan', function ($q) use ($regionIds) {
-                        $q->whereHas('siteFormation', function($sq) use ($regionIds) { $sq->whereIn('region_id', $regionIds); });
+                    $builder->whereHas('participant.instituts', function($sq) use ($regionIds) {
+                        $sq->whereIn('region_id', $regionIds);
+                    });
+                } elseif ($table === 'presences') {
+                    $builder->whereHas('participant.instituts', function($sq) use ($regionIds) {
+                        $sq->whereIn('region_id', $regionIds);
+                    });
+                } elseif ($table === 'qcms') {
+                    $builder->whereHas('seance.plan.participants.instituts', function($sq) use ($regionIds) {
+                        $sq->whereIn('region_id', $regionIds);
                     });
                 }
             } finally {

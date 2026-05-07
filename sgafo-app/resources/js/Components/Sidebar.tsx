@@ -229,6 +229,38 @@ export default function Sidebar({ user }: SidebarProps) {
                                 </svg>
                                 Documents & Reporting
                             </Link>
+
+                            <Link
+                                href={route('dr.calendrier.index')}
+                                className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('dr.calendrier.*') ? activeClass : inactiveClass}`}
+                            >
+                                <svg className="mr-3 h-5 w-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Calendrier Régional
+                            </Link>
+
+                            <div className="pt-4 pb-2">
+                                <h3 className="px-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Ressources</h3>
+                                <Link
+                                    href={route('dr.formateurs.index')}
+                                    className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('dr.formateurs.*') ? activeClass : inactiveClass}`}
+                                >
+                                    <svg className="mr-3 h-5 w-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    Annuaire Formateurs
+                                </Link>
+                                <Link
+                                    href={route('dr.etablissements.index')}
+                                    className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('dr.etablissements.*') ? activeClass : inactiveClass}`}
+                                >
+                                    <svg className="mr-3 h-5 w-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                    Répertoire Établissements
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 )}

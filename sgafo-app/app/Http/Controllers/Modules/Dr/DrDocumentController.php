@@ -17,12 +17,13 @@ class DrDocumentController extends Controller
         $user = Auth::user();
         $regionIds = $user->regions->pluck('id');
 
-        // On cherche les plans où il y a au moins un formateur de la région du DR
+        // On cherche tous les plans rattachés aux sites de formation de la région du DR
         $plans = PlanFormation::with(['entite', 'siteFormation'])
-            ->whereHas('seances.seanceThemes.formateur.instituts', function($q) use ($regionIds) {
+            ->whereHas('siteFormation', function($q) use ($regionIds) {
                 $q->whereIn('region_id', $regionIds);
             })
-            ->whereIn('statut', ['confirmé', 'validé', 'terminé'])
+            ->whereIn('statut', ['soumis', 'confirmé', 'validé', 'terminé'])
+            ->orderBy('date_debut', 'desc')
             ->get();
 
         return Inertia::render('Modules/Dr/Documents/Index', [
@@ -31,22 +32,45 @@ class DrDocumentController extends Controller
     }
 
     /**
-     * Export du Plan Régional Complet (Point 5)
+     * Export du Plan Régional Augmenté avec KPIs
      */
     public function exportRegionalPlan()
     {
         $user = Auth::user();
         $regions = $user->regions;
+        $regionIds = $regions->pluck('id');
         $regionNames = $regions->pluck('nom')->join(', ');
 
-        // Récupérer tous les plans de la région (filtrage automatique par scope)
+        // 1. Récupération des Plans
         $plans = PlanFormation::with(['entite', 'siteFormation', 'seances.site'])
             ->orderBy('date_debut', 'asc')
+            ->get();
+
+        // 2. Calcul des KPIs (Même logique que le Dashboard)
+        $presenceStats = \App\Models\Presence::selectRaw("count(*) as total, sum(case when statut in ('présent', 'retard') then 1 else 0 end) as present")
+            ->first();
+        $attendanceRate = $presenceStats->total > 0 ? round(($presenceStats->present / $presenceStats->total) * 100, 1) : 0;
+
+        $qcmStats = \App\Models\QcmTentative::whereHas('qcm.seance.plan')
+            ->selectRaw('avg(score) as average')
+            ->first();
+
+        $satisfactionRadar = \App\Models\FeedbackResponse::whereHas('submission.plan')
+            ->join('feedback_questions', 'feedback_responses.question_id', '=', 'feedback_questions.id')
+            ->where('feedback_questions.type', 'rating')
+            ->select('feedback_questions.categorie', \DB::raw('AVG(rating) as average'))
+            ->groupBy('feedback_questions.categorie')
             ->get();
 
         $data = [
             'regions' => $regionNames,
             'plans' => $plans,
+            'stats' => [
+                'attendance_rate' => $attendanceRate,
+                'qcm_average' => round($qcmStats->average ?? 0, 1),
+                'satisfaction' => $satisfactionRadar,
+                'total_formateurs' => \App\Models\User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))->count(),
+            ],
             'date' => now()->format('d/m/Y'),
             'user' => $user->prenom . ' ' . $user->nom
         ];
@@ -54,7 +78,7 @@ class DrDocumentController extends Controller
         $pdf = Pdf::loadView('pdf.regional_plan_report', $data);
         $pdf->setPaper('a4', 'landscape');
 
-        return $pdf->download('Rapport_Regional_Formation_' . str_replace(' ', '_', $regionNames) . '.pdf');
+        return $pdf->download('Bilan_Regional_SGAFO_' . str_replace(' ', '_', $regionNames) . '.pdf');
     }
 
     /**
@@ -69,11 +93,30 @@ class DrDocumentController extends Controller
         $formateurs = \App\Models\User::whereHas('instituts', function($q) use ($regionIds) {
                 $q->whereIn('region_id', $regionIds);
             })
-            ->whereHas('seanceThemes.seance', function($q) use ($plan) {
-                $q->where('plan_id', $plan->id);
+            ->where(function($q) use ($plan) {
+                $q->whereHas('seances', function($sq) use ($plan) {
+                    $sq->where('plan_id', $plan->id);
+                })
+                ->orWhereHas('planThemes', function($sq) use ($plan) {
+                    $sq->where('plan_id', $plan->id);
+                })
+                ->orWhereHas('plans', function($sq) use ($plan) {
+                    $sq->where('plans_formation.id', $plan->id);
+                });
             })
             ->with('instituts')
-            ->get();
+            ->get()
+            ->sortBy(function($user) {
+                return $user->instituts->first()?->nom ?? 'ZZZ';
+            })
+            ->map(function($u) use ($plan) {
+                // Vérifier s'il est animateur sur au moins un thème ou une séance
+                $isAnimator = $u->seances()->where('plan_id', $plan->id)->exists() || 
+                             $u->planThemes()->where('plan_id', $plan->id)->exists();
+                
+                $u->role_dans_plan = $isAnimator ? 'Animateur' : 'Participant';
+                return $u;
+            });
 
         // On génère une convocation "groupée" ou individuelle pour ces formateurs
         $data = [

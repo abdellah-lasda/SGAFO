@@ -253,6 +253,12 @@ Route::middleware(['auth', 'role:DR', 'readonly.dr'])->prefix('dr')->name('dr.')
     Route::get('/documents', [App\Http\Controllers\Modules\Dr\DrDocumentController::class, 'index'])->name('documents.index');
     Route::get('/documents/export-regional', [App\Http\Controllers\Modules\Dr\DrDocumentController::class, 'exportRegionalPlan'])->name('documents.export-regional');
     Route::get('/documents/{plan}/convocation', [App\Http\Controllers\Modules\Dr\DrDocumentController::class, 'downloadConvocation'])->name('documents.convocation');
+
+    // Ressources Régionales
+    Route::get('/formateurs', [App\Http\Controllers\Modules\Dr\DrDashboardController::class, 'formateurs'])->name('formateurs.index');
+    Route::get('/formateurs/{user}', [App\Http\Controllers\Modules\Dr\DrDashboardController::class, 'formateurShow'])->name('formateurs.show');
+    Route::get('/etablissements', [App\Http\Controllers\Modules\Dr\DrDashboardController::class, 'etablissements'])->name('etablissements.index');
+    Route::get('/calendrier', [App\Http\Controllers\Modules\Dr\DrDashboardController::class, 'calendrier'])->name('calendrier.index');
 });
 
 require __DIR__.'/auth.php';

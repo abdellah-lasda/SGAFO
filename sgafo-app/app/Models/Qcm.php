@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Qcm extends Model
 {
+    use \App\Traits\HasRegionalScope;
     protected $fillable = [
         'seance_id',
         'titre',

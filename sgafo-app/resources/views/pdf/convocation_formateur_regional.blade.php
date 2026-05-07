@@ -30,16 +30,36 @@
         <p><span class="label">Période :</span> <span class="value">Du {{ \Carbon\Carbon::parse($plan->date_debut)->format('d/m/Y') }} au {{ \Carbon\Carbon::parse($plan->date_fin)->format('d/m/Y') }}</span></p>
     </div>
 
-    <h3>Liste des Animateurs Convoqués (Région {{ $region_dr }})</h3>
-    
-    @foreach($formateurs as $formateur)
-    <div class="formateur-card">
-        <p><span class="label">Nom & Prénom :</span> <span class="value">{{ $formateur->nom }} {{ $formateur->prenom }}</span></p>
-        <p><span class="label">Rôle :</span> <span class="value">Animateur Principal / Formateur</span></p>
-        <p><span class="label">Établissement d'Origine :</span> <span class="value">{{ $formateur->instituts->first()?->nom ?? 'N/A' }}</span></p>
-        <p><span class="label">Code Établissement :</span> <span class="value">{{ $formateur->instituts->first()?->code ?? 'N/A' }}</span></p>
-    </div>
-    @endforeach
+    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+        <thead>
+            <tr style="background: #f1f5f9;">
+                <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left; font-size: 10px; text-transform: uppercase; color: #64748b;">Nom & Prénom</th>
+                <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left; font-size: 10px; text-transform: uppercase; color: #64748b;">Établissement</th>
+                <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left; font-size: 10px; text-transform: uppercase; color: #64748b;">Code</th>
+                <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left; font-size: 10px; text-transform: uppercase; color: #64748b;">Rôle</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($formateurs as $formateur)
+            <tr>
+                <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold;">{{ $formateur->nom }} {{ $formateur->prenom }}</td>
+                <td style="padding: 10px; border: 1px solid #e2e8f0;">{{ $formateur->instituts->first()?->nom ?? 'N/A' }}</td>
+                <td style="padding: 10px; border: 1px solid #e2e8f0;">{{ $formateur->instituts->first()?->code ?? 'N/A' }}</td>
+                <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 9px;">
+                    <span style="color: {{ $formateur->role_dans_plan === 'Animateur' ? '#1e293b' : '#64748b' }}">
+                        {{ $formateur->role_dans_plan }}
+                    </span>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="4" style="padding: 30px; text-align: center; color: #64748b; font-style: italic; border: 1px solid #e2e8f0;">
+                    Aucun animateur de la région n'est encore assigné à ce plan.
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
 
     <div style="margin-top: 50px;">
         <p>Le Directeur Régional est chargé de la transmission de la présente convocation aux établissements d'origine des intéressés pour exécution.</p>
