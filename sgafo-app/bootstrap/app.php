@@ -22,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'readonly.dr' => \App\Http\Middleware\CheckReadOnlyDR::class,
         ]);
     })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        $schedule->command('sgafo:notify-sessions')->everyMinute();
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

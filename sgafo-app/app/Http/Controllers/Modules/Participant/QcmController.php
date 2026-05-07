@@ -95,6 +95,11 @@ class QcmController extends Controller
             'total_points' => $totalPoints,
         ]);
 
+        // Notification félicitations si 100%
+        if ($totalPoints > 0 && $scoreObtenu === $totalPoints) {
+            $user->notify(new \App\Notifications\PerfectScoreNotification($qcm));
+        }
+
         return redirect()->route('participant.qcm.resultat', $tentative->id);
     }
 

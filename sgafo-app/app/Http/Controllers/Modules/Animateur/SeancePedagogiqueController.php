@@ -78,9 +78,18 @@ class SeancePedagogiqueController extends Controller
             $data['path'] = $request->url;
         }
 
-        SeanceRessource::create($data);
+        $ressource = SeanceRessource::create($data);
 
-        return back()->with('success', 'Ressource ajoutée.');
+        // Notifier les participants du plan
+        $participants = $seance->plan->participants;
+        if ($participants->count() > 0) {
+            \Illuminate\Support\Facades\Notification::send(
+                $participants, 
+                new \App\Notifications\NewResourceNotification($seance, $ressource->titre)
+            );
+        }
+
+        return back()->with('success', 'Ressource ajoutée et participants notifiés.');
     }
 
     public function updateResource(Request $request, SeanceRessource $ressource)
