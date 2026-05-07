@@ -65,9 +65,15 @@ class ParticipantDashboardController extends Controller
             ->with('seance.plan')
             ->get()
             ->map(function($qcm) use ($user) {
-                $qcm->deja_fait = QcmTentative::where('user_id', $user->id)
+                $latestTentative = QcmTentative::where('user_id', $user->id)
                     ->where('qcm_id', $qcm->id)
-                    ->exists();
+                    ->latest()
+                    ->first();
+                
+                $qcm->deja_fait = !is_null($latestTentative);
+                $qcm->derniere_tentative_id = $latestTentative ? $latestTentative->id : null;
+                $qcm->derniere_score = $latestTentative ? $latestTentative->score : null;
+                $qcm->total_points = $latestTentative ? $latestTentative->total_points : null;
                 return $qcm;
             });
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 interface Option {
@@ -26,9 +26,11 @@ interface Qcm {
 interface Props {
     qcm: Qcm;
     auth: any;
+    derniere_tentative?: any;
 }
 
-export default function Passage({ qcm, auth }: Props) {
+export default function Passage({ qcm, auth, derniere_tentative }: Props) {
+    const [hasStarted, setHasStarted] = useState(!derniere_tentative);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [timeLeft, setTimeLeft] = useState(qcm.duree_minutes * 60);
     const [startTime] = useState(Date.now());
@@ -108,9 +110,57 @@ export default function Passage({ qcm, auth }: Props) {
 
     const isLastQuestion = currentQuestionIndex === qcm.questions.length - 1;
 
+    if (!hasStarted) {
+        return (
+            <AuthenticatedLayout
+                header={<span className="font-semibold text-gray-800 leading-tight">QCM: {qcm.titre}</span>}
+            >
+                <Head title={`QCM - ${qcm.titre}`} />
+                <div className="py-12 bg-slate-50 min-h-screen flex items-center justify-center">
+                    <div className="max-w-2xl w-full px-4">
+                        <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-blue-900/10 border border-slate-100 overflow-hidden">
+                            <div className="p-12 text-center">
+                                <div className="w-20 h-20 bg-blue-50 rounded-3xl mx-auto flex items-center justify-center mb-8">
+                                    <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-3xl font-black text-slate-900 mb-4">QCM déjà effectué</h3>
+                                <p className="text-slate-500 font-medium mb-12">
+                                    Vous avez déjà passé ce QCM. Vous pouvez consulter vos résultats ou décider de le repasser pour améliorer votre score.
+                                </p>
+
+                                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                                    <Link
+                                        href={route('participant.qcm.resultat', derniere_tentative.id)}
+                                        className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                        Voir mon résultat
+                                    </Link>
+                                    <button
+                                        onClick={() => setHasStarted(true)}
+                                        className="w-full sm:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        Repasser le QCM
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </AuthenticatedLayout>
+        );
+    }
+
     return (
         <AuthenticatedLayout
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">QCM: {qcm.titre}</h2>}
+            header={<span className="font-semibold text-gray-800 leading-tight">QCM: {qcm.titre}</span>}
         >
             <Head title={`QCM - ${qcm.titre}`} />
 

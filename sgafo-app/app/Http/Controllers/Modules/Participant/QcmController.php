@@ -28,8 +28,15 @@ class QcmController extends Controller
         // Load QCM with questions and options
         $qcm->load(['questions.options']);
 
+        // Check if user has already taken this QCM
+        $derniereTentative = QcmTentative::where('user_id', Auth::id())
+            ->where('qcm_id', $qcm->id)
+            ->latest()
+            ->first();
+
         return Inertia::render('Modules/Participant/Qcm/Passage', [
             'qcm' => $qcm,
+            'derniere_tentative' => $derniereTentative,
         ]);
     }
 

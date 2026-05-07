@@ -38,6 +38,9 @@ interface Qcm {
     titre: string;
     seance: Seance;
     deja_fait: boolean;
+    derniere_tentative_id?: number;
+    derniere_score?: number;
+    total_points?: number;
 }
 
 interface Props extends PageProps {
@@ -229,8 +232,12 @@ export default function Dashboard({ auth, seances, stats, nextSession, qcms }: P
                                 {qcms.filter(q => !q.deja_fait).length > 0 ? (
                                     qcms.filter(q => !q.deja_fait).map(qcm => {
                                         const now = new Date();
-                                        const seanceStart = new Date(`${qcm.seance.date}T${qcm.seance.debut}`);
-                                        const isPassable = now >= seanceStart;
+                                        now.setHours(0, 0, 0, 0);
+                                        const seanceDate = new Date(qcm.seance.date);
+                                        seanceDate.setHours(0, 0, 0, 0);
+                                        
+                                        // Block only if seance date is in the future
+                                        const isPassable = seanceDate <= now;
 
                                         return (
                                             <div key={qcm.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-blue-200 hover:bg-blue-50 transition-all">
@@ -245,7 +252,7 @@ export default function Dashboard({ auth, seances, stats, nextSession, qcms }: P
                                                     </Link>
                                                 ) : (
                                                     <div className="w-full py-2 bg-slate-200 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest text-center italic cursor-not-allowed">
-                                                        Déblocage à {qcm.seance.debut}
+                                                        Déblocage le {format(new Date(qcm.seance.date), 'dd/MM')}
                                                     </div>
                                                 )}
                                             </div>
@@ -266,11 +273,31 @@ export default function Dashboard({ auth, seances, stats, nextSession, qcms }: P
                             <div className="space-y-4">
                                 {qcms.filter(q => q.deja_fait).length > 0 ? (
                                     qcms.filter(q => q.deja_fait).slice(0, 3).map(qcm => (
-                                        <div key={qcm.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                                            <div className="min-w-0 flex-1 pr-4">
-                                                <p className="text-[10px] font-bold text-slate-500 truncate">{qcm.titre}</p>
+                                        <div key={qcm.id} className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="min-w-0 flex-1 pr-4">
+                                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest truncate">{qcm.seance?.plan?.titre}</p>
+                                                    <p className="text-xs font-bold text-white truncate">{qcm.titre}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-xs font-black text-blue-400">{qcm.derniere_score} / {qcm.total_points}</p>
+                                                </div>
                                             </div>
-                                            <span className="text-sm font-black text-blue-400">Terminé</span>
+                                            
+                                            <div className="flex gap-2">
+                                                <Link 
+                                                    href={route('participant.qcm.resultat', qcm.derniere_tentative_id)}
+                                                    className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest text-center hover:bg-blue-500 transition-all"
+                                                >
+                                                    Résultat
+                                                </Link>
+                                                <Link 
+                                                    href={route('participant.qcm.passage', qcm.id)}
+                                                    className="flex-1 py-2 bg-white/10 text-white border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-widest text-center hover:bg-white/20 transition-all"
+                                                >
+                                                    Repasser
+                                                </Link>
+                                            </div>
                                         </div>
                                     ))
                                 ) : (
