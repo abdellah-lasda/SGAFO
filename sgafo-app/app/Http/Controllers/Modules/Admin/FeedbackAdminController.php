@@ -18,47 +18,59 @@ class FeedbackAdminController extends Controller
 {
     public function dashboard(Request $request)
     {
-        $planId = $request->input('plan_id');
+        $query = Seance::whereHas('feedbackForm')
+            ->with(['plan.entite', 'feedbackForm.submissions', 'site'])
+            ->withCount(['presences' => function($q) {
+                $q->whereIn('statut', ['présent', 'retard']);
+            }]);
 
-        $plans = PlanFormation::whereIn('statut', ['validé', 'terminée'])
-            ->select('id', 'titre')
-            ->get();
-
-        $query = FeedbackSubmission::with(['participant', 'seance', 'plan', 'responses.question']);
-
-        if ($planId) {
-            $query->where('plan_id', $planId);
+        if ($request->filled('plan_id')) {
+            $query->where('plan_id', $request->plan_id);
         }
 
-        $submissions = $query->latest()->paginate(15);
+        $seances = $query->orderBy('date', 'desc')->paginate(10);
 
-        // Stats globales
-        $avgRating = \DB::table('feedback_responses')
-            ->whereNotNull('rating')
-            ->avg('rating');
+        // Transformer les séances pour inclure les stats calculées
+        $seances->getCollection()->transform(function ($seance) {
+            $submissionsCount = $seance->feedbackForm->submissions->count();
+            $presentsCount = $seance->presences_count;
+            
+            // Calculer la moyenne de la séance (toutes questions rating confondues)
+            $seance->avg_rating = \DB::table('feedback_responses')
+                ->join('feedback_submissions', 'feedback_responses.feedback_submission_id', '=', 'feedback_submissions.id')
+                ->where('feedback_submissions.feedback_form_id', $seance->feedbackForm->id)
+                ->avg('rating');
 
-        $stats = [
+            $seance->participation_rate = $presentsCount > 0 ? round(($submissionsCount / $presentsCount) * 100) : 0;
+            $seance->submissions_count = $submissionsCount;
+            
+            return $seance;
+        });
+
+        // Stats globales pour les widgets
+        $globalStats = [
             'total_submissions' => FeedbackSubmission::count(),
-            'published_count' => FeedbackSubmission::where('est_affiche_sur_plan', true)->count(),
+            'avg_rating' => round(\DB::table('feedback_responses')->avg('rating'), 1),
             'testimonial_count' => FeedbackSubmission::where('is_testimonial', true)->count(),
-            'avg_rating' => round($avgRating, 1) ?: 0,
         ];
 
-        $feedbackStats = DB::table('feedback_questions')
+        // Stats par catégorie pour le radar chart
+        $feedbackStats = \DB::table('feedback_questions')
             ->join('feedback_responses', 'feedback_questions.id', '=', 'feedback_responses.question_id')
-            ->select('feedback_questions.categorie', DB::raw('AVG(feedback_responses.rating) as average'))
-            ->groupBy('feedback_questions.categorie')
+            ->select('categorie', \DB::raw('AVG(rating) as average'))
+            ->where('type', 'rating')
+            ->groupBy('categorie')
             ->get();
 
+        $plans = PlanFormation::has('seances.feedbackForm')->get(['id', 'titre']);
 
         return Inertia::render('Modules/Admin/Feedback/FeedbackDashboard', [
-            'submissions' => $submissions,
+            'seances' => $seances,
             'plans' => $plans,
             'filters' => $request->only(['plan_id']),
-            'stats' => $stats,
-            'feedbackStats' => $feedbackStats,
+            'stats' => $globalStats,
+            'feedbackStats' => $feedbackStats
         ]);
-
     }
 
     public function builder(Seance $seance)
@@ -113,8 +125,21 @@ class FeedbackAdminController extends Controller
 
             $form->questions()->whereNotIn('id', $questionIdsToKeep)->delete();
 
+            // Notifier les participants uniquement si la séance est terminée et qu'ils étaient présents
+            if ($seance->statut === 'terminée') {
+                $presents = $seance->presences()
+                    ->whereIn('statut', ['présent', 'retard'])
+                    ->with('participant')
+                    ->get()
+                    ->pluck('participant');
+
+                if ($presents->count() > 0) {
+                    \Illuminate\Support\Facades\Notification::send($presents, new FeedbackRequiredNotification($seance));
+                }
+            }
+
             DB::commit();
-            return back()->with('success', 'Questionnaire de feedback sauvegardé.');
+            return back()->with('success', 'Questionnaire de feedback sauvegardé' . ($seance->statut === 'terminée' ? ' et participants notifiés.' : '.'));
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Erreur lors de la sauvegarde : ' . $e->getMessage()]);
@@ -203,9 +228,22 @@ class FeedbackAdminController extends Controller
                 $form->questions()->create($q);
             }
 
+            // Notifier les participants uniquement si la séance est terminée et qu'ils étaient présents
+            if ($seance->statut === 'terminée') {
+                $presents = $seance->presences()
+                    ->whereIn('statut', ['présent', 'retard'])
+                    ->with('participant')
+                    ->get()
+                    ->pluck('participant');
+
+                if ($presents->count() > 0) {
+                    \Illuminate\Support\Facades\Notification::send($presents, new FeedbackRequiredNotification($seance));
+                }
+            }
+
             DB::commit();
 
-            return back()->with('success', 'Évaluation standard activée pour cette séance.');
+            return back()->with('success', 'Évaluation standard activée' . ($seance->statut === 'terminée' ? ' et participants notifiés.' : '.'));
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Erreur : ' . $e->getMessage()]);

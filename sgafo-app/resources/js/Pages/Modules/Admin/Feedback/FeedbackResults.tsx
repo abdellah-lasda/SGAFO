@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
 export default function FeedbackResults({ auth, seance, stats, submissions, submissionCount }: any) {
-    const isManager = auth.user.roles.some((r: any) => ['RF', 'ADMIN'].includes(r.name));
+    const isManager = auth.user.roles.some((r: any) => r.code.includes('RF'));
 
     const togglePublish = (submissionId: number) => {
         router.patch(route('modules.feedback.submissions.toggle-publish', submissionId), {}, {
@@ -15,13 +15,9 @@ export default function FeedbackResults({ auth, seance, stats, submissions, subm
         if (score >= 3) return 'text-amber-600 bg-amber-50 border-amber-100';
         return 'text-red-600 bg-red-50 border-red-100';
     };
-
     return (
         <AuthenticatedLayout header={
             <div className="flex items-center gap-4 text-sm">
-                <Link className="text-slate-400 hover:text-emerald-600 transition-colors font-bold" href={route('dashboard')} >SGAFO</Link>
-                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
-                
                 {isManager && (
                     <>
                         <Link className="text-slate-400 hover:text-emerald-600 transition-colors font-bold" href={route('modules.validations.planning.index', seance.plan_id)} >Planning du Plan</Link>
@@ -109,15 +105,19 @@ export default function FeedbackResults({ auth, seance, stats, submissions, subm
                                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{new Date(submission.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</p>
                                                 </div>
                                             </div>
-                                            <button 
-                                                onClick={() => togglePublish(submission.id)}
-                                                className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${submission.est_affiche_sur_plan ? 'bg-emerald-500 text-white shadow-lg' : 'bg-white text-slate-500 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600'}`}
-                                            >
-                                                {submission.est_affiche_sur_plan ? '✓ Publié au catalogue' : 'Publier au catalogue'}
-                                            </button>
+                                            {isManager && (
+                                                <button 
+                                                    onClick={() => togglePublish(submission.id)}
+                                                    className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${submission.est_affiche_sur_plan ? 'bg-emerald-500 text-white shadow-lg' : 'bg-white text-slate-500 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-600'}`}
+                                                >
+                                                    {submission.est_affiche_sur_plan ? '✓ Publié au catalogue' : 'Publier au catalogue'}
+                                                </button>
+                                            )}
                                         </div>
                                         <div className="mt-6 p-4 bg-white/60 rounded-2xl border border-slate-100 italic text-slate-600 text-sm leading-relaxed relative">
-                                            <svg className="absolute -top-3 -left-1 w-6 h-6 text-emerald-100" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.893h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.893h3.999v10h-9.999z" /></svg>
+                                            <svg className="absolute -top-3 -left-1 w-8 h-8 text-emerald-50 opacity-50" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.893h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.893h3.999v10h-9.999z" />
+                                            </svg>
                                             "{submission.commentaire_general || 'Aucun commentaire textuel.'}"
                                         </div>
                                     </div>
