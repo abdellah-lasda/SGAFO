@@ -4,6 +4,7 @@ import { Editor } from '@tinymce/tinymce-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useState, useEffect, useRef } from 'react';
+import { BarChart2 } from 'lucide-react';
 import { validateFile, validateUrl, validateRequiredString } from '@/utils/validators';
 import ConfirmDialog from '@/Components/ConfirmDialog';
 
@@ -398,6 +399,13 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                                             >
                                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                                 Éditer
+                                            </Link>
+                                            <Link
+                                                href={route('modules.animateur.qcms.results', qcm.id)}
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-slate-900 text-white hover:bg-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
+                                            >
+                                                <BarChart2 className="w-3.5 h-3.5" />
+                                                Résultats
                                             </Link>
                                             <button
                                                 type="button"

@@ -210,6 +210,7 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
     Route::put('/qcms/{qcm}', [QcmAnimateurController::class, 'update'])->name('qcms.update');
     Route::delete('/qcms/{qcm}', [QcmAnimateurController::class, 'destroy'])->name('qcms.destroy');
     Route::post('/qcms/{qcm}/structure', [QcmAnimateurController::class, 'saveStructure'])->name('qcms.structure.save');
+    Route::get('/qcms/{qcm}/results', [QcmAnimateurController::class, 'results'])->name('qcms.results');
 });
 
 // Routes partagées Animateur / Admin / RF (Exports)

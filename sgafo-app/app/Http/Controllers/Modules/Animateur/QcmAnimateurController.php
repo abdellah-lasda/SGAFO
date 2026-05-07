@@ -153,4 +153,24 @@ class QcmAnimateurController extends Controller
             return back()->withErrors(['error' => 'Erreur lors de la sauvegarde : ' . $e->getMessage()]);
         }
     }
+    /**
+     * Show the results of the QCM (Participant scores).
+     */
+    public function results(Qcm $qcm)
+    {
+        $this->checkAssignment($qcm->seance);
+
+        $qcm->load(['seance.plan.participants']);
+        
+        $tentatives = \App\Models\QcmTentative::with('user')
+            ->where('qcm_id', $qcm->id)
+            ->latest('termine_le')
+            ->get();
+
+        return Inertia::render('Modules/Animateur/QcmResults', [
+            'qcm' => $qcm,
+            'seance' => $qcm->seance,
+            'tentatives' => $tentatives,
+        ]);
+    }
 }
