@@ -202,8 +202,6 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
     // Attendance (Appel & Rapports)
     Route::get('/seances/{seance}/attendance', [AnimateurDashboardController::class, 'attendance'])->name('seances.attendance');
     Route::post('/seances/{seance}/attendance', [AnimateurDashboardController::class, 'submitAttendance'])->name('seances.submit-attendance');
-    Route::get('/seances/{seance}/print-sheet', [AnimateurDashboardController::class, 'printSheet'])->name('seances.print-sheet');
-    Route::get('/seances/{seance}/export-absences', [AnimateurDashboardController::class, 'exportAbsences'])->name('seances.export-absences');
     Route::post('/seances/{seance}/reopen', [AnimateurDashboardController::class, 'reopenAttendance'])->name('seances.reopen');
 
     // QCM Management
@@ -212,6 +210,12 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('module
     Route::put('/qcms/{qcm}', [QcmAnimateurController::class, 'update'])->name('qcms.update');
     Route::delete('/qcms/{qcm}', [QcmAnimateurController::class, 'destroy'])->name('qcms.destroy');
     Route::post('/qcms/{qcm}/structure', [QcmAnimateurController::class, 'saveStructure'])->name('qcms.structure.save');
+});
+
+// Routes partagées Animateur / Admin / RF (Exports)
+Route::middleware(['auth', 'role:FORMATEUR,ADMIN,RF,CDC'])->prefix('animateur')->name('modules.animateur.')->group(function () {
+    Route::get('/seances/{seance}/print-sheet', [AnimateurDashboardController::class, 'printSheet'])->name('seances.print-sheet');
+    Route::get('/seances/{seance}/export-absences', [AnimateurDashboardController::class, 'exportAbsences'])->name('seances.export-absences');
 });
 
 // Espace Participant

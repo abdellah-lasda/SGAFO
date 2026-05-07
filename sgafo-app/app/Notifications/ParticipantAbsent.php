@@ -49,7 +49,7 @@ class ParticipantAbsent extends Notification
             'plan_titre' => $this->seance->plan->titre,
             'seance_id' => $this->seance->id,
             'animateur_nom' => $this->animateur->prenom . ' ' . $this->animateur->nom,
-            'action_url' => route('modules.plans.show', $this->seance->plan_id), // Vers le plan pour voir l'historique
+            'action_url' => route('modules.plans.show', $this->seance->plan_id) . '?tab=suivi', // Vers le plan pour voir l'historique de suivi
         ];
     }
 }

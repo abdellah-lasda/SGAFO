@@ -23,6 +23,14 @@ trait HasRoles
         return $this->roles()->where('code', $code)->exists();
     }
 
+    /**
+     * Check if user has any of the given roles
+     */
+    public function hasAnyRole(array $codes): bool
+    {
+        return $this->roles()->whereIn('code', $codes)->exists();
+    }
+
     public function isCDC(): bool      { return $this->hasRole('CDC'); }
     public function isRF(): bool       { return $this->hasRole('RF'); }
     public function isDR(): bool       { return $this->hasRole('DR'); }

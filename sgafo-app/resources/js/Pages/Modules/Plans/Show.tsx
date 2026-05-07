@@ -169,6 +169,14 @@ export default function Show({ plan, isValidationContext }: Props) {
                     >
                         Informations
                     </button>
+                    {plan.seances && plan.seances.length > 0 && (
+                        <button 
+                            onClick={() => setCurrentTab('suivi')}
+                            className={`px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${currentTab === 'suivi' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                        >
+                            Suivi & Absences
+                        </button>
+                    )}
                     <button 
                         onClick={() => setCurrentTab('qualite')}
                         className={`px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${currentTab === 'qualite' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
@@ -177,7 +185,16 @@ export default function Show({ plan, isValidationContext }: Props) {
                     </button>
                 </div>
 
-                {currentTab === 'infos' ? (
+                {/* Effect to handle tab from URL */}
+                {useEffect(() => {
+                    const params = new URLSearchParams(window.location.search);
+                    const tab = params.get('tab');
+                    if (tab && ['infos', 'qualite', 'suivi'].includes(tab)) {
+                        setCurrentTab(tab);
+                    }
+                }, []) as any}
+
+                {currentTab === 'infos' && (
                     <>
                 {/* Cancellation/Rejection reason */}
                 {['rejeté', 'annulé'].includes(plan.statut) && plan.motif_rejet && (
@@ -519,7 +536,88 @@ export default function Show({ plan, isValidationContext }: Props) {
                     </div>
                 )}
                     </>
-                ) : (
+                )}
+
+                {currentTab === 'suivi' && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                            <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                                Suivi de l'exécution des séances
+                            </h3>
+
+                            <div className="space-y-4">
+                                {plan.seances?.map((seance: any) => (
+                                    <div key={seance.id} className="group p-6 bg-slate-50 hover:bg-white border border-slate-100 hover:border-blue-200 rounded-[2rem] transition-all flex items-center gap-6">
+                                        <div className="w-14 h-14 bg-white rounded-2xl flex flex-col items-center justify-center shadow-sm group-hover:shadow-blue-100/50 transition-all">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{new Date(seance.date).toLocaleDateString('fr-FR', { month: 'short' })}</span>
+                                            <span className="text-xl font-black text-slate-900">{new Date(seance.date).getDate()}</span>
+                                        </div>
+
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ${
+                                                    seance.statut === 'terminée' ? 'bg-emerald-100 text-emerald-600' :
+                                                    seance.statut === 'en_cours' ? 'bg-amber-100 text-amber-600' : 'bg-slate-200 text-slate-500'
+                                                }`}>
+                                                    {seance.statut}
+                                                </span>
+                                                <span className="text-xs font-bold text-slate-400">· {seance.heure_debut} - {seance.heure_fin}</span>
+                                            </div>
+                                            <h4 className="text-sm font-black text-slate-800">
+                                                {seance.themes?.map((t: any) => t.nom).join(', ') || 'Séance sans thème'}
+                                            </h4>
+                                            <p className="text-[10px] font-medium text-slate-400 mt-1">
+                                                📍 {seance.site?.nom || 'Lieu non défini'}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex items-center gap-8">
+                                            {seance.statut === 'terminée' ? (
+                                                <div className="text-right">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Présence</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-1.5 w-24 bg-slate-200 rounded-full overflow-hidden">
+                                                            <div 
+                                                                className="h-full bg-emerald-500" 
+                                                                style={{ width: `${Math.round(((plan.participants?.length || 0) - (seance.absents_count || 0)) / (plan.participants?.length || 1) * 100)}%` }}
+                                                            ></div>
+                                                        </div>
+                                                        <span className="text-xs font-black text-slate-700">
+                                                            {Math.round(((plan.participants?.length || 0) - (seance.absents_count || 0)) / (plan.participants?.length || 1) * 100)}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <span className="text-[10px] font-bold text-slate-300 italic">En attente d'appel</span>
+                                            )}
+
+                                            <div className="flex items-center gap-2">
+                                                {seance.statut === 'terminée' && (
+                                                    <a 
+                                                        href={route('modules.animateur.seances.export-absences', seance.id)}
+                                                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                                        title="Rapport d'absences (PDF)"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {(!plan.seances || plan.seances.length === 0) && (
+                                    <div className="p-12 text-center border-2 border-dashed border-slate-100 rounded-[2.5rem]">
+                                        <p className="text-sm font-bold text-slate-400 italic">Aucune séance planifiée pour le moment.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {currentTab === 'qualite' && (
                     <div className="space-y-8 animate-in fade-in duration-500">
                         {loadingAnalytics ? (
                             <div className="p-20 flex flex-col items-center justify-center space-y-4">

@@ -210,7 +210,7 @@ class AnimateurDashboardController extends Controller
         ]);
 
         foreach ($validated['presences'] as $pData) {
-            $presence = \App\Models\Presence::updateOrCreate(
+            \App\Models\Presence::updateOrCreate(
                 [
                     'seance_id' => $seance->id,
                     'participant_id' => $pData['participant_id'],
@@ -222,42 +222,37 @@ class AnimateurDashboardController extends Controller
                     'animateur_id' => $user->id,
                 ]
             );
-
-            // ── Notifications pour les absences non justifiées ──────────────
-            if ($presence->statut === 'absent' && !$presence->est_justifie) {
-                $participant = User::find($pData['participant_id']);
-
-                // 1) Notification simple d'absence (existante)
-                $absenceNotif = new \App\Notifications\ParticipantAbsent($seance, $participant, $user);
-                if ($seance->plan->createur) {
-                    $seance->plan->createur->notify($absenceNotif);
-                }
-                if ($seance->plan->validateur) {
-                    $seance->plan->validateur->notify($absenceNotif);
-                }
-
-                // 2) Alerte seuil : déclencher EXACTEMENT quand le seuil est atteint
-                $nbAbsencesNJ = Presence::whereHas('seance', fn($q) => $q->where('plan_id', $seance->plan_id))
-                    ->where('participant_id', $pData['participant_id'])
-                    ->where('statut', 'absent')
-                    ->where('est_justifie', false)
-                    ->count();
-
-                if ($nbAbsencesNJ === ABSENCE_SEUIL) {
-                    $seancePlan = $seance->plan->load(['createur', 'validateur']);
-                    $seuilNotif = new AbsenceSeuilAtteint($seancePlan, $participant, $nbAbsencesNJ);
-                    if ($seancePlan->createur) {
-                        $seancePlan->createur->notify($seuilNotif);
-                    }
-                    if ($seancePlan->validateur) {
-                        $seancePlan->validateur->notify($seuilNotif);
-                    }
-                }
-            }
         }
 
         if ($request->input('is_closing')) {
             $seance->update(['statut' => 'terminée']);
+
+            // ── Notifications Récapitulatives pour les Administrateurs ──────────
+            $presencesSession = $seance->presences()->where('statut', 'absent')->where('est_justifie', false)->get();
+            $absentsCount = $presencesSession->count();
+
+            if ($absentsCount > 0) {
+                $summaryNotif = new \App\Notifications\AttendanceSummaryNotification($seance, $absentsCount, $user);
+                if ($seance->plan->createur) $seance->plan->createur->notify($summaryNotif);
+                if ($seance->plan->validateur) $seance->plan->validateur->notify($summaryNotif);
+
+                // Alertes seuil (individuelles mais envoyées une seule fois à la clôture)
+                foreach ($presencesSession as $p) {
+                    $nbAbsencesNJ = Presence::whereHas('seance', fn($q) => $q->where('plan_id', $seance->plan_id))
+                        ->where('participant_id', $p->participant_id)
+                        ->where('statut', 'absent')
+                        ->where('est_justifie', false)
+                        ->count();
+
+                    if ($nbAbsencesNJ === ABSENCE_SEUIL) {
+                        $participant = User::find($p->participant_id);
+                        $seancePlan = $seance->plan->load(['createur', 'validateur']);
+                        $seuilNotif = new \App\Notifications\AbsenceSeuilAtteint($seancePlan, $participant, $nbAbsencesNJ);
+                        if ($seancePlan->createur) $seancePlan->createur->notify($seuilNotif);
+                        if ($seancePlan->validateur) $seancePlan->validateur->notify($seuilNotif);
+                    }
+                }
+            }
 
             // Si un feedback est actif pour cette séance, notifier les participants PRÉSENTS
             $seance->load(['feedbackForm', 'qcms' => function($q) {
@@ -282,38 +277,35 @@ class AnimateurDashboardController extends Controller
             }
 
             return redirect()->route('modules.animateur.dashboard')
-                ->with('success', 'Séance clôturée. Les participants présents ont été notifiés pour l\'évaluation.');
+                ->with('success', 'Séance clôturée. Les administrateurs et participants ont été notifiés.');
         }
 
         return back()->with('success', 'Présences mises à jour.');
     }
     public function printSheet(Seance $seance)
     {
-        $user = Auth::user();
-        $isAssigned = $seance->themes()->where('seance_themes.formateur_id', $user->id)->exists();
-        if (!$isAssigned) {
-            abort(403);
-        }
+        $this->checkReportAccess($seance);
 
         $seance->load(['plan.entite', 'plan.participants.instituts', 'site', 'themes']);
         
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.feuille_presence_manuelle', [
             'seance' => $seance,
             'participants' => $seance->plan->participants,
-            'animateur' => $user
+            'animateur' => Auth::user()
         ]);
 
         $pdf->setPaper('a4', 'portrait');
 
         return $pdf->stream('Feuille_Presence_Manuelle_' . $seance->id . '.pdf');
     }
+
     public function exportAbsences(Seance $seance)
     {
-        $user = Auth::user();
-        $isAssigned = $seance->themes()->where('seance_themes.formateur_id', $user->id)->exists();
-        if (!$isAssigned) {
-            abort(403);
+        if ($seance->statut !== 'terminée') {
+            abort(403, "Le rapport d'absences n'est disponible que pour les séances terminées.");
         }
+
+        $this->checkReportAccess($seance);
 
         $seance->load(['plan.entite', 'plan.participants.instituts', 'site', 'themes', 'presences' => function($q) {
             $q->where('statut', '!=', 'présent');
@@ -327,7 +319,7 @@ class AnimateurDashboardController extends Controller
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.rapport_absences', [
             'seance' => $seance,
-            'animateur' => $user,
+            'animateur' => Auth::user(),
             'stats' => [
                 'total' => $totalParticipants,
                 'absents' => $absentsCount,
@@ -337,5 +329,34 @@ class AnimateurDashboardController extends Controller
         ]);
 
         return $pdf->stream('Rapport_Absences_Seance_' . $seance->id . '.pdf');
+    }
+
+    /**
+     * Vérifie si l'utilisateur a le droit d'accéder aux rapports d'une séance.
+     */
+    private function checkReportAccess(Seance $seance)
+    {
+        $user = Auth::user();
+        
+        // 1. L'animateur assigné a toujours accès
+        $isAssigned = $seance->themes()->where('seance_themes.formateur_id', $user->id)->exists();
+        if ($isAssigned) return;
+
+        // 2. Administrateur Global
+        if ($user->hasRole('ADMIN')) return;
+
+        // 3. CDC : Uniquement ses propres plans
+        if ($user->hasRole('CDC') && $seance->plan->cree_par === $user->id) return;
+
+        // 4. RF : Uniquement les plans de son secteur
+        if ($user->hasRole('RF')) {
+            $planSecteurId = $seance->plan->entite->secteur_id ?? null;
+            if ($planSecteurId && $user->secteurs()->where('secteurs.id', $planSecteurId)->exists()) {
+                return;
+            }
+        }
+
+        // Sinon, accès interdit
+        abort(403, "Vous n'êtes pas autorisé à accéder à ce rapport.");
     }
 }
