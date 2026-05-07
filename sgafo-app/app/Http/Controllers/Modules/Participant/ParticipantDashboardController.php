@@ -77,11 +77,18 @@ class ParticipantDashboardController extends Controller
                 return $qcm;
             });
 
+        // 6. Récupérer les feedbacks soumis par l'utilisateur
+        $myFeedbacks = \App\Models\FeedbackSubmission::where('participant_id', $user->id)
+            ->with(['seance.plan', 'responses.question'])
+            ->latest()
+            ->get();
+
         return Inertia::render('Modules/Participant/Dashboard', [
             'seances' => $seances,
             'stats' => $stats,
             'nextSession' => $nextSession,
             'qcms' => $availableQcms,
+            'myFeedbacks' => $myFeedbacks,
         ]);
     }
 }

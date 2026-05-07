@@ -123,10 +123,14 @@ class FeedbackAdminController extends Controller
 
     public function results(Seance $seance)
     {
-        $seance->load(['plan.entite', 'feedbackForm.questions.responses', 'feedbackForm.submissions.participant']);
+        $seance->load(['plan.entite', 'feedbackForm.questions.responses']);
         
+        $form = $seance->feedbackForm;
+        $submissions = $form ? $form->submissions()->with('participant')->get() : collect();
+        $submissionCount = $submissions->count();
+
         // Calculer les moyennes pour les questions de type 'rating'
-        $stats = $seance->feedbackForm ? $seance->feedbackForm->questions->map(function ($question) {
+        $stats = $form ? $form->questions->map(function ($question) {
             if ($question->type === 'rating') {
                 $question->average = $question->responses->avg('rating');
                 $question->count = $question->responses->count();
@@ -137,6 +141,8 @@ class FeedbackAdminController extends Controller
         return Inertia::render('Modules/Admin/Feedback/FeedbackResults', [
             'seance' => $seance,
             'stats' => $stats,
+            'submissions' => $submissions,
+            'submissionCount' => $submissionCount,
         ]);
     }
 

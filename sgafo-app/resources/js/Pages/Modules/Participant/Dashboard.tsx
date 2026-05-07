@@ -53,9 +53,10 @@ interface Props extends PageProps {
     };
     nextSession: Seance | null;
     qcms: Qcm[];
+    myFeedbacks: any[];
 }
 
-export default function Dashboard({ auth, seances, stats, nextSession, qcms }: Props) {
+export default function Dashboard({ auth, seances, stats, nextSession, qcms, myFeedbacks }: Props) {
     const user = auth.user;
     const isToday = nextSession && nextSession.date === format(new Date(), 'yyyy-MM-dd');
 
@@ -269,8 +270,63 @@ export default function Dashboard({ auth, seances, stats, nextSession, qcms }: P
                         {/* Recent Results */}
                         <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
-                            <h3 className="text-xs font-black uppercase tracking-widest mb-6">Derniers scores</h3>
+                            <h3 className="text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-2">
+                                <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                Mes Derniers Avis
+                            </h3>
                             <div className="space-y-4">
+                                {myFeedbacks && myFeedbacks.length > 0 ? (
+                                    myFeedbacks.slice(0, 3).map((fb: any) => {
+                                        const fbAvg = fb.responses?.filter((r: any) => r.rating).length > 0
+                                            ? Math.round((fb.responses.filter((r: any) => r.rating).reduce((acc: number, r: any) => acc + r.rating, 0) / fb.responses.filter((r: any) => r.rating).length) * 10) / 10
+                                            : null;
+
+                                        return (
+                                            <div key={fb.id} className="p-4 bg-white/5 rounded-2xl border border-white/5 group hover:bg-white/10 transition-all">
+                                                <div className="flex justify-between items-start gap-3 mb-2">
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-[10px] font-black text-slate-500 uppercase truncate">{fb.seance.plan.titre}</p>
+                                                        <p className="text-xs font-bold text-white italic">"{fb.commentaire_general?.substring(0, 50)}..."</p>
+                                                    </div>
+                                                    {fbAvg && <span className="text-[10px] font-black text-emerald-400 shrink-0">{fbAvg}/5</span>}
+                                                </div>
+                                                
+                                                <div className="grid grid-cols-2 gap-2 mb-3">
+                                                    {fb.responses?.filter((r: any) => r.rating).slice(0, 4).map((r: any) => (
+                                                        <div key={r.id} className="flex flex-col">
+                                                            <span className="text-[7px] font-black text-slate-500 uppercase tracking-tighter truncate">{r.question.question_text}</span>
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="text-[9px] font-bold text-slate-300">{r.rating}/5</span>
+                                                                <div className="flex gap-0.5">
+                                                                    {[1, 2, 3, 4, 5].map(s => (
+                                                                        <div key={s} className={`w-1 h-1 rounded-full ${s <= r.rating ? 'bg-emerald-500' : 'bg-slate-700'}`}></div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                <div className="flex items-center justify-between border-t border-white/5 pt-3">
+                                                    <span className="text-[8px] font-bold text-slate-500 uppercase">{format(new Date(fb.created_at), 'dd/MM/yyyy')}</span>
+                                                    <Link 
+                                                        href={route('participant.seance.show', fb.seance_id)}
+                                                        className="text-[9px] font-black text-blue-400 hover:text-blue-300 uppercase tracking-widest"
+                                                    >
+                                                        Voir
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <p className="text-[10px] text-slate-500 italic">Vous n'avez pas encore soumis d'avis.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Recent QCM Scores */}
+                        <div className="bg-slate-800 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
                                 {qcms.filter(q => q.deja_fait).length > 0 ? (
                                     qcms.filter(q => q.deja_fait).slice(0, 3).map(qcm => (
                                         <div key={qcm.id} className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-4">
@@ -308,7 +364,6 @@ export default function Dashboard({ auth, seances, stats, nextSession, qcms }: P
                     </div>
 
                 </div>
-            </div>
         </AuthenticatedLayout>
     );
 }

@@ -168,14 +168,21 @@ Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')-
     // Logistique (Utilisée par les coordinateurs pour consultation)
     Route::get('logistique', [LogistiqueController::class, 'index'])->name('logistique.index');
 
-    // Feedback Management (RF/CDC)
-    Route::get('feedback/dashboard', [FeedbackAdminController::class, 'dashboard'])->name('feedback.dashboard');
-    Route::get('feedback/builder/{seance}', [FeedbackAdminController::class, 'builder'])->name('feedback.builder');
-    Route::post('feedback/save/{seance}', [FeedbackAdminController::class, 'save'])->name('feedback.save');
-    Route::post('feedback/quick-store/{seance}', [FeedbackAdminController::class, 'quickStore'])->name('feedback.quick-store');
-    Route::get('feedback/results/{seance}', [FeedbackAdminController::class, 'results'])->name('feedback.results');
-    Route::patch('feedback/submissions/{submission}/publish', [FeedbackAdminController::class, 'togglePublish'])->name('feedback.submissions.toggle-publish');
-    Route::patch('feedback/submissions/{submission}/testimonial', [FeedbackAdminController::class, 'promoteTestimonial'])->name('feedback.submissions.testimonial');
+    // Feedback Management
+    // 1. Consultation (RF, CDC, ADMIN)
+    Route::middleware(['role:RF,CDC,ADMIN'])->group(function () {
+        Route::get('feedback/dashboard', [FeedbackAdminController::class, 'dashboard'])->name('feedback.dashboard');
+        Route::get('feedback/results/{seance}', [FeedbackAdminController::class, 'results'])->name('feedback.results');
+    });
+
+    // 2. Configuration & Modération (RF, ADMIN uniquement)
+    Route::middleware(['role:RF,ADMIN'])->group(function () {
+        Route::get('feedback/builder/{seance}', [FeedbackAdminController::class, 'builder'])->name('feedback.builder');
+        Route::post('feedback/save/{seance}', [FeedbackAdminController::class, 'save'])->name('feedback.save');
+        Route::post('feedback/quick-store/{seance}', [FeedbackAdminController::class, 'quickStore'])->name('feedback.quick-store');
+        Route::patch('feedback/submissions/{submission}/publish', [FeedbackAdminController::class, 'togglePublish'])->name('feedback.submissions.toggle-publish');
+        Route::patch('feedback/submissions/{submission}/testimonial', [FeedbackAdminController::class, 'promoteTestimonial'])->name('feedback.submissions.testimonial');
+    });
 
     // Plan Analytics API
     Route::get('plans/{plan}/analytics-data', [AnalyticsController::class, 'planAnalytics'])->name('plans.analytics-data');

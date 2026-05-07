@@ -232,6 +232,17 @@ export default function Formations({ plans, allSeances, stats }: Props) {
                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Horaire</p>
                                                         <p className="text-sm font-black text-slate-900">{s.debut} - {s.fin}</p>
                                                     </div>
+                                                    
+                                                    {s.has_feedback_form && (
+                                                        <div className={`px-3 py-1.5 rounded-xl border text-[9px] font-black uppercase tracking-widest flex items-center gap-2 ${
+                                                            s.user_submitted_feedback 
+                                                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                                                                : 'bg-amber-50 text-amber-600 border-amber-100'
+                                                        }`}>
+                                                            {s.user_submitted_feedback ? '✅ Évalué' : '⭐ À évaluer'}
+                                                        </div>
+                                                    )}
+
                                                     <span className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl border ${
                                                         s.statut === 'terminée' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                                                         s.statut === 'confirmée' ? 'bg-blue-50 text-blue-600 border-blue-100' :

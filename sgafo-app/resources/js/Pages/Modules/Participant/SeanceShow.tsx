@@ -64,10 +64,14 @@ interface Props extends PageProps {
     qcms: Qcm[];
     hasFeedbackForm: boolean;
     hasSubmittedFeedback: boolean;
+    userFeedback?: any;
 }
 
-export default function SeanceShow({ auth, seance, canPassQcm, qcms, hasFeedbackForm, hasSubmittedFeedback }: Props) {
-    console.log(seance)
+export default function SeanceShow({ auth, seance, canPassQcm, qcms, hasFeedbackForm, hasSubmittedFeedback, userFeedback }: Props) {
+    const avgSatisfaction = userFeedback?.responses?.filter((r: any) => r.rating).length > 0
+        ? Math.round((userFeedback.responses.filter((r: any) => r.rating).reduce((acc: number, r: any) => acc + r.rating, 0) / userFeedback.responses.filter((r: any) => r.rating).length) * 10) / 10
+        : null;
+
     return (
         <AuthenticatedLayout header={<div className="flex items-center gap-2">
             <Link href={route('participant.formations')} className="text-slate-400 hover:text-blue-600 transition-colors font-bold">Mes formations</Link>
@@ -244,8 +248,59 @@ export default function SeanceShow({ auth, seance, canPassQcm, qcms, hasFeedback
                                 </h3>
 
                                 {hasSubmittedFeedback ? (
-                                    <div className="p-4 bg-white/50 rounded-2xl border border-emerald-200">
-                                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">✅ Vous avez déjà évalué cette séance. Merci !</p>
+                                    <div className="space-y-4">
+                                        <div className="p-4 bg-white/50 rounded-2xl border border-emerald-200">
+                                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-3">✅ Séance évaluée</p>
+                                            
+                                            {avgSatisfaction !== null && (
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+                                                        <span>Satisfaction</span>
+                                                        <span className="text-emerald-600">{avgSatisfaction}/5</span>
+                                                    </div>
+                                                    <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-emerald-500" style={{ width: `${(avgSatisfaction / 5) * 100}%` }}></div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        {userFeedback?.commentaire_general && (
+                                            <div className="p-4 bg-emerald-100/50 rounded-2xl border border-emerald-200">
+                                                <p className="text-[9px] font-black text-emerald-700 uppercase tracking-widest mb-1 italic">Mon commentaire</p>
+                                                <p className="text-xs text-slate-700 leading-relaxed italic">"{userFeedback.commentaire_general}"</p>
+                                            </div>
+                                        )}
+
+                                        <div className="grid grid-cols-2 gap-3 mb-4">
+                                            {userFeedback.responses.filter((r: any) => r.rating).map((r: any) => (
+                                                <div key={r.id} className="p-3 bg-white/50 rounded-2xl border border-emerald-100">
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate" title={r.question.question_text}>
+                                                        {r.question.question_text}
+                                                    </p>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-black text-slate-900">{r.rating}/5</span>
+                                                        <div className="flex gap-0.5">
+                                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                                <div 
+                                                                    key={star} 
+                                                                    className={`w-1.5 h-1.5 rounded-full ${star <= r.rating ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                                                ></div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {userFeedback.responses.filter((r: any) => r.answer_text).map((r: any) => (
+                                            <div key={r.id} className="p-3 bg-white/50 rounded-2xl border border-emerald-100 mb-3">
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                                                    {r.question.question_text}
+                                                </p>
+                                                <p className="text-xs text-slate-700 font-medium italic">"{r.answer_text}"</p>
+                                            </div>
+                                        ))}
                                     </div>
                                 ) : (
                                     <Link

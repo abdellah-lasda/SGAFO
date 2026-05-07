@@ -27,7 +27,7 @@ class SeanceController extends Controller
 
         // 2. Récupérer toutes les séances de ces plans
         $allSeances = Seance::whereIn('plan_id', $planIds)
-            ->with(['plan.entite', 'site', 'seanceThemes.theme', 'seanceThemes.formateur'])
+            ->with(['plan.entite', 'site', 'seanceThemes.theme', 'seanceThemes.formateur', 'feedbackForm'])
             ->orderBy('date', 'asc')
             ->get();
 
@@ -48,10 +48,21 @@ class SeanceController extends Controller
             'completion_rate' => $totalHours > 0 ? round(($completedHours / $totalHours) * 100) : 0,
         ];
 
+        $userSubmissionFormIds = \App\Models\FeedbackSubmission::where('participant_id', $user->id)
+            ->pluck('feedback_form_id')
+            ->toArray();
+
+        $allSeances = $allSeances->map(function($s) use ($userSubmissionFormIds) {
+            $s->has_feedback_form = $s->feedbackForm !== null;
+            $s->user_submitted_feedback = $s->has_feedback_form && in_array($s->feedback_form_id, $userSubmissionFormIds);
+            return $s;
+        });
+
         return Inertia::render('Modules/Participant/Formations', [
             'plans' => $plans,
             'allSeances' => $allSeances,
             'stats' => $stats,
+            'userSubmissionFormIds' => $userSubmissionFormIds,
         ]);
     }
 
@@ -107,10 +118,13 @@ class SeanceController extends Controller
         $hasFeedbackForm = $seance->feedbackForm !== null;
         $hasSubmittedFeedback = false;
         
+        $userFeedback = null;
         if ($hasFeedbackForm) {
-            $hasSubmittedFeedback = \App\Models\FeedbackSubmission::where('feedback_form_id', $seance->feedbackForm->id)
+            $userFeedback = \App\Models\FeedbackSubmission::where('feedback_form_id', $seance->feedbackForm->id)
                 ->where('participant_id', $user->id)
-                ->exists();
+                ->with('responses.question')
+                ->first();
+            $hasSubmittedFeedback = $userFeedback !== null;
         }
 
         return Inertia::render('Modules/Participant/SeanceShow', [
@@ -119,6 +133,7 @@ class SeanceController extends Controller
             'qcms' => $qcms,
             'hasFeedbackForm' => $hasFeedbackForm,
             'hasSubmittedFeedback' => $hasSubmittedFeedback,
+            'userFeedback' => $userFeedback,
         ]);
     }
     public function planShow(PlanFormation $plan)
