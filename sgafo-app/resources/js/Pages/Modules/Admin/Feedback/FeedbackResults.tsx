@@ -18,16 +18,11 @@ export default function FeedbackResults({ auth, seance, stats, submissions, subm
     return (
         <AuthenticatedLayout header={
             <div className="flex items-center gap-4 text-sm">
-                {isManager && (
-                    <>
-                        <Link className="text-slate-400 hover:text-emerald-600 transition-colors font-bold" href={route('modules.validations.planning.index', seance.plan_id)} >Planning du Plan</Link>
-                        <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
-                        <Link className="text-slate-400 hover:text-emerald-600 transition-colors font-bold" href={route('modules.feedback.builder', seance.id)} >Configuration</Link>
-                        <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
-                    </>
-                )}
-
-                <span className="font-black text-slate-900 uppercase tracking-widest text-[11px]">Résultats du Feedback</span>
+                <Link className="text-slate-400 hover:text-emerald-600 transition-colors font-bold" href={route('dashboard')} >SGAFO</Link>
+                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+                <Link className="text-slate-400 hover:text-emerald-600 transition-colors font-bold" href={route('modules.feedback.dashboard')} >Résultats du Feedback</Link>
+                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+                <span className="font-black text-slate-900 uppercase tracking-widest text-[11px]">Détails Complet</span>
             </div>
         }>
             <Head title="Résultats du Feedback" />

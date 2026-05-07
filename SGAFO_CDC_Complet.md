@@ -5,10 +5,10 @@
 
 | Champ | Valeur |
 |---|---|
-| **Référence** | SGAFO-CDC-v2.1 |
-| **Version** | 2.2 — Mise à jour avec les référentiels de données réelles |
-| **Date** | 28 Avril 2026 |
-| **Statut** | Validé — Application peuplée de données de production |
+| **Référence** | SGAFO-CDC-v2.3 |
+| **Version** | 2.3 — Optimisation du Workflow Feedback & Analytics |
+| **Date** | 07 Mai 2026 |
+| **Statut** | Validé — Système de pilotage par séance opérationnel |
 | **Encadrant** | M. Zaher MECHBOUK |
 | **Année académique** | 2025 – 2026 |
 
@@ -154,9 +154,10 @@ Le système SGAFO utilise un contrôle d'accès basé sur les rôles à **deux n
 - Sélectionne les **formateurs participants** de la formation
 - Prépare la **logistique** : hébergement, déplacements, site de formation
 - Crée les **questions de feedback** pour évaluer la qualité de la formation
+- **Pilote la qualité** : Accède en lecture seule aux résultats et statistiques par séance
 - En cas de rejet par le RF, **modifie et re-soumet** le même plan (avec le motif de rejet visible)
 
-**Contrainte majeure :** Le CDC **ne peut pas valider lui-même** son plan — il dépend obligatoirement du Responsable Formation.
+**Contrainte majeure :** Le CDC **ne peut pas modérer** les avis (Afficher/Promouvoir au catalogue). Cette action est réservée au RF et à l'ADMIN.
 
 ---
 
@@ -175,7 +176,8 @@ Le système SGAFO utilise un contrôle d'accès basé sur les rôles à **deux n
   - Document 2 : liste des animateurs (mêmes informations)
 - Envoie manuellement les convocations au Responsable DR (hors système)
 - Accède aux **statistiques complètes** : QCM, feedback, absences, planning global
-- Peut clôturer les sessions (déclenchant le verrouillage des présences)
+- **Modère les témoignages** : Décide quels avis sont visibles sur le plan ou promus au catalogue national
+- Peut clôturer les sessions (déclenchant le verrouillage des présences et l'envoi des notifications de feedback)
 
 **Pouvoir exclusif :** Le RF est le seul à pouvoir **publier** une formation et **planifier** ses sessions.
 
@@ -468,16 +470,35 @@ Résultats visibles selon les droits de chaque rôle
 | FA (Animateur) | Résultats individuels de chaque participant + statistiques globales |
 | FP (Participant) | Ses propres résultats uniquement |
 
-### 6.6 Feedback Post-Session
+### 6.6 Système de Pilotage des Feedbacks
 
-| Aspect | Détail |
-|---|---|
-| **Création** | Formulaire entièrement facultatif — RF ou CDC peut choisir de ne pas en créer |
-| **Réponse** | Si créé, la réponse du participant reste facultative |
-| **Questions** | Libres, créées par RF ou CDC, portant sur : animateurs, hébergement, site, organisation |
-| **Timing** | Formulaire créable avant ou après chaque session |
-| **Résultats** | Statistiques visibles pour CDC, RF et DR (région uniquement pour DR) |
-| **Anonymat** | Non précisé dans la v2 — à définir |
+Le module de feedback a évolué vers une approche **centrée sur la séance**, permettant d'analyser la qualité pédagogique non plus par individu, mais par session de formation cohérente.
+
+#### A. Workflow de collecte
+1. **Clôture de séance** : Dès que l'émargement est clôturé par le RF ou l'Animateur, le système identifie les participants présents.
+2. **Notification intelligente** : Une notification (Email + In-app) est envoyée uniquement aux participants ayant assisté à la séance.
+3. **Saisie simplifiée** : Le participant répond à un formulaire dynamique (Notation par étoiles et commentaires libres).
+
+#### B. Niveaux de visibilité (Double Lecture)
+- **Niveau 1 : Dashboard de Pilotage (Macro)**
+    - Chemin : `SGAFO > Résultats du Feedback`
+    - Vue par **Séance** uniquement.
+    - Indicateurs clés : **Taux de participation** (ex: 90% des présents ont répondu), **Note moyenne** de la session.
+    - **Profil de Satisfaction** : Graphique en radar (Radar Chart) agrégeant les scores par catégorie (**Animation, Supports, Logistique, Contenu, Commentaires**).
+- **Niveau 2 : Résultats Détaillés (Micro)**
+    - Chemin : `SGAFO > Résultats du Feedback > Détails Complet`
+    - Accès via le lien "Détails Complet" sur chaque séance.
+    - Liste de tous les commentaires individuels.
+    - **Outils de modération** (Réservés RF/ADMIN) : 
+        - ● **Affiché** : Rendre l'avis visible sur le rapport du plan.
+        - ⭐ **Promouvoir** : Mettre en avant l'avis comme témoignage sur le Catalogue National.
+
+#### C. Accès par Rôle
+| Rôle | Dashboard (Stats) | Détails (Commentaires) | Modération |
+|---|:---:|:---:|:---:|
+| **RF / ADMIN** | ✅ Lecture | ✅ Lecture | ✅ Écriture |
+| **CDC** | ✅ Lecture | ✅ Lecture | ❌ Lecture seule |
+| **DR** | ✅ Lecture (Région) | ✅ Lecture (Région) | ❌ Non |
 
 ### 6.7 Gestion Documentaire
 
@@ -518,7 +539,7 @@ Résultats visibles selon les droits de chaque rôle
 | Session planifiée | Animateurs + Participants | Email + In-app |
 | Rappel J-2 avant session | Animateurs + Participants | Email + In-app |
 | QCM disponible (fin session) | Participants de la session | Email + In-app |
-| Feedback disponible | Participants (si formulaire créé) | Email + In-app |
+| Feedback disponible | Participants présents ou en retard à la séance | Email + In-app |
 | Absence enregistrée | Participant concerné | Email + In-app |
 | Document uploadé (convocation) | DR concerné | Email + In-app |
 
@@ -862,30 +883,49 @@ DOMAINE 6 : Notifications & Audit
 | score | DECIMAL(5,2) | NOT NULL | Score calculé en % |
 | soumis_at | TIMESTAMP | NOT NULL | — |
 
-#### Table `formulaires_feedback`
+#### Table `feedback_forms`
 | Champ | Type | Contrainte | Description |
 |---|---|---|---|
 | id | BIGSERIAL | PK | — |
-| session_id | BIGINT | FK → sessions_formation | — |
-| cree_par | BIGINT | FK → utilisateurs | RF ou CDC |
-| created_at | TIMESTAMP | NOT NULL | — |
+| seance_id | BIGINT | FK → seances | Séance associée |
+| plan_id | BIGINT | FK → plans_formation | Plan associé |
+| titre | VARCHAR(255) | NOT NULL | Titre du formulaire |
+| description | TEXT | — | Instructions |
+| created_by | BIGINT | FK → users | — |
+| is_active | BOOLEAN | DEFAULT true | — |
+| created_at / updated_at | TIMESTAMP | NOT NULL | — |
 
 #### Table `feedback_questions`
 | Champ | Type | Contrainte | Description |
 |---|---|---|---|
 | id | BIGSERIAL | PK | — |
-| formulaire_id | BIGINT | FK → formulaires_feedback | — |
-| texte | TEXT | NOT NULL | Texte de la question |
-| categorie | VARCHAR(100) | — | `animateur`/`hébergement`/`site`/`organisation` |
-| ordre | INTEGER | NOT NULL | — |
+| feedback_form_id | BIGINT | FK → feedback_forms | — |
+| question_text | TEXT | NOT NULL | Libellé de la question |
+| type | ENUM | NOT NULL | `rating` (1-5) ou `text` (libre) |
+| categorie | VARCHAR(100) | — | Ex: Animation, Support, Logistique |
+| ordre | INTEGER | DEFAULT 0 | Ordre d'affichage |
 
-#### Table `feedback_reponses`
+#### Table `feedback_submissions`
 | Champ | Type | Contrainte | Description |
 |---|---|---|---|
-| formulaire_id | BIGINT | PK, FK → formulaires_feedback | — |
-| participant_id | BIGINT | PK, FK → utilisateurs | — |
-| reponses | JSONB | NOT NULL | Tableau `{question_id, reponse_texte}` |
-| soumis_at | TIMESTAMP | NOT NULL | — |
+| id | BIGSERIAL | PK | — |
+| feedback_form_id | BIGINT | FK → feedback_forms | — |
+| participant_id | BIGINT | FK → utilisateurs | Auteur de l'avis |
+| plan_id | BIGINT | FK → plans_formation | — |
+| seance_id | BIGINT | FK → seances | — |
+| commentaire_general | TEXT | — | Commentaire global de synthèse |
+| est_affiche_sur_plan | BOOLEAN | DEFAULT false | Modération : visible sur rapport plan |
+| is_testimonial | BOOLEAN | DEFAULT false | Modération : promu au catalogue |
+| created_at / updated_at | TIMESTAMP | NOT NULL | — |
+
+#### Table `feedback_responses`
+| Champ | Type | Contrainte | Description |
+|---|---|---|---|
+| id | BIGSERIAL | PK | — |
+| feedback_submission_id | BIGINT | FK → feedback_submissions | — |
+| question_id | BIGINT | FK → feedback_questions | — |
+| rating | INTEGER | NULLABLE | Note de 1 à 5 |
+| answer_text | TEXT | NULLABLE | Réponse textuelle |
 
 ### 10.6 Domaine 5 — Documents & Logistique
 
@@ -1113,7 +1153,7 @@ Le **Catalogue National** ne sera pas seulement un répertoire de titres, mais d
 En cliquant sur une carte, l'utilisateur accède à un espace narratif complet :
 - **Documents & Ressources** : Supports de cours, guides, et livrables produits.
 - **Galerie Média** : Photos des sessions, vidéos des ateliers pratiques, captures des moments clés.
-- **Feedback & Feedback** : Commentaires réels des participants, témoignages et remerciements.
+- **Feedback & Témoignages** : Commentaires réels des participants, témoignages sélectionnés et modérés via le module de feedback (Opérationnel).
 - **Tableau de Bord d'Impact** : Statistiques de réussite et impressions globales.
 
 ### 15.3 Objectif : Mémoire et Inspiration
@@ -1170,7 +1210,7 @@ Ce système permettra à l'OFPPT de passer d'une gestion fragmentée et manuelle
 | Notifications in-app | ✅ Complet | Laravel Notifications (canal : database) |
 | QCM par session | ✅ Complet | Structure BDD, Création par animateur, Passage par participant |
 | Présences / Absences | ✅ Complet | Saisie animateur, Verrouillage, Notifications absences, Exports PDF |
-| Feedback post-session | ✅ Complet | Formulaire dynamique, Soumission participant, Notifications |
+| Feedback post-session | ✅ Complet | Dashboard centré sur les séances, Radar Chart analytique, Taux de participation calculé, Modération RBAC (RF/ADMIN). |
 
 ### 17.2 Validations Métier Implémentées
 
@@ -1253,5 +1293,5 @@ Cette section présente les données métier réelles actuellement intégrées a
 
 ---
 
-*SGAFO — Cahier des Charges v2.2 — OFPPT 2025–2026*
-*Mis à jour le 28 Avril 2026 — Données réelles intégrées*
+*SGAFO — Cahier des Charges v2.3 — OFPPT 2025–2026*
+*Mis à jour le 07 Mai 2026 — Optimisation Feedback & Analytics intégrée*

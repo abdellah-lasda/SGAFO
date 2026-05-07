@@ -22,7 +22,7 @@ export default function FeedbackDashboard({ auth, seances, plans, filters, stats
                 <div className="flex items-center gap-4 text-sm">
                     <Link className="text-slate-400 hover:text-emerald-600 transition-colors font-bold" href={route('dashboard')} >SGAFO</Link>
                     <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
-                    <span className="font-black text-slate-900 uppercase tracking-widest text-[11px]">Analyses Qualitatives & Feedbacks</span>
+                    <span className="font-black text-slate-900 uppercase tracking-widest text-[11px]">Résultats du Feedback</span>
                 </div>
             }
         >

@@ -276,6 +276,7 @@ class DashboardController extends Controller
     private function getQcmStats(array $filters)
     {
         $qcmQuery = \App\Models\Qcm::query()
+            ->whereHas('seance.plan') // S'assurer que le QCM est lié à une structure valide
             ->when(isset($filters['scope_region_ids']), fn($q) => $q->whereHas('seance.plan.participants.instituts.region', fn($sq) => $sq->whereIn('id', $filters['scope_region_ids'])))
             ->when(isset($filters['scope_institut_ids']), fn($q) => $q->whereHas('seance.plan.participants.instituts', fn($sq) => $sq->whereIn('instituts.id', $filters['scope_institut_ids'])));
 
@@ -285,17 +286,23 @@ class DashboardController extends Controller
         $qcms = (clone $qcmQuery)->with(['seance.plan.participants'])->get();
         
         $totalRate = 0;
+        $validQcmCount = 0;
+
         foreach ($qcms as $qcm) {
-            $participantsCount = $qcm->seance->plan->participants->count();
-            if ($participantsCount > 0) {
-                $tentativesCount = \App\Models\QcmTentative::where('qcm_id', $qcm->id)->distinct('user_id')->count();
-                $totalRate += ($tentativesCount / $participantsCount) * 100;
+            // Sécurité supplémentaire : vérifier que toute la chaîne existe
+            if ($qcm->seance && $qcm->seance->plan) {
+                $participantsCount = $qcm->seance->plan->participants->count();
+                if ($participantsCount > 0) {
+                    $tentativesCount = \App\Models\QcmTentative::where('qcm_id', $qcm->id)->distinct('user_id')->count();
+                    $totalRate += ($tentativesCount / $participantsCount) * 100;
+                    $validQcmCount++;
+                }
             }
         }
 
         return [
             'count' => $totalQcm,
-            'rate' => round($totalRate / $totalQcm, 1)
+            'rate' => $validQcmCount > 0 ? round($totalRate / $validQcmCount, 1) : 0
         ];
     }
 
