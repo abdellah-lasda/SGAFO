@@ -45,8 +45,7 @@ class DrDocumentController extends Controller
         $plans = PlanFormation::with(['entite', 'siteFormation', 'seances.site'])
             ->orderBy('date_debut', 'asc')
             ->get();
-
-        // 2. Calcul des KPIs (Même logique que le Dashboard)
+        // 2. Calcul des KPIs Globaux
         $presenceStats = \App\Models\Presence::selectRaw("count(*) as total, sum(case when statut in ('présent', 'retard') then 1 else 0 end) as present")
             ->first();
         $attendanceRate = $presenceStats->total > 0 ? round(($presenceStats->present / $presenceStats->total) * 100, 1) : 0;
@@ -61,6 +60,29 @@ class DrDocumentController extends Controller
             ->select('feedback_questions.categorie', \DB::raw('AVG(rating) as average'))
             ->groupBy('feedback_questions.categorie')
             ->get();
+        // 3. Statistiques par Institut
+        $statsParInstitut = \App\Models\Institut::whereIn('region_id', $regionIds)
+            ->get()
+            ->map(function($inst) {
+                $totalSeances = \App\Models\Seance::where('site_id', $inst->id)->count();
+                $presenceRate = \App\Models\Presence::whereHas('seance', fn($q) => $q->where('site_id', $inst->id))
+                    ->selectRaw("count(*) as total, sum(case when statut in ('présent', 'retard') then 1 else 0 end) as present")
+                    ->first();
+                
+                return [
+                    'nom' => $inst->nom,
+                    'seances_count' => $totalSeances,
+                    'attendance' => $presenceRate->total > 0 ? round(($presenceRate->present / $presenceRate->total) * 100, 1) : 0
+                ];
+            });
+
+        // 4. Répartition par Secteur
+        $statsParSecteur = \App\Models\PlanFormation::whereHas('siteFormation', fn($q) => $q->whereIn('region_id', $regionIds))
+            ->join('entite_formations', 'plans_formation.entite_id', '=', 'entite_formations.id')
+            ->join('secteurs', 'entite_formations.secteur_id', '=', 'secteurs.id')
+            ->select('secteurs.nom', \DB::raw('count(*) as total'))
+            ->groupBy('secteurs.nom')
+            ->get();
 
         $data = [
             'regions' => $regionNames,
@@ -69,7 +91,9 @@ class DrDocumentController extends Controller
                 'attendance_rate' => $attendanceRate,
                 'qcm_average' => round($qcmStats->average ?? 0, 1),
                 'satisfaction' => $satisfactionRadar,
-                'total_formateurs' => \App\Models\User::whereHas('roles', fn($q) => $q->where('code', 'FORMATEUR'))->count(),
+                'total_formateurs' => \App\Models\User::whereHas('instituts', fn($q) => $q->whereIn('region_id', $regionIds))->count(),
+                'par_institut' => $statsParInstitut,
+                'par_secteur' => $statsParSecteur
             ],
             'date' => now()->format('d/m/Y'),
             'user' => $user->prenom . ' ' . $user->nom
