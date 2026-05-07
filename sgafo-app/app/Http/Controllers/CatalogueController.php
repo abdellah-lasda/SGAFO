@@ -60,7 +60,10 @@ class CatalogueController extends Controller
             'seances.themes',
             'seances.site',
             'feedbackSubmissions' => function($q) {
-                $q->where('est_affiche_sur_plan', true)->with('participant');
+                $q->where('is_testimonial', true)
+                  ->whereNotNull('commentaire_general')
+                  ->where('commentaire_general', '!=', '')
+                  ->with('participant');
             }
         ]);
 

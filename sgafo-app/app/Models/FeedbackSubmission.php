@@ -15,6 +15,13 @@ class FeedbackSubmission extends Model
         'seance_id',
         'commentaire_general',
         'est_affiche_sur_plan',
+        'is_testimonial',
+        'moderated_by',
+    ];
+
+    protected $casts = [
+        'is_testimonial'     => 'boolean',
+        'est_affiche_sur_plan' => 'boolean',
     ];
 
     public function participant()

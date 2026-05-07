@@ -22,6 +22,12 @@ export default function FeedbackDashboard({ submissions, plans, filters, stats, 
         });
     };
 
+    const promoteTestimonial = (submissionId: number) => {
+        router.patch(route('modules.feedback.submissions.testimonial', submissionId), {}, {
+            preserveScroll: true
+        });
+    };
+
     return (
         <AuthenticatedLayout
             header={<span>Feedbacks & Avis Participants</span>}
@@ -48,8 +54,8 @@ export default function FeedbackDashboard({ submissions, plans, filters, stats, 
                     </div>
                     <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110" />
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 relative">Témoignages Publiés</p>
-                        <h4 className="text-4xl font-black text-purple-600 tabular-nums relative">{stats.published_count}</h4>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 relative">Témoignages Catalogue</p>
+                        <h4 className="text-4xl font-black text-purple-600 tabular-nums relative">{stats.testimonial_count}</h4>
                     </div>
                 </div>
 
@@ -108,7 +114,8 @@ export default function FeedbackDashboard({ submissions, plans, filters, stats, 
                                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Participant & Séance</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Formation</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Commentaire Général</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Visibilité Catalogue</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sur le Plan</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sur le Catalogue</th>
                                     <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
                                 </tr>
                             </thead>
@@ -139,11 +146,23 @@ export default function FeedbackDashboard({ submissions, plans, filters, stats, 
                                                 onClick={() => togglePublish(sub.id)}
                                                 className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
                                                     sub.est_affiche_sur_plan 
-                                                        ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' 
+                                                        ? 'bg-blue-100 text-blue-600 border border-blue-200' 
                                                         : 'bg-slate-100 text-slate-400 border border-slate-200'
                                                 }`}
                                             >
-                                                {sub.est_affiche_sur_plan ? '● Publié' : '○ Masqué'}
+                                                {sub.est_affiche_sur_plan ? '● Affiché' : '○ Masqué'}
+                                            </button>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <button 
+                                                onClick={() => promoteTestimonial(sub.id)}
+                                                className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-1 ${
+                                                    sub.is_testimonial 
+                                                        ? 'bg-purple-100 text-purple-600 border border-purple-200' 
+                                                        : 'bg-slate-100 text-slate-400 border border-slate-200 hover:border-purple-300'
+                                                }`}
+                                            >
+                                                {sub.is_testimonial ? '⭐ Témoignage' : '☆ Promouvoir'}
                                             </button>
                                         </td>
                                         <td className="px-8 py-6 text-right">

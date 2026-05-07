@@ -111,4 +111,17 @@ class QcmController extends Controller
             'tentative' => $tentative,
         ]);
     }
+
+    public function submitFeedback(Request $request, QcmTentative $tentative)
+    {
+        $request->validate([
+            'difficulty' => 'required|in:easy,medium,hard',
+        ]);
+
+        $tentative->update([
+            'difficulty_feedback' => $request->difficulty,
+        ]);
+
+        return back()->with('success', 'Feedback enregistré avec succès');
+    }
 }

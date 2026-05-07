@@ -14,6 +14,7 @@ class QcmTentative extends Model
         'commence_le',
         'termine_le',
         'duree_secondes',
+        'difficulty_feedback',
     ];
 
     protected $casts = [

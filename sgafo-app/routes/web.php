@@ -175,6 +175,7 @@ Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')-
     Route::post('feedback/quick-store/{seance}', [FeedbackAdminController::class, 'quickStore'])->name('feedback.quick-store');
     Route::get('feedback/results/{seance}', [FeedbackAdminController::class, 'results'])->name('feedback.results');
     Route::patch('feedback/submissions/{submission}/publish', [FeedbackAdminController::class, 'togglePublish'])->name('feedback.submissions.toggle-publish');
+    Route::patch('feedback/submissions/{submission}/testimonial', [FeedbackAdminController::class, 'promoteTestimonial'])->name('feedback.submissions.testimonial');
 
     // Plan Analytics API
     Route::get('plans/{plan}/analytics-data', [AnalyticsController::class, 'planAnalytics'])->name('plans.analytics-data');
@@ -228,6 +229,7 @@ Route::middleware(['auth', 'role:FORMATEUR'])->prefix('participant')->name('part
     Route::get('/qcm/{qcm}', [App\Http\Controllers\Modules\Participant\QcmController::class, 'show'])->name('qcm.passage');
     Route::post('/qcm/{qcm}/submit', [App\Http\Controllers\Modules\Participant\QcmController::class, 'submit'])->name('qcm.submit');
     Route::get('/qcm/resultat/{tentative}', [App\Http\Controllers\Modules\Participant\QcmController::class, 'resultat'])->name('qcm.resultat');
+    Route::patch('/qcm/resultat/{tentative}/feedback', [App\Http\Controllers\Modules\Participant\QcmController::class, 'submitFeedback'])->name('qcm.feedback');
     
     // Feedback Participant
     Route::get('/feedback/{seance}', [App\Http\Controllers\Modules\Participant\FeedbackParticipantController::class, 'show'])->name('feedback.show');

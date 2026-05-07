@@ -40,6 +40,7 @@ class FeedbackAdminController extends Controller
         $stats = [
             'total_submissions' => FeedbackSubmission::count(),
             'published_count' => FeedbackSubmission::where('est_affiche_sur_plan', true)->count(),
+            'testimonial_count' => FeedbackSubmission::where('is_testimonial', true)->count(),
             'avg_rating' => round($avgRating, 1) ?: 0,
         ];
 
@@ -146,6 +147,24 @@ class FeedbackAdminController extends Controller
         ]);
 
         return back()->with('success', $submission->est_affiche_sur_plan ? 'Commentaire publié sur le plan.' : 'Commentaire retiré du plan.');
+    }
+
+    public function promoteTestimonial(FeedbackSubmission $submission)
+    {
+        $newState = !$submission->is_testimonial;
+
+        $submission->update([
+            'is_testimonial'  => $newState,
+            'moderated_by'    => $newState ? Auth::id() : null,
+            // Automatically publish it on the plan too
+            'est_affiche_sur_plan' => $newState ? true : $submission->est_affiche_sur_plan,
+        ]);
+
+        $message = $newState
+            ? '⭐ Témoignage validé et affiché sur le catalogue.'
+            : 'Témoignage retiré du catalogue.';
+
+        return back()->with('success', $message);
     }
 
     public function quickStore(Seance $seance)

@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 
 interface Props {
     plan: PlanFormation & {
-        feedbackSubmissions: any[];
+        feedback_submissions: any[];
     };
 }
 
@@ -374,46 +374,106 @@ export default function Show({ plan }: Props) {
                             </div>
                         )}
 
-                        {/* Tab Content: Avis */}
+                        {/* Tab Content: Avis & Témoignages */}
                         {activeTab === 'avis' && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="bg-white rounded-[2rem] p-10 border border-slate-100 shadow-sm">
-                                    <h2 className="text-2xl font-black text-slate-900 mb-10 flex items-center gap-3">
-                                        <span className="w-2 h-8 bg-emerald-500 rounded-full"></span>
-                                        Retours des participants
-                                    </h2>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        {plan.feedbackSubmissions?.map((submission, idx) => (
-                                            <div key={idx} className="relative p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 italic">
-                                                <div className="absolute -top-4 -left-4 w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg">
-                                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M14.017 21L14.017 18C14.017 16.8954 13.1216 16 12.017 16H9.01701C7.91244 16 7.01701 16.8954 7.01701 18V21M14.017 21H17.017C18.1216 21 19.017 20.1046 19.017 19V10C19.017 8.89543 18.1216 8 17.017 8H3.01701C1.91244 8 1.01701 8.89543 1.01701 10V19C1.01701 20.1046 1.91244 21 3.01701 21H7.01701M14.017 21V10" /></svg>
-                                                </div>
-                                                <p className="text-slate-700 font-medium mb-6 leading-relaxed">
-                                                    "{submission.commentaire_general}"
-                                                </p>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 bg-white rounded-xl border border-slate-100 flex items-center justify-center font-black text-emerald-500 text-xs">
-                                                        {submission.participant?.nom[0]}{submission.participant?.prenom[0]}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-black text-slate-900">{submission.participant?.nom} {submission.participant?.prenom}</p>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Participant certifié</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {(plan.feedbackSubmissions?.length === 0 || !plan.feedbackSubmissions) && (
-                                        <div className="text-center py-20 bg-slate-50/50 rounded-[2.5rem] border border-dashed border-slate-200">
-                                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300">
-                                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                                            </div>
-                                            <p className="text-sm font-bold text-slate-400 italic">Aucun avis publié pour le moment.</p>
+                                {plan.feedback_submissions && plan.feedback_submissions.length > 0 ? (
+                                    <>
+                                        {/* Header */}
+                                        <div
+                                            className="rounded-[2rem] p-8 text-center border"
+                                            style={{
+                                                background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
+                                                borderColor: '#1e3a5f',
+                                            }}
+                                        >
+                                            <div className="text-4xl mb-3">💬</div>
+                                            <h2 className="text-2xl font-black text-white mb-1">Ce qu'en disent les participants</h2>
+                                            <p className="text-slate-400 text-sm font-medium">
+                                                {plan.feedback_submissions.length} témoignage{plan.feedback_submissions.length > 1 ? 's' : ''} validé{plan.feedback_submissions.length > 1 ? 's' : ''} par nos équipes
+                                            </p>
                                         </div>
-                                    )}
-                                </div>
+
+                                        {/* Testimonials Grid (Bento style) */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            {plan.feedback_submissions.map((submission: any, idx: number) => {
+                                                // Cycle through a few accent colors
+                                                const accents = [
+                                                    { border: '#818cf8', bg: '#eef2ff', dot: '#6366f1', badge: '#e0e7ff', badgeText: '#4338ca' },
+                                                    { border: '#6ee7b7', bg: '#f0fdf4', dot: '#10b981', badge: '#dcfce7', badgeText: '#15803d' },
+                                                    { border: '#fcd34d', bg: '#fffbeb', dot: '#f59e0b', badge: '#fef9c3', badgeText: '#92400e' },
+                                                    { border: '#f9a8d4', bg: '#fdf2f8', dot: '#ec4899', badge: '#fce7f3', badgeText: '#9d174d' },
+                                                ];
+                                                const accent = accents[idx % accents.length];
+
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        className="relative rounded-[2rem] p-7 border-2"
+                                                        style={{
+                                                            backgroundColor: accent.bg,
+                                                            borderColor: accent.border,
+                                                            boxShadow: `0 4px 20px ${accent.border}40`,
+                                                        }}
+                                                    >
+                                                        {/* Quote Icon */}
+                                                        <div
+                                                            className="absolute -top-3 -left-3 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-black shadow-md"
+                                                            style={{ backgroundColor: accent.dot }}
+                                                        >
+                                                            "
+                                                        </div>
+
+                                                        {/* Testimonial badge */}
+                                                        <div className="flex justify-end mb-3">
+                                                            <span
+                                                                className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg"
+                                                                style={{ backgroundColor: accent.badge, color: accent.badgeText }}
+                                                            >
+                                                                ⭐ Témoignage validé
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Comment */}
+                                                        <p className="text-slate-700 font-medium leading-relaxed italic text-sm mb-6">
+                                                            "{submission.commentaire_general}"
+                                                        </p>
+
+                                                        {/* Author */}
+                                                        <div className="flex items-center gap-3">
+                                                            <div
+                                                                className="w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-black text-white shadow-sm"
+                                                                style={{ backgroundColor: accent.dot }}
+                                                            >
+                                                                {submission.participant?.prenom?.[0]}{submission.participant?.nom?.[0]}
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-xs font-black text-slate-900">
+                                                                    {submission.participant?.prenom} {submission.participant?.nom}
+                                                                </p>
+                                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                                    Participant certifié
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div
+                                        className="bg-white rounded-[2rem] p-16 text-center border border-slate-100"
+                                        style={{ boxShadow: '0 4px 20px rgba(15,23,42,0.04)' }}
+                                    >
+                                        <div className="text-5xl mb-4">💬</div>
+                                        <h3 className="text-lg font-black text-slate-800 mb-2">Aucun témoignage pour l'instant</h3>
+                                        <p className="text-sm font-medium text-slate-400 italic">
+                                            Les avis des participants apparaîtront ici après validation par nos équipes.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
