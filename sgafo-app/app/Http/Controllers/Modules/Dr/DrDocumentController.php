@@ -17,11 +17,8 @@ class DrDocumentController extends Controller
         $user = Auth::user();
         $regionIds = $user->regions->pluck('id');
 
-        // On cherche tous les plans rattachés aux sites de formation de la région du DR
+        // On cherche tous les plans impliquant le personnel de la région du DR (filtre global automatique appliqué)
         $plans = PlanFormation::with(['entite', 'siteFormation'])
-            ->whereHas('siteFormation', function($q) use ($regionIds) {
-                $q->whereIn('region_id', $regionIds);
-            })
             ->whereIn('statut', ['soumis', 'confirmé', 'validé', 'terminé'])
             ->orderBy('date_debut', 'desc')
             ->get();
@@ -77,7 +74,7 @@ class DrDocumentController extends Controller
             });
 
         // 4. Répartition par Secteur
-        $statsParSecteur = \App\Models\PlanFormation::whereHas('siteFormation', fn($q) => $q->whereIn('region_id', $regionIds))
+        $statsParSecteur = PlanFormation::whereHas('siteFormation', fn($q) => $q->whereIn('region_id', $regionIds))
             ->join('entite_formations', 'plans_formation.entite_id', '=', 'entite_formations.id')
             ->join('secteurs', 'entite_formations.secteur_id', '=', 'secteurs.id')
             ->select('secteurs.nom', \DB::raw('count(*) as total'))

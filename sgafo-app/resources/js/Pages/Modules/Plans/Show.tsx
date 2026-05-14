@@ -592,7 +592,9 @@ export default function Show({ plan, isValidationContext }: Props) {
                                                 <span className="text-[10px] font-bold text-slate-300 italic">En attente d'appel</span>
                                             )}
 
-                                            <div className="flex items-center gap-2">
+                                            {/* vérifier c'est l'utilisateur est un responsable de formation pour autorise l'acces a les actions de feedback  */}
+                                            {isRF && (
+                                                <div className="flex items-center gap-2">
                                                 {/* Actions de Feedback */}
                                                 {seance.feedback_form ? (
                                                     <Link 
@@ -629,6 +631,7 @@ export default function Show({ plan, isValidationContext }: Props) {
                                                     </a>
                                                 )}
                                             </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

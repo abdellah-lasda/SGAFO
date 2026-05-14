@@ -55,25 +55,28 @@ trait HasRegionalScope
                 if (\Schema::hasColumn($table, 'region_id')) {
                     $builder->whereIn($table . '.region_id', $regionIds);
                 } elseif ($table === 'plans_formation') {
-                    // Logique "Humaine et Géographique" (Point crucial demandé)
+                    // Logique "Ressources Humaines" (Uniquement le personnel rattaché aux instituts de la région)
                     $builder->where(function ($q) use ($regionIds) {
-                        // 1. Le lieu de formation est dans la région
-                        $q->whereHas('siteFormation', function ($sq) use ($regionIds) {
+                        // 1. Au moins un participant est de la région
+                        $q->whereHas('participants.instituts', function ($sq) use ($regionIds) {
                             $sq->whereIn('region_id', $regionIds);
                         })
-                        // 2. OU au moins un participant est de la région
-                        ->orWhereHas('participants.instituts', function ($sq) use ($regionIds) {
-                            $sq->whereIn('region_id', $regionIds);
-                        })
-                        // 3. OU au moins un animateur (formateur) est de la région
+                        // 2. OU au moins un animateur (formateur) est de la région
                         ->orWhereHas('seances.seanceThemes.formateur.instituts', function ($sq) use ($regionIds) {
                             $sq->whereIn('region_id', $regionIds);
                         });
                     });
                 } elseif ($table === 'seances') {
                     $builder->whereHas('plan', function ($q) use ($regionIds) {
-                         // On réutilise la logique du plan pour les séances
-                         $q->whereHas('siteFormation', function($sq) use ($regionIds) { $sq->whereIn('region_id', $regionIds); });
+                         // On réutilise la logique "Ressources Humaines" du plan pour les séances
+                         $q->where(function ($sq) use ($regionIds) {
+                             $sq->whereHas('participants.instituts', function ($ssq) use ($regionIds) {
+                                 $ssq->whereIn('region_id', $regionIds);
+                             })
+                             ->orWhereHas('seances.seanceThemes.formateur.instituts', function ($ssq) use ($regionIds) {
+                                 $ssq->whereIn('region_id', $regionIds);
+                             });
+                         });
                     });
                 } elseif ($table === 'feedback_submissions') {
                     $builder->whereHas('participant.instituts', function($sq) use ($regionIds) {
