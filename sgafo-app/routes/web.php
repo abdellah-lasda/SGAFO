@@ -145,10 +145,9 @@ Route::middleware(['auth', 'role:RF,CDC,ADMIN'])->prefix('modules')->name('modul
     Route::get('absences', [AbsenceDashboardController::class, 'index'])->name('absences.dashboard');
 });
 
-Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')->group(function () {
+Route::middleware(['auth', 'role:RF,CDC,'])->prefix('modules')->name('modules.')->group(function () {
     Route::post('plans/availability/check', [PlanFormationController::class, 'checkAvailability'])->name('plans.availability.check');
     Route::resource('plans', PlanFormationController::class);
-    Route::get('plans/{plan}/export-pdf', [PlanFormationController::class, 'exportPdf'])->name('plans.export-pdf');
     Route::post('plans/{plan}/submit', [PlanFormationController::class, 'submit'])->name('plans.submit');
     Route::post('plans/{plan}/validate', [PlanFormationController::class, 'validatePlan'])->name('plans.validate');
     Route::post('plans/{plan}/reject', [PlanFormationController::class, 'reject'])->name('plans.reject');
@@ -188,6 +187,9 @@ Route::middleware(['auth', 'role:RF,CDC'])->prefix('modules')->name('modules.')-
     Route::get('plans/{plan}/analytics-data', [AnalyticsController::class, 'planAnalytics'])->name('plans.analytics-data');
 });
 
+Route::middleware(['auth', 'role:RF,CDC,ADMIN,FORMATEUR,DR'])->prefix('modules')->name('modules.')->group(function () {
+    Route::get('plans/{plan}/export-pdf', [PlanFormationController::class, 'exportPdf'])->name('plans.export-pdf');
+});
 
 // Espace Animateur
 Route::middleware(['auth', 'role:FORMATEUR'])->prefix('animateur')->name('modules.animateur.')->group(function () {
