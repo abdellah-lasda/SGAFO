@@ -14,7 +14,7 @@ interface IndexProps extends PageProps {
 export default function Index({ auth, plans }: IndexProps) {
     return (
         <AuthenticatedLayout
-            header={<h2 className="font-black text-2xl text-slate-800 leading-tight">Plans de Formation de la Région</h2>}
+            header={<span className="font-black text-slate-800 leading-tight">Plans de Formation de la Région</span>}
         >
             <Head title="Plans Régionaux" />
 
