@@ -13,8 +13,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement('ALTER TABLE plans_formation DROP CONSTRAINT IF EXISTS plans_formation_statut_check');
-        DB::statement("ALTER TABLE plans_formation ADD CONSTRAINT plans_formation_statut_check CHECK (statut IN ('brouillon', 'soumis', 'confirmé', 'rejeté', 'validé', 'annulé'))");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE plans_formation DROP CONSTRAINT IF EXISTS plans_formation_statut_check');
+            DB::statement("ALTER TABLE plans_formation ADD CONSTRAINT plans_formation_statut_check CHECK (statut IN ('brouillon', 'soumis', 'confirmé', 'rejeté', 'validé', 'annulé'))");
+        }
     }
 
     /**
@@ -22,7 +24,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE plans_formation DROP CONSTRAINT IF EXISTS plans_formation_statut_check');
-        DB::statement("ALTER TABLE plans_formation ADD CONSTRAINT plans_formation_statut_check CHECK (statut IN ('brouillon', 'soumis', 'confirmé', 'rejeté', 'validé'))");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE plans_formation DROP CONSTRAINT IF EXISTS plans_formation_statut_check');
+            DB::statement("ALTER TABLE plans_formation ADD CONSTRAINT plans_formation_statut_check CHECK (statut IN ('brouillon', 'soumis', 'confirmé', 'rejeté', 'validé'))");
+        }
     }
 };
