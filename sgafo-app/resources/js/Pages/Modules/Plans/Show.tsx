@@ -103,7 +103,7 @@ export default function Show({ plan, isValidationContext }: Props) {
 
             <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
                             <span className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg ${config.bg} ${config.color}`}>
@@ -115,7 +115,7 @@ export default function Show({ plan, isValidationContext }: Props) {
                             Créé par {plan.createur?.prenom} {plan.createur?.nom} · {new Date(plan.created_at).toLocaleDateString()}
                         </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto">
                         <a
                             href={route('modules.plans.export-pdf', plan.id)}
                             className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-white text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm"
@@ -162,24 +162,24 @@ export default function Show({ plan, isValidationContext }: Props) {
                 </div>
 
                 {/* Tabs Navigation */}
-                <div className="flex border-b border-slate-200">
+                <div className="flex overflow-x-auto scrollbar-hide border-b border-slate-200 w-full">
                     <button 
                         onClick={() => setCurrentTab('infos')}
-                        className={`px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${currentTab === 'infos' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                        className={`whitespace-nowrap flex-shrink-0 px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${currentTab === 'infos' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                     >
                         Informations
                     </button>
                     {plan.seances && plan.seances.length > 0 && (
                         <button 
                             onClick={() => setCurrentTab('suivi')}
-                            className={`px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${currentTab === 'suivi' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                            className={`whitespace-nowrap flex-shrink-0 px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${currentTab === 'suivi' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                         >
                             Suivi & Absences
                         </button>
                     )}
                     <button 
                         onClick={() => setCurrentTab('qualite')}
-                        className={`px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${currentTab === 'qualite' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                        className={`whitespace-nowrap flex-shrink-0 px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${currentTab === 'qualite' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                     >
                         Analyse Qualité
                     </button>

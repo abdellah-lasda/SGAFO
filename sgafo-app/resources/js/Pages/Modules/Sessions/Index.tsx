@@ -644,7 +644,8 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                     </div>
 
                     {seances.length > 0 && (
-                        <div className="bg-white border border-slate-200 rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 overflow-x-auto">
+                        <div className="bg-white border border-slate-200 rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 mb-6">
+                            <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-slate-100">
                                 <thead className="bg-slate-50/50">
                                     <tr>
@@ -746,6 +747,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
                         </div>
                     )}
                 </div>

@@ -60,7 +60,7 @@ export default function Show({ plan }: Props) {
                                 {plan.titre}
                             </h1>
                             
-                            <div className="flex items-center gap-8">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white font-black">
                                         {plan.createur?.prenom[0]}{plan.createur?.nom[0]}
@@ -143,12 +143,12 @@ export default function Show({ plan }: Props) {
                     {/* Main Content Areas */}
                     <div className="lg:col-span-3 space-y-8">
                         {/* Tabs Navigation */}
-                        <div className="bg-white p-2 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-wrap gap-2">
+                        <div className="bg-white p-2 rounded-[1.5rem] border border-slate-100 shadow-sm flex overflow-x-auto scrollbar-hide gap-2">
                             {tabs.map(tab => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${
                                         activeTab === tab.id 
                                         ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' 
                                         : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'

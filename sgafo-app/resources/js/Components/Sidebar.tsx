@@ -3,9 +3,10 @@ import { User } from '@/types';
 
 interface SidebarProps {
     user: User;
+    onClose?: () => void;
 }
 
-export default function Sidebar({ user }: SidebarProps) {
+export default function Sidebar({ user, onClose }: SidebarProps) {
     const roles = user.roles || [];
     const roleCodes = roles.map(r => typeof r === 'object' ? (r as any).code : r);
     
@@ -22,7 +23,7 @@ export default function Sidebar({ user }: SidebarProps) {
     return (
         <aside className="w-64 bg-[#0f172a] text-white flex flex-col h-full shadow-2xl font-sans border-r border-slate-800/50">
             {/* Logo Section */}
-            <div className="h-20 flex items-center px-6">
+            <div className="h-20 flex items-center justify-between px-6">
                 <span className="text-xl font-black tracking-tighter text-white flex items-center gap-2">
                     <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg">
                         <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -31,6 +32,11 @@ export default function Sidebar({ user }: SidebarProps) {
                     </div>
                     SGAFO
                 </span>
+                {onClose && (
+                    <button onClick={onClose} className="md:hidden p-2 text-slate-400 hover:text-white rounded-lg">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                )}
             </div>
 
             {/* Action Button Section (Only for non-admins) */}
