@@ -16,3 +16,38 @@
         }
     }
 }
+
+@layer utilities {
+    /* Hide scrollbar completely */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+}
+
+/* Custom sleek scrollbar for the entire app */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1; /* slate-300 */
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8; /* slate-400 */
+}
+
+/* Darker scrollbar for dark areas like sidebar if needed */
+.dark-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #334155; /* slate-700 */
+}
+.dark-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #475569; /* slate-600 */
+}

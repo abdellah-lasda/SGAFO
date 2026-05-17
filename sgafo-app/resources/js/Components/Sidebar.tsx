@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { User } from '@/types';
+import Logo from '@/Components/Logo';
 
 interface SidebarProps {
     user: User;
@@ -24,14 +25,9 @@ export default function Sidebar({ user, onClose }: SidebarProps) {
         <aside className="w-64 bg-[#0f172a] text-white flex flex-col h-full shadow-2xl font-sans border-r border-slate-800/50">
             {/* Logo Section */}
             <div className="h-20 flex items-center justify-between px-6">
-                <span className="text-xl font-black tracking-tighter text-white flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg">
-                        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                    </div>
-                    SGAFO
-                </span>
+                <Link href={route('dashboard')}>
+                    <Logo variant="sidebar" size="md" />
+                </Link>
                 {onClose && (
                     <button onClick={onClose} className="md:hidden p-2 text-slate-400 hover:text-white rounded-lg">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -39,24 +35,6 @@ export default function Sidebar({ user, onClose }: SidebarProps) {
                 )}
             </div>
 
-            {/* Action Button Section (Only for non-admins) */}
-            {isAdmin && (
-                <div className="px-4 mb-8">
-                    <button className="w-full flex items-center justify-between px-5 py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-all shadow-xl shadow-blue-600/20 group">
-                        <span className="flex items-center gap-3">
-                            <div className="bg-white/20 p-1 rounded-lg">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
-                                </svg>
-                            </div>
-                            Nouveau
-                        </span>
-                        <svg className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                </div>
-            )}
 
             <nav className="flex-1 overflow-y-auto px-4 space-y-8 scrollbar-hide pb-10">
                 
@@ -117,6 +95,20 @@ export default function Sidebar({ user, onClose }: SidebarProps) {
                                     Centre de Validation
                                 </Link>
                             )}
+
+                            {isRF && (
+                                <Link
+                                    href={route('admin.attestations.list')}
+                                    className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${route().current('admin.attestations.list') || route().current('admin.attestations.index') ? activeClass : inactiveClass}`}
+                                >
+                                    <svg className="mr-3 h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                                    </svg>
+                                    Attestations
+                                </Link>
+                            )}
+
+
                             {(isRF || isCDC) && (
                                 <Link
                                     href={route('admin.analytics.index')}
@@ -330,8 +322,8 @@ export default function Sidebar({ user, onClose }: SidebarProps) {
 
             {/* User Profile Mini (Modernized) */}
             <div className="p-4 bg-slate-900 border-t border-slate-800">
-                <div className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer group text-left">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-xs font-black text-white shadow-lg ring-2 ring-slate-800 group-hover:ring-slate-700 transition-all flex-shrink-0">
+                <div className="w-full flex items-center gap-3 p-2 rounded-lg transition-colors group text-left">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-xs font-black text-white shadow-lg ring-2 ring-slate-800 flex-shrink-0">
                         {user.prenom?.charAt(0)}{user.nom?.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -344,9 +336,9 @@ export default function Sidebar({ user, onClose }: SidebarProps) {
                         href={route('logout')}
                         method="post"
                         as="button"
-                        className="rounded-lg hover:bg-slate-800 transition-colors cursor-pointer group text-left"
+                        className="rounded-lg transition-colors cursor-pointer text-left"
                     >
-                        <div className="p-2 rounded-md group-hover:bg-red-500/10 group-hover:text-red-500 text-slate-500 transition-colors">
+                        <div className="p-2 rounded-md hover:bg-red-500/10 hover:text-red-500 text-slate-500 transition-colors">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
@@ -354,6 +346,8 @@ export default function Sidebar({ user, onClose }: SidebarProps) {
                     </Link>
                 </div>
             </div>
+
+
         </aside>
     );
 }

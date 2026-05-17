@@ -1,7 +1,10 @@
 import { PageProps } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
+import Logo from '@/Components/Logo';
 import { PlanFormation } from '@/types/plan';
+import { ArrowRight, Users, BookOpen, Clock, Shield, Award, ChevronDown, MonitorPlay, Zap, ArrowUpRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface WelcomeProps extends PageProps {
     stats: {
@@ -14,8 +17,8 @@ interface WelcomeProps extends PageProps {
         participants_count: number, 
         animateurs_count: number 
     })[];
-    laravelVersion: string;
-    phpVersion: string;
+    laravelVersion?: string;
+    phpVersion?: string;
 }
 
 const FAQ_DATA = [
@@ -37,55 +40,79 @@ const FAQ_DATA = [
     }
 ];
 
+// Framer Motion Variants
+const fadeInUp = {
+    hidden: { opacity: 0, y: 40 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
+};
+
+const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.15
+        }
+    }
+};
+
 export default function Welcome({
     auth,
     stats,
     latestPlans,
-    laravelVersion,
-    phpVersion,
 }: WelcomeProps) {
     const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
-    const [isAnimating, setIsAnimating] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
     const [activeFaqIndex, setActiveFaqIndex] = useState<number | null>(null);
 
     // Auto-slide logic
     useEffect(() => {
         if (latestPlans.length <= 1) return;
         const timer = setInterval(() => {
-            handleNext();
-        }, 5000);
-        return () => clearInterval(timer);
-    }, [latestPlans, currentPlanIndex]);
-
-    const handleNext = () => {
-        if (isAnimating) return;
-        setIsAnimating(true);
-        setTimeout(() => {
             setCurrentPlanIndex((prev) => (prev + 1) % latestPlans.length);
-            setIsAnimating(false);
-        }, 500);
-    };
+        }, 6000);
+        return () => clearInterval(timer);
+    }, [latestPlans]);
 
-    const handlePrev = () => {
-        if (isAnimating) return;
-        setIsAnimating(true);
-        setTimeout(() => {
-            setCurrentPlanIndex((prev) => (prev - 1 + latestPlans.length) % latestPlans.length);
-            setIsAnimating(false);
-        }, 500);
-    };
+    // Scroll listener for Navbar
+    useEffect(() => {
+        const handleScroll = () => setIsScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-600 selection:text-white">
-            <Head title="SGAFO • OFPPT - Portail Institutionnel" />
+        <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-blue-600 selection:text-white overflow-x-hidden">
+            <Head title="SGAFO • Portail Institutionnel" />
 
-            {/* Navigation */}
-            <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/60">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 rounded-2xl bg-slate-900 flex items-center justify-center p-1.5 shadow-xl shadow-slate-900/10">
-                             <svg viewBox="0 0 100 100" className="w-full h-full text-white" fill="currentColor"><circle cx="50" cy="50" r="35" /><path d="M20 20h60v10H20zM20 70h60v10H20z" className="opacity-30"/></svg>
-                        </div>
+            {/* Glowing Soft Orbs Background for Light Mode */}
+            <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 2, ease: "easeOut" }}
+                    className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/10 rounded-full blur-[120px] mix-blend-multiply animate-pulse" 
+                    style={{ animationDuration: '8s' }} 
+                />
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 2, delay: 0.5, ease: "easeOut" }}
+                    className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-400/10 rounded-full blur-[120px] mix-blend-multiply animate-pulse" 
+                    style={{ animationDuration: '10s' }} 
+                />
+            </div>
+
+            {/* Premium Glass Navbar Light */}
+            <motion.nav 
+                initial={{ y: -100 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-white/80 backdrop-blur-2xl border-b border-slate-200/50 py-4 shadow-sm shadow-slate-200/50' : 'bg-transparent py-6'}`}
+            >
+                <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+                    <div className="flex items-center gap-4 group cursor-pointer">
+                        <Logo variant="brand" size="lg" showText={false} className="group-hover:scale-110 transition-transform duration-500 shadow-md shadow-blue-500/20" />
                         <div className="flex flex-col leading-none">
                             <span className="text-2xl font-black tracking-tighter text-slate-900">SGAFO</span>
                             <span className="text-[10px] font-black tracking-[0.2em] text-blue-600 uppercase">OFPPT Maroc</span>
@@ -93,322 +120,301 @@ export default function Welcome({
                     </div>
 
                     <div className="hidden md:flex items-center gap-8">
-                        <div className="flex items-center gap-6">
-                            <a href="#stats" className="text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Performance</a>
-                            <a href="#carousel" className="text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Actualités</a>
-                            <a href="#support" className="text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Support</a>
+                        <div className="flex items-center gap-8">
+                            <a href="#performance" className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Performance</a>
+                            <a href="#catalogue" className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Catalogue</a>
+                            <a href="#support" className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Support</a>
                         </div>
                         <div className="h-6 w-px bg-slate-200" />
                         {auth.user ? (
-                            <Link href={route('dashboard')} className="px-6 py-3 bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10">Tableau de bord</Link>
+                            <Link href={route('dashboard')} className="px-6 py-2.5 bg-slate-100 text-slate-900 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all duration-300 shadow-sm border border-slate-200/50">Mon Espace</Link>
                         ) : (
-                            <Link href={route('login')} className="px-6 py-3 bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20">Espace Sécurisé</Link>
+                            <Link href={route('login')} className="px-6 py-2.5 bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/25 hover:-translate-y-0.5 transition-all duration-300">Connexion</Link>
                         )}
                     </div>
                 </div>
-            </nav>
+            </motion.nav>
 
-            <main className="pt-20">
-                {/* Hero Institutional */}
-                <section className="py-20 px-6">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="relative overflow-hidden rounded-[48px] bg-slate-900 p-12 md:p-24 shadow-2xl">
-                            <div className="absolute top-0 right-0 -mt-20 -mr-20 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
-                            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
-                            
-                            <div className="relative z-10 max-w-4xl">
-                                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-10 animate-fade-in">
-                                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                                    <span className="text-[11px] font-black tracking-[0.2em] uppercase text-blue-400">Digitalisation des Flux de Formation</span>
-                                </div>
-                                
-                                <h1 className="text-6xl md:text-7xl font-black text-white tracking-tighter leading-[1] mb-8">
-                                    L'Excellence <br />
-                                    <span className="text-blue-500">Pédagogique Digitalisée.</span>
-                                </h1>
-                                
-                                <p className="text-xl md:text-2xl text-slate-400 font-medium leading-relaxed mb-14 max-w-3xl">
-                                    Plateforme centralisée pour la planification stratégique, la logistique et l'évaluation continue des formateurs de l'OFPPT.
-                                </p>
+            <main>
+                {/* Cinematic Hero Section Light */}
+                <section className="relative pt-40 pb-32 px-6 flex flex-col items-center justify-center min-h-[90vh]">
+                    <motion.div 
+                        variants={staggerContainer}
+                        initial="hidden"
+                        animate="visible"
+                        className="max-w-5xl mx-auto text-center relative z-10"
+                    >
+                        <motion.div variants={fadeInUp} className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 mb-8 shadow-sm shadow-blue-100">
+                            <Zap className="w-4 h-4 text-blue-600" />
+                            <span className="text-[11px] font-black tracking-[0.2em] uppercase text-blue-600">Plateforme Intranet Officielle</span>
+                        </motion.div>
+                        
+                        <motion.h1 variants={fadeInUp} className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter leading-[1.05] mb-8 drop-shadow-sm">
+                            L'Excellence <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
+                                Pédagogique Digitalisée.
+                            </span>
+                        </motion.h1>
+                        
+                        <motion.p variants={fadeInUp} className="text-lg md:text-2xl text-slate-500 font-medium leading-relaxed mb-14 max-w-3xl mx-auto">
+                            SGAFO centralise la planification stratégique, l'ingénierie et le pilotage des actions de formation continue pour le réseau OFPPT.
+                        </motion.p>
 
-                                <div className="flex flex-col sm:flex-row items-center gap-8">
-                                    <Link
-                                        href={route('login')}
-                                        className="w-full sm:w-auto px-12 py-5 bg-white text-slate-900 font-black uppercase tracking-widest text-sm rounded-2xl hover:scale-105 transition-all shadow-2xl flex items-center justify-center gap-4 group"
-                                    >
-                                        Connexion Intranet
-                                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7-7 7M5 12h16" /></svg>
-                                    </Link>
-                                    <a href="#carousel" className="text-white/40 hover:text-white font-black uppercase tracking-widest text-xs transition-colors border-b-2 border-white/10 pb-1">Voir les derniers plans</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                            <Link
+                                href={route('login')}
+                                className="w-full sm:w-auto px-10 py-5 bg-slate-900 text-white font-black uppercase tracking-widest text-sm rounded-2xl hover:bg-blue-600 hover:shadow-[0_20px_40px_rgba(37,99,235,0.2)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-3 group"
+                            >
+                                Accéder au Système
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                            <a href="#catalogue" className="w-full sm:w-auto px-10 py-5 bg-white border border-slate-200 text-slate-700 font-black uppercase tracking-widest text-sm rounded-2xl hover:bg-slate-50 hover:shadow-lg hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-3 group">
+                                Voir le Catalogue
+                                <MonitorPlay className="w-5 h-5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                            </a>
+                        </motion.div>
+                    </motion.div>
                 </section>
 
-                {/* Statistics Banner */}
-                <section id="stats" className="pb-24 px-6">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
+                {/* Light Stats Section with Scroll Animation */}
+                <section id="performance" className="py-24 px-6 relative z-10 overflow-hidden">
+                    <motion.div 
+                        variants={staggerContainer}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-100px" }}
+                        className="max-w-7xl mx-auto"
+                    >
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {[
-                                { label: 'Formateurs', value: stats.formateurs, icon: 'Users', color: 'bg-blue-50 text-blue-600' },
-                                { label: 'Plans Validés', value: stats.plans, icon: 'Clipboard', color: 'bg-indigo-50 text-indigo-600' },
-                                { label: 'Secteurs', value: stats.secteurs, icon: 'Layers', color: 'bg-emerald-50 text-emerald-600' },
-                                { label: 'Heures / An', value: `${stats.totalHeures}h`, icon: 'Clock', color: 'bg-orange-50 text-orange-600' },
+                                { label: 'Formateurs Experts', value: stats.formateurs, icon: Users, color: 'blue' },
+                                { label: 'Programmes Validés', value: stats.plans, icon: Award, color: 'indigo' },
+                                { label: 'Secteurs Couverts', value: stats.secteurs, icon: Shield, color: 'emerald' },
+                                { label: 'Volume Horaire', value: `${stats.totalHeures}h`, icon: Clock, color: 'orange' },
                             ].map((stat, i) => (
-                                <div key={i} className="bg-white p-10 rounded-[40px] border border-slate-200/60 shadow-xl shadow-slate-200/20 hover:scale-105 transition-all group">
-                                    <div className="text-5xl font-black text-slate-900 mb-3 tracking-tighter group-hover:scale-110 transition-transform">{stat.value}</div>
-                                    <div className="flex items-center justify-center gap-2">
-                                        <div className={`w-2 h-2 rounded-full ${stat.color.replace('text-', 'bg-')}`} />
-                                        <div className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{stat.label}</div>
+                                <motion.div 
+                                    variants={fadeInUp}
+                                    key={i} 
+                                    className="group relative bg-white p-8 rounded-[32px] border border-slate-200/60 shadow-xl shadow-slate-200/20 hover:border-slate-300 hover:shadow-2xl hover:shadow-slate-200/40 transition-all duration-500 hover:-translate-y-2 overflow-hidden"
+                                >
+                                    <div className={`absolute top-0 right-0 w-32 h-32 bg-${stat.color}-500/5 rounded-full blur-3xl group-hover:bg-${stat.color}-500/10 transition-colors duration-500`} />
+                                    
+                                    <div className="relative z-10">
+                                        <div className={`w-12 h-12 rounded-2xl bg-${stat.color}-50 border border-${stat.color}-100 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500`}>
+                                            <stat.icon className={`w-6 h-6 text-${stat.color}-600`} />
+                                        </div>
+                                        <div className="text-4xl md:text-5xl font-black text-slate-900 mb-2 tracking-tighter">{stat.value}</div>
+                                        <div className="text-xs font-bold uppercase tracking-widest text-slate-400">{stat.label}</div>
                                     </div>
-                                </div>
+                                </motion.div>
                             ))}
                         </div>
-                    </div>
+                    </motion.div>
                 </section>
 
-                {/* Enhanced Carousel Section */}
-                <section id="carousel" className="py-32 px-6 bg-white border-y border-slate-100 relative">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
-                            <div className="text-left max-w-2xl">
-                                <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-slate-900 mb-6">Dernières Validations.</h2>
-                                <p className="text-slate-400 text-lg font-medium italic">Zoom sur les nouveaux programmes de formation certifiés par la Direction Régionale.</p>
-                            </div>
-                            <div className="flex gap-4">
-                                <button onClick={handlePrev} className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
+                {/* Modern Light Catalogue Showcase */}
+                <section id="catalogue" className="py-32 px-6">
+                    <motion.div 
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-100px" }}
+                        variants={staggerContainer}
+                        className="max-w-7xl mx-auto"
+                    >
+                        <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-8">
+                            <motion.div variants={fadeInUp} className="max-w-2xl">
+                                <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900 mb-6">Catalogue National.</h2>
+                                <p className="text-slate-500 text-lg md:text-xl font-medium">Découvrez les dernières thématiques d'ingénierie certifiées et déployées sur l'ensemble du réseau.</p>
+                            </motion.div>
+                            <motion.div variants={fadeInUp} className="flex gap-4">
+                                <button onClick={() => setCurrentPlanIndex((prev) => (prev - 1 + latestPlans.length) % latestPlans.length)} className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:text-blue-600 shadow-sm transition-all group">
+                                    <ArrowRight className="w-6 h-6 rotate-180 group-hover:-translate-x-1 transition-transform" />
                                 </button>
-                                <button onClick={handleNext} className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+                                <button onClick={() => setCurrentPlanIndex((prev) => (prev + 1) % latestPlans.length)} className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:text-blue-600 shadow-sm transition-all group">
+                                    <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                                 </button>
-                            </div>
+                            </motion.div>
                         </div>
 
                         {latestPlans.length > 0 ? (
-                            <div className="relative min-h-[900px] md:min-h-[600px] lg:min-h-[500px]">
-                                {latestPlans.map((plan, index) => (
-                                    <div
-                                        key={plan.id}
-                                        className={`absolute inset-0 transition-all duration-700 ease-in-out transform ${
-                                            index === currentPlanIndex 
-                                                ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' 
-                                                : 'opacity-0 scale-95 translate-y-8 pointer-events-none'
-                                        }`}
+                            <motion.div variants={fadeInUp} className="relative min-h-[500px]">
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={currentPlanIndex}
+                                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                                        className="absolute inset-0 z-20"
                                     >
-                                        <div className="grid lg:grid-cols-12 gap-0 overflow-hidden bg-white rounded-[32px] md:rounded-[48px] border border-slate-200 shadow-2xl h-full min-h-[900px] md:min-h-[600px] lg:min-h-[500px]">
-                                            {/* Left Column: Main Info */}
-                                            <div className="lg:col-span-7 p-6 sm:p-10 md:p-16 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-slate-100">
-                                                <div className="flex items-center gap-3 mb-8">
-                                                    <span className="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[11px] font-black uppercase tracking-widest border border-blue-100">
-                                                        {plan.entite?.secteur?.nom}
-                                                    </span>
-                                                    <span className={`px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest border ${
-                                                        plan.plateforme ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-orange-50 text-orange-600 border-orange-100'
-                                                    }`}>
-                                                        {plan.plateforme ? `À distance (${plan.plateforme})` : 'Présentiel'}
-                                                    </span>
-                                                </div>
+                                        <div className="bg-white rounded-[40px] border border-slate-200/80 shadow-2xl shadow-slate-200/50 overflow-hidden group h-full">
+                                            <div className="grid lg:grid-cols-2 gap-0 h-full">
                                                 
-                                                <h3 className="text-2xl sm:text-3xl md:text-5xl font-black text-slate-900 leading-[1.1] mb-6 md:mb-8 tracking-tighter">
-                                                    {plan.titre}
-                                                </h3>
-                                                
-                                                <div className="space-y-4 mb-10">
-                                                    <div className="flex items-start gap-3">
-                                                        <div className="w-1 h-1 rounded-full bg-blue-600 mt-2" />
-                                                        <p className="text-slate-500 font-medium text-lg leading-relaxed line-clamp-2 italic">
-                                                            "{plan.themes?.[0]?.objectifs || 'Amélioration des compétences techniques et pédagogiques...'}"
-                                                        </p>
+                                                {/* Card Content Light */}
+                                                <div className="p-10 md:p-16 flex flex-col justify-center">
+                                                    <div className="flex items-center gap-3 mb-8">
+                                                        <span className="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">
+                                                            {latestPlans[currentPlanIndex].entite?.secteur?.nom}
+                                                        </span>
+                                                        <span className="px-4 py-1.5 bg-slate-100 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-slate-200">
+                                                            {latestPlans[currentPlanIndex].plateforme ? 'À distance' : 'Présentiel'}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <h3 className="text-3xl md:text-5xl font-black text-slate-900 leading-[1.1] mb-6 tracking-tighter line-clamp-3">
+                                                        {latestPlans[currentPlanIndex].titre}
+                                                    </h3>
+                                                    
+                                                    <p className="text-slate-500 font-medium text-lg leading-relaxed line-clamp-2 mb-10">
+                                                        {latestPlans[currentPlanIndex].themes?.[0]?.objectifs || 'Amélioration des compétences techniques et pédagogiques spécifiques au secteur.'}
+                                                    </p>
+
+                                                    <div className="grid grid-cols-3 gap-6 pt-8 border-t border-slate-100">
+                                                        <div>
+                                                            <div className="text-3xl font-black text-slate-900">{latestPlans[currentPlanIndex].themes?.length || 0}</div>
+                                                            <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Modules</div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-3xl font-black text-slate-900">{latestPlans[currentPlanIndex].animateurs_count}</div>
+                                                            <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Experts</div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-3xl font-black text-slate-900">{latestPlans[currentPlanIndex].participants_count}</div>
+                                                            <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Inscrits</div>
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-3 gap-4 sm:gap-8 p-6 sm:p-8 bg-slate-50 rounded-2xl sm:rounded-[32px] border border-slate-100">
-                                                    <div>
-                                                        <div className="text-3xl font-black text-slate-900 tracking-tighter">{plan.themes?.length || 0}</div>
-                                                        <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Modules</div>
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-3xl font-black text-slate-900 tracking-tighter">{plan.animateurs_count}</div>
-                                                        <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Animateurs</div>
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-xl sm:text-3xl font-black text-slate-900 tracking-tighter">{plan.participants_count}</div>
-                                                        <div className="text-[8px] sm:text-[10px] font-black uppercase text-slate-400 tracking-widest text-center sm:text-left">Participants</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Right Column: Meta Info */}
-                                            <div className="lg:col-span-5 bg-slate-50/50 p-6 sm:p-10 md:p-16 flex flex-col justify-center space-y-6 md:space-y-10">
-                                                <div className="flex items-center gap-5">
-                                                    <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-slate-100 text-xl font-black text-slate-900 uppercase">
-                                                        {plan.createur?.prenom[0]}{plan.createur?.nom[0]}
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-xl font-black text-slate-900">{plan.createur?.prenom} {plan.createur?.nom}</span>
-                                                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Responsable de Plan</span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-6 pt-6 border-t border-slate-200">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">Période</span>
-                                                        <span className="text-sm font-black text-slate-900 uppercase">Du {new Date(plan.date_debut).toLocaleDateString('fr-FR')} au {new Date(plan.date_fin).toLocaleDateString('fr-FR')}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">Total Volume</span>
-                                                        <span className="text-sm font-black text-slate-900">{plan.themes?.reduce((acc, t) => acc + Number(t.duree_heures), 0)} Heures</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">Entité</span>
-                                                        <span className="text-sm font-black text-blue-600 truncate max-w-[200px]">{plan.entite?.titre}</span>
+                                                {/* Card Visual / Abstract Light */}
+                                                <div className="hidden lg:flex relative bg-slate-50 p-16 items-center justify-center border-l border-slate-100 overflow-hidden">
+                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+                                                    
+                                                    <div className="relative z-10 w-full max-w-sm">
+                                                        <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white p-8 shadow-2xl shadow-slate-200/60 transform translate-x-4 group-hover:translate-x-0 transition-transform duration-700">
+                                                            <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-6 shadow-inner border border-blue-200/50">
+                                                                <BookOpen className="w-6 h-6 text-blue-600" />
+                                                            </div>
+                                                            <div className="text-slate-900 font-bold text-xl mb-2">{latestPlans[currentPlanIndex].entite?.titre}</div>
+                                                            <div className="text-slate-500 text-sm font-medium">
+                                                                {new Date(latestPlans[currentPlanIndex].date_debut).toLocaleDateString('fr-FR')} - {new Date(latestPlans[currentPlanIndex].date_fin).toLocaleDateString('fr-FR')}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    </motion.div>
+                                </AnimatePresence>
 
-                                {/* Progress Dots */}
-                                <div className="absolute bottom-[-60px] left-1/2 -translate-x-1/2 flex gap-3">
+                                {/* Progress Indicator */}
+                                <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-3">
                                     {latestPlans.map((_, i) => (
                                         <button
                                             key={i}
                                             onClick={() => setCurrentPlanIndex(i)}
-                                            className={`h-2.5 rounded-full transition-all duration-500 ${
-                                                i === currentPlanIndex ? 'w-12 bg-blue-600' : 'w-2.5 bg-slate-200 hover:bg-slate-300'
+                                            className={`h-1.5 rounded-full transition-all duration-500 ${
+                                                i === currentPlanIndex ? 'w-10 bg-blue-600' : 'w-2.5 bg-slate-300 hover:bg-slate-400'
                                             }`}
                                         />
                                     ))}
                                 </div>
-                            </div>
+                            </motion.div>
                         ) : (
-                            <div className="bg-slate-50 rounded-[48px] p-32 text-center border-2 border-dashed border-slate-200">
-                                <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-sm">
-                                    <svg className="w-10 h-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                                </div>
-                                <h3 className="text-2xl font-black text-slate-900 mb-2">Aucune actualité disponible</h3>
-                                <p className="text-slate-400 font-medium">Les nouveaux plans validés apparaîtront ici automatiquement.</p>
-                            </div>
+                            <motion.div variants={fadeInUp} className="bg-white rounded-[48px] p-32 text-center border border-slate-200/60 shadow-sm">
+                                <MonitorPlay className="w-16 h-16 text-slate-300 mx-auto mb-6" />
+                                <h3 className="text-2xl font-black text-slate-900 mb-2">Catalogue en cours de mise à jour</h3>
+                                <p className="text-slate-500 font-medium">Les programmes certifiés apparaîtront ici prochainement.</p>
+                            </motion.div>
                         )}
-                    </div>
+                    </motion.div>
                 </section>
 
-                {/* Institutional Support Hub */}
-                <section id="support" className="py-40 px-6">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex flex-col md:flex-row items-center justify-between mb-24 gap-12 text-center md:text-left">
-                            <div className="max-w-2xl">
-                                <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-slate-900 mb-6">Assistance Technique.</h2>
-                                <p className="text-slate-500 text-xl font-medium leading-relaxed">
-                                    Un problème d'accès ? Besoin d'un guide ? Notre équipe est là pour vous accompagner dans la prise en main de l'écosystème SGAFO.
+                {/* Light Support & FAQ */}
+                <section id="support" className="py-32 px-6 border-t border-slate-200 bg-white">
+                    <motion.div 
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-100px" }}
+                        variants={staggerContainer}
+                        className="max-w-7xl mx-auto"
+                    >
+                        <div className="grid lg:grid-cols-2 gap-20">
+                            <motion.div variants={fadeInUp}>
+                                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 mb-8 shadow-sm">
+                                    <Shield className="w-4 h-4 text-indigo-600" />
+                                    <span className="text-[11px] font-black tracking-[0.2em] uppercase text-indigo-600">Assistance Intégrale</span>
+                                </div>
+                                <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 mb-6">Nous sommes là pour vous.</h2>
+                                <p className="text-slate-500 text-lg font-medium leading-relaxed mb-12">
+                                    Découvrez nos guides d'utilisation interactifs ou contactez l'équipe d'administration centrale pour toute requête technique liée à votre espace de travail.
                                 </p>
-                            </div>
-                            <div className="shrink-0">
-                                <a href="mailto:support.sgafo@ofppt.ma" className="inline-flex flex-col items-center gap-4 group">
-                                    <div className="w-24 h-24 rounded-[32px] bg-slate-900 flex items-center justify-center text-white shadow-2xl group-hover:bg-blue-600 transition-all">
-                                        <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                    </div>
-                                    <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 group-hover:text-slate-900 transition-colors">Ouvrir un ticket</span>
-                                </a>
-                            </div>
-                        </div>
-
-                        <div className="grid md:grid-cols-3 gap-10">
-                            {/* FAQ Interactive */}
-                            <div className="group bg-white p-10 md:p-12 rounded-[48px] border border-slate-200/60 shadow-xl shadow-slate-200/10 hover:border-blue-500/30 transition-all">
-                                <h4 className="text-2xl font-black mb-8 uppercase tracking-tighter">Questions Fréquentes</h4>
-                                <div className="space-y-4">
-                                    {FAQ_DATA.map((faq, i) => (
-                                        <div key={i} className="border-b border-slate-100 last:border-0 pb-4">
-                                            <button 
-                                                onClick={() => setActiveFaqIndex(activeFaqIndex === i ? null : i)}
-                                                className="w-full flex items-center justify-between text-left group/item"
-                                            >
-                                                <span className={`text-sm font-bold transition-colors ${activeFaqIndex === i ? 'text-blue-600' : 'text-slate-600 group-hover/item:text-slate-900'}`}>
-                                                    {faq.question}
-                                                </span>
-                                                <svg 
-                                                    className={`w-4 h-4 text-slate-300 transition-transform duration-300 ${activeFaqIndex === i ? 'rotate-180 text-blue-500' : ''}`} 
-                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                                >
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
-                                                </svg>
-                                            </button>
-                                            <div className={`overflow-hidden transition-all duration-300 ${activeFaqIndex === i ? 'max-h-40 mt-4' : 'max-h-0'}`}>
-                                                <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                                                    {faq.answer}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-
-                            {/* Guides */}
-                            <div className="group bg-white p-12 rounded-[48px] border border-slate-200/60 shadow-xl shadow-slate-200/10 hover:border-blue-500/30 transition-all">
-                                <h4 className="text-2xl font-black mb-8 uppercase tracking-tighter">Documentation</h4>
-                                <div className="grid grid-cols-1 gap-4">
-                                    <Link 
-                                        href={route('documentation')}
-                                        className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-900 hover:text-white transition-all group/btn"
-                                    >
-                                        <span className="text-[11px] font-black uppercase tracking-widest">Guide Intégral (Portail)</span>
-                                        <svg className="w-5 h-5 text-slate-300 group-hover/btn:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5m0 0l5-5m-5 5V3" /></svg>
+                                
+                                <div className="flex gap-4">
+                                    <Link href={route('documentation')} className="px-8 py-4 bg-slate-100 border border-slate-200 text-slate-700 font-bold text-sm rounded-2xl hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all duration-300 flex items-center gap-3 group">
+                                        Documentation Globale
+                                        <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                                     </Link>
-                                    <button className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-900 hover:text-white transition-all group/btn">
-                                        <span className="text-[11px] font-black uppercase tracking-widest">Tutoriel Vidéo CDC</span>
-                                        <svg className="w-5 h-5 text-slate-300 group-hover/btn:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /></svg>
-                                    </button>
+                                    <a href="mailto:support.sgafo@ofppt.ma" className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/30 transition-all hover:-translate-y-1">
+                                        <MonitorPlay className="w-6 h-6" />
+                                    </a>
                                 </div>
-                            </div>
+                            </motion.div>
 
-                            {/* Infrastructure */}
-                            <div className="bg-blue-600 p-12 rounded-[48px] shadow-2xl shadow-blue-600/30 text-white relative overflow-hidden">
-                                <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-                                <h4 className="text-2xl font-black mb-6 uppercase tracking-tighter relative z-10">Infrastructure</h4>
-                                <div className="space-y-4 relative z-10">
-                                    <div className="p-4 bg-white/10 rounded-2xl border border-white/10">
-                                        <div className="text-[10px] font-black uppercase text-white/60 mb-1">Version Logicielle</div>
-                                        <div className="font-bold">Laravel v{laravelVersion} / PHP v{phpVersion}</div>
-                                    </div>
-                                    <div className="p-4 bg-white/10 rounded-2xl border border-white/10">
-                                        <div className="text-[10px] font-black uppercase text-white/60 mb-1">Environnement</div>
-                                        <div className="font-bold uppercase tracking-widest text-xs">Production Intranet</div>
-                                    </div>
-                                </div>
-                            </div>
+                            <motion.div variants={staggerContainer} className="space-y-4">
+                                {FAQ_DATA.map((faq, i) => (
+                                    <motion.div 
+                                        variants={fadeInUp}
+                                        key={i} 
+                                        className={`bg-slate-50 border rounded-2xl transition-all duration-300 overflow-hidden ${activeFaqIndex === i ? 'border-blue-500/50 shadow-md shadow-blue-500/10 bg-white' : 'border-slate-200 hover:border-slate-300 hover:bg-white'}`}
+                                    >
+                                        <button 
+                                            onClick={() => setActiveFaqIndex(activeFaqIndex === i ? null : i)}
+                                            className="w-full flex items-center justify-between p-6 text-left"
+                                        >
+                                            <span className={`text-sm font-bold ${activeFaqIndex === i ? 'text-blue-600' : 'text-slate-900'}`}>{faq.question}</span>
+                                            <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${activeFaqIndex === i ? 'rotate-180 text-blue-600' : 'text-slate-400'}`} />
+                                        </button>
+                                        <div 
+                                            className={`transition-all duration-500 ease-in-out ${activeFaqIndex === i ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}
+                                        >
+                                            <p className="px-6 pb-6 text-sm text-slate-500 leading-relaxed font-medium">
+                                                {faq.answer}
+                                            </p>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </motion.div>
                         </div>
-                    </div>
+                    </motion.div>
                 </section>
             </main>
 
-            {/* Institutional Footer */}
-            <footer className="py-24 px-6 bg-slate-50 border-t border-slate-200">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
-                    <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center p-2 shadow-sm">
-                             <svg viewBox="0 0 100 100" className="w-full h-full text-slate-900" fill="currentColor"><circle cx="50" cy="50" r="40" /></svg>
-                        </div>
+            {/* Light Footer */}
+            <motion.footer 
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1 }}
+                className="py-12 px-6 border-t border-slate-200 bg-slate-50 relative overflow-hidden"
+            >
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+                    <div className="flex items-center gap-4">
+                        <Logo variant="brand" size="lg" showText={false} />
                         <div className="flex flex-col text-left leading-none">
-                            <span className="text-3xl font-black tracking-tighter text-slate-900 uppercase">SGAFO</span>
-                            <span className="text-[11px] font-black text-slate-400 tracking-[0.2em] uppercase">Espace Intranet • OFPPT 2026</span>
+                            <span className="text-2xl font-black tracking-tighter text-slate-900 uppercase">SGAFO</span>
+                            <span className="text-[10px] font-black text-slate-500 tracking-[0.2em] uppercase mt-1">Plateforme Intranet • 2026</span>
                         </div>
                     </div>
                     
-                    <div className="flex gap-12 text-[12px] font-black uppercase tracking-[0.2em] text-slate-400">
-                        <a href="#" className="hover:text-blue-600 transition-colors">Portail</a>
-                        <a href="#" className="hover:text-blue-600 transition-colors">Sécurité</a>
-                        <a href="#" className="hover:text-blue-600 transition-colors">Cookies</a>
+                    <div className="flex items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
+                        <span>Assistance Centrale</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                        <span>Support Technique</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                        <span>OFPPT MAROC</span>
                     </div>
                 </div>
-                <div className="max-w-7xl mx-auto mt-16 pt-10 border-t border-slate-200/60 text-center">
-                    <p className="text-[11px] text-slate-300 font-bold uppercase tracking-[0.3em]">© 2026 Office de la Formation Professionnelle et de la Promotion du Travail</p>
-                </div>
-            </footer>
+            </motion.footer>
         </div>
     );
 }

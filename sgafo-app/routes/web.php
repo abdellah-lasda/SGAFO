@@ -66,6 +66,10 @@ Route::get('/documentation', function () {
 
 Route::get('/documentation/download', [App\Http\Controllers\Support\PdfGuideController::class, 'download'])->name('documentation.download');
 
+// Téléchargement public des attestations (sans authentification)
+Route::get('/attestations/download/{token}', [App\Http\Controllers\AttestationController::class, 'download'])->name('attestations.download');
+
+
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -120,9 +124,16 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->name('admin.')->grou
 });
 
 // Analyse & Analytics (Accessibles aux Admins, RF et CDC)
-Route::middleware(['auth', 'role:ADMIN,RF,CDC'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:RF,CDC,ADMIN'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    // Attestations
+    Route::get('attestations', [App\Http\Controllers\AttestationController::class, 'list'])->name('attestations.list');
+    Route::get('attestations/{plan}', [App\Http\Controllers\AttestationController::class, 'index'])->name('attestations.index');
+    Route::post('attestations/{plan}/save-template', [App\Http\Controllers\AttestationController::class, 'saveTemplate'])->name('attestations.save-template');
+    Route::post('attestations/{plan}/test-template', [App\Http\Controllers\AttestationController::class, 'testTemplate'])->name('attestations.test-template');
+    Route::post('attestations/{plan}/generate', [App\Http\Controllers\AttestationController::class, 'generate'])->name('attestations.generate');
 });
+
 
 
 // Catalogue National

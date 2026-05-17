@@ -1,214 +1,427 @@
 import { Head, Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Logo from '@/Components/Logo';
+import { Search, ChevronRight, Hash, BookOpen, Layers, Layout, Box, Code, GraduationCap, MessageSquare } from 'lucide-react';
 
-const DOCS = {
+const TOP_SIDEBAR_LINKS = [
+    { name: "Documentation", icon: BookOpen, active: true },
+    { name: "Components", icon: Layers },
+    { name: "Templates", icon: Layout },
+    { name: "UI Kit", icon: Box },
+    { name: "Playground", icon: Code },
+    { name: "Course", icon: GraduationCap, badge: "NEW" },
+    { name: "Community", icon: MessageSquare },
+];
+
+const NAVIGATION = [
+    {
+        title: "GETTING STARTED",
+        links: [
+            { id: "introduction", title: "Introduction & Vision" },
+            { id: "architecture", title: "Architecture du Système" },
+        ]
+    },
+    {
+        title: "GUIDES UTILISATEURS",
+        links: [
+            { id: "cdc", title: "Chef de Complexe (CDC)" },
+            { id: "rf", title: "Responsable Formation (RF)" },
+            { id: "animateur", title: "Animateur (Expert)" },
+            { id: "participant", title: "Participant (Apprenant)" },
+        ]
+    },
+    {
+        title: "RESSOURCES",
+        links: [
+            { id: "faq", title: "Foire Aux Questions" },
+            { id: "support", title: "Assistance Technique" },
+        ]
+    }
+];
+
+const CONTENT = {
     introduction: {
         title: "Introduction & Vision",
-        content: `
-            Le Système de Gestion de l'Apprentissage et de la Formation Continue (SGAFO) est l'outil central de digitalisation du workflow de formation au sein de l'OFPPT. 
-            Il permet de fluidifier les échanges entre les Directions Régionales, les Complexes de Formation et les Formateurs.
-        `,
-        steps: [
-            "Centralisation du catalogue national pour une meilleure visibilité",
-            "Automatisation de la planification logistique et des réservations",
-            "Suivi pédagogique en temps réel et évaluation par QCM",
-            "Dématérialisation des feuilles d'émargement et des attestations"
-        ]
+        description: "Découvrez le Système de Gestion de l'Apprentissage et de la Formation Continue (SGAFO).",
+        body: (
+            <>
+                <p>
+                    SGAFO est l'outil central de digitalisation du workflow de formation au sein de l'OFPPT. 
+                    Il permet de fluidifier les échanges entre les Directions Régionales, les Complexes de Formation et les Formateurs, offrant une visibilité en temps réel sur l'ensemble du processus de formation continue.
+                </p>
+                <h2 id="objectifs-principaux">Objectifs Principaux</h2>
+                <p>
+                    Le déploiement de cette plateforme s'inscrit dans une démarche globale de modernisation et vise plusieurs objectifs stratégiques :
+                </p>
+                <ul>
+                    <li><strong>Centralisation :</strong> Un catalogue national unique pour une meilleure visibilité.</li>
+                    <li><strong>Automatisation :</strong> Planification logistique et gestion des réservations fluidifiées.</li>
+                    <li><strong>Suivi :</strong> Évaluation pédagogique en temps réel et suivi par QCM.</li>
+                    <li><strong>Dématérialisation :</strong> Fin du format papier pour les feuilles d'émargement et les attestations.</li>
+                </ul>
+                <h2 id="public-cible">Public Cible</h2>
+                <p>
+                    SGAFO a été conçu pour répondre aux besoins spécifiques de plusieurs profils utilisateurs, chacun disposant d'une interface et de fonctionnalités dédiées à son périmètre d'action.
+                </p>
+                <pre><code className="language-bash"># Accès Rapide
+1. Chefs de Complexe (CDC) - Ingénierie et planification
+2. Responsables Formation (RF) - Validation et pilotage
+3. Animateurs - Évaluation et suivi pédagogique
+4. Participants - Inscription et montée en compétences</code></pre>
+            </>
+        )
+    },
+    architecture: {
+        title: "Architecture du Système",
+        description: "Comprendre comment SGAFO est structuré techniquement et fonctionnellement.",
+        body: (
+            <>
+                <p>
+                    L'architecture de SGAFO repose sur une séparation claire entre la planification stratégique (au niveau central/régional) et l'exécution opérationnelle (au niveau des complexes).
+                </p>
+                <h2 id="cycle-de-vie">Cycle de Vie d'un Plan</h2>
+                <p>
+                    Tout plan de formation passe par un workflow de validation strict :
+                </p>
+                <ol>
+                    <li><strong>Brouillon :</strong> Initialisation par le CDC.</li>
+                    <li><strong>Soumis :</strong> Envoi pour révision à la Direction Régionale.</li>
+                    <li><strong>Confirmé :</strong> Validation administrative par le RF.</li>
+                    <li><strong>Validé :</strong> Validation technique et injection dans le Catalogue National.</li>
+                </ol>
+            </>
+        )
     },
     cdc: {
         title: "Guide Chef de Complexe (CDC)",
-        content: "En tant que CDC, vous êtes le garant de l'ingénierie et de la planification opérationnelle des formations de votre complexe.",
-        sections: [
-            {
-                subtitle: "1. Initialisation du Plan de Formation",
-                text: "Depuis votre dashboard, cliquez sur 'Nouveau Plan'. Saisissez l'entité bénéficiaire, le titre du plan et les dates globales prévisionnelles. Un plan commence toujours à l'état 'Brouillon'."
-            },
-            {
-                subtitle: "2. Ingénierie des Thèmes (Modules)",
-                text: "Ajoutez chaque module en précisant le volume horaire, les objectifs SMART et les animateurs pressentis. Le système vérifie en temps réel que l'animateur n'a pas d'autre séance programmée sur la même période."
-            },
-            {
-                subtitle: "3. Gestion des Participants",
-                text: "Sélectionnez les formateurs participants. Vous pouvez filtrer par établissement, spécialité ou secteur. Le système bloquera l'ajout si le participant dépasse son quota d'heures annuel de formation."
-            },
-            {
-                subtitle: "4. Réservation Logistique",
-                text: "Une fois le plan 'Soumis', vous devez finaliser la logistique : choix du site de formation (Interne/Externe) et sélection des hôtels partenaires pour les participants venant hors-ville."
-            }
-        ]
+        description: "Gérez l'ingénierie et la planification opérationnelle des formations de votre complexe.",
+        body: (
+            <>
+                <p>
+                    En tant que CDC, vous êtes le point de départ du processus de formation. C'est vous qui identifiez les besoins et structurez les plans.
+                </p>
+                <h2 id="nouveau-plan">1. Initialisation du Plan</h2>
+                <p>
+                    Depuis votre dashboard, cliquez sur <strong>Nouveau Plan</strong>. Saisissez l'entité bénéficiaire, le titre du plan et les dates globales prévisionnelles. Un plan commence toujours à l'état <em>Brouillon</em>.
+                </p>
+                <h2 id="modules-themes">2. Ingénierie des Thèmes</h2>
+                <p>
+                    Ajoutez chaque module en précisant le volume horaire, les objectifs SMART et les animateurs pressentis. Le système vérifie en temps réel que l'animateur n'a pas d'autre séance programmée sur la même période.
+                </p>
+                <h2 id="gestion-participants">3. Gestion des Participants</h2>
+                <p>
+                    Sélectionnez les formateurs participants. Vous pouvez filtrer par établissement, spécialité ou secteur. Le système bloquera l'ajout si le participant dépasse son quota d'heures annuel de formation.
+                </p>
+            </>
+        )
     },
     rf: {
         title: "Guide Responsable Formation (RF)",
-        content: "Le RF (Direction Régionale) assure le pilotage stratégique et la validation finale des plans au niveau régional.",
-        sections: [
-            {
-                subtitle: "1. Validation Administrative (Confirmation)",
-                text: "Examinez les plans soumis par les CDC. Vérifiez l'adéquation avec le plan de développement régional. Si conforme, passez le statut à 'Confirmé'. En cas de rejet, saisissez un motif précis pour guider le CDC."
-            },
-            {
-                subtitle: "2. Validation Technique (Mise en Production)",
-                text: "Après confirmation, le plan doit être planifié (séances). Une fois le planning complet, le RF effectue la validation finale pour injection dans le Catalogue National et ouverture des sessions."
-            },
-            {
-                subtitle: "3. Pilotage & Tableaux de Bord",
-                text: "Utilisez l'onglet 'Pilotage' pour suivre le taux de réalisation des formations, le budget consommé (hôtellerie/transport) et le taux de satisfaction des participants."
-            }
-        ]
+        description: "Pilotez et validez les plans de formation au niveau de votre Direction Régionale.",
+        body: (
+            <>
+                <p>
+                    Le RF assure le pilotage stratégique et la validation finale des plans au niveau régional, garantissant l'alignement avec les objectifs de l'OFPPT.
+                </p>
+                <h2 id="validation-admin">1. Validation Administrative</h2>
+                <p>
+                    Examinez les plans soumis par les CDC. Vérifiez l'adéquation avec le plan de développement régional. Si conforme, passez le statut à <em>Confirmé</em>. En cas de rejet, saisissez un motif précis pour guider le CDC.
+                </p>
+                <h2 id="validation-tech">2. Validation Technique</h2>
+                <p>
+                    Après confirmation, le plan doit être planifié (séances). Une fois le planning complet, le RF effectue la validation finale pour injection dans le Catalogue National et ouverture des sessions.
+                </p>
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+                    <p className="text-sm text-blue-800 m-0 font-medium">
+                        <strong>Note importante :</strong> Seuls les plans "Validés" apparaissent dans le Catalogue National.
+                    </p>
+                </div>
+            </>
+        )
     },
     animateur: {
         title: "Guide Animateur (Expert)",
-        content: "L'animateur est un expert métier chargé de la transmission des compétences lors des sessions de formation.",
-        sections: [
-            {
-                subtitle: "1. Préparation Pédagogique",
-                text: "Accédez à vos thèmes assignés et déposez vos ressources (PDF, supports, liens). Ces documents seront visibles par les participants inscrits à vos modules."
-            },
-            {
-                subtitle: "2. Gestion des Séances & Émargement",
-                text: "Pour chaque séance, validez la présence numérique des participants. En fin de module, vous devez confirmer l'assiduité pour permettre la génération des attestations."
-            },
-            {
-                subtitle: "3. Rapport d'Animation",
-                text: "Après la clôture d'un module, saisissez votre bilan pédagogique : points forts, difficultés rencontrées et recommandations pour les sessions futures."
-            }
-        ]
+        description: "Gérez vos sessions de formation et évaluez les participants.",
+        body: (
+            <>
+                <p>
+                    L'animateur est un expert métier chargé de la transmission des compétences lors des sessions de formation. SGAFO vous fournit les outils nécessaires pour animer et évaluer efficacement.
+                </p>
+                <h2 id="preparation">1. Préparation Pédagogique</h2>
+                <p>
+                    Accédez à vos thèmes assignés et déposez vos ressources (PDF, supports, liens). Ces documents seront visibles par les participants inscrits à vos modules.
+                </p>
+                <h2 id="emargement">2. Émargement</h2>
+                <p>
+                    Pour chaque séance, validez la présence numérique des participants. En fin de module, vous devez confirmer l'assiduité pour permettre la génération des attestations.
+                </p>
+            </>
+        )
     },
     participant: {
         title: "Guide Participant (Apprenant)",
-        content: "Le participant utilise le système pour suivre son parcours de montée en compétences et accéder aux ressources.",
-        sections: [
-            {
-                subtitle: "1. Consultation du Catalogue National",
-                text: "Découvrez l'offre de formation disponible. Vous pouvez consulter les programmes validés et voir les dates prévues pour les prochaines sessions."
-            },
-            {
-                subtitle: "2. Évaluations & QCM",
-                text: "Répondez aux tests de positionnement avant le démarrage et passez l'évaluation finale. Vos scores sont enregistrés dans votre dossier de formation personnel."
-            },
-            {
-                subtitle: "3. Documents & Attestations",
-                text: "Téléchargez vos attestations de réussite une fois la formation clôturée. Vous avez également accès à l'historique complet de vos formations passées."
-            }
-        ]
+        description: "Suivez votre parcours de formation et accédez à vos attestations.",
+        body: (
+            <>
+                <p>
+                    En tant que formateur participant à une formation continue, SGAFO est votre portail pour suivre votre montée en compétences.
+                </p>
+                <h2 id="catalogue">1. Consultation du Catalogue</h2>
+                <p>
+                    Découvrez l'offre de formation disponible. Vous pouvez consulter les programmes validés et voir les dates prévues pour les prochaines sessions.
+                </p>
+                <h2 id="evaluations">2. Évaluations</h2>
+                <p>
+                    Répondez aux tests de positionnement avant le démarrage et passez l'évaluation finale. Vos scores sont enregistrés dans votre dossier de formation personnel.
+                </p>
+            </>
+        )
+    },
+    faq: {
+        title: "Foire Aux Questions",
+        description: "Les réponses aux questions les plus fréquentes sur l'utilisation de SGAFO.",
+        body: (
+            <>
+                <h2 id="mot-de-passe">Comment réinitialiser mon mot de passe ?</h2>
+                <p>
+                    Contactez l'administrateur de votre complexe ou utilisez le lien "Mot de passe oublié" sur la page de connexion si votre email institutionnel est configuré.
+                </p>
+                <h2 id="quota-heures">Comment est calculé le quota d'heures ?</h2>
+                <p>
+                    Chaque formateur dispose d'un quota annuel d'heures de formation continue. Le système déduit automatiquement les heures des formations terminées et validées.
+                </p>
+            </>
+        )
+    },
+    support: {
+        title: "Assistance Technique",
+        description: "Comment obtenir de l'aide en cas de problème technique.",
+        body: (
+            <>
+                <p>
+                    Si vous rencontrez un blocage ou une erreur technique, notre équipe d'assistance est à votre disposition.
+                </p>
+                <h2 id="contact">Contact</h2>
+                <p>
+                    Envoyez un email détaillé (avec captures d'écran si possible) à : <a href="mailto:support.sgafo@ofppt.ma">support.sgafo@ofppt.ma</a>
+                </p>
+                <h2 id="horaires">Horaires d'ouverture</h2>
+                <p>
+                    L'équipe support est disponible du lundi au vendredi, de 8h30 à 16h30.
+                </p>
+            </>
+        )
     }
 };
 
+// Extracts h2 ids and texts from a body component for the Right Sidebar TOC
+const getTableOfContents = (body: any) => {
+    const toc: { id: string, title: string }[] = [];
+    if (body && body.props && body.props.children) {
+        const children = Array.isArray(body.props.children) ? body.props.children : [body.props.children];
+        children.forEach((child: any) => {
+            if (child.type === 'h2' && child.props.id) {
+                toc.push({
+                    id: child.props.id,
+                    title: child.props.children
+                });
+            }
+        });
+    }
+    return toc;
+};
+
 export default function Documentation() {
-    const [activeSection, setActiveSection] = useState<keyof typeof DOCS>('introduction');
+    const [activeSection, setActiveSection] = useState<keyof typeof CONTENT>('introduction');
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    const currentDoc = CONTENT[activeSection];
+    const tableOfContents = getTableOfContents(currentDoc.body);
 
     return (
-        <div className="bg-slate-50 min-h-screen font-sans selection:bg-blue-600 selection:text-white">
-            <Head title="Documentation Intégrale SGAFO" />
+        <div className="bg-white min-h-screen font-sans text-slate-900 selection:bg-sky-100 selection:text-sky-900">
+            <Head title={`${currentDoc.title} - Documentation SGAFO`} />
 
-            <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 py-12">
-                {/* Header Navigation */}
-                <div className="flex flex-col sm:flex-row items-center justify-between mb-12 px-4 gap-6">
-                    <Link href="/" className="flex items-center gap-4 group">
-                        <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center p-3 shadow-2xl shadow-slate-900/20 group-hover:bg-blue-600 transition-all">
-                                <svg viewBox="0 0 100 100" className="w-full h-full text-white" fill="currentColor"><circle cx="50" cy="50" r="40" /></svg>
+            {/* Top Navbar (Tailwind Docs Style) */}
+            <header className="sticky top-0 z-50 w-full backdrop-blur flex-none transition-colors duration-500 border-b border-slate-900/10 bg-white/95">
+                <div className="max-w-8xl mx-auto">
+                    <div className="py-4 border-b border-slate-900/10 lg:px-8 lg:border-0 mx-4 lg:mx-0">
+                        <div className="relative flex items-center">
+                            <Link href="/" className="flex items-center gap-2 group mr-3 w-[2.0625rem] overflow-hidden md:w-auto">
+                                <Logo variant="brand" size="sm" showText={false} />
+                                <span className="text-base font-bold text-slate-900 sr-only md:not-sr-only">SGAFO <span className="font-normal text-slate-500">Docs</span></span>
+                            </Link>
+                            
+                            <div className="relative hidden lg:flex items-center ml-auto">
+                                <nav className="text-sm leading-6 font-semibold text-slate-700">
+                                    <ul className="flex space-x-8">
+                                        <li><Link href="/" className="hover:text-sky-500 transition-colors">Portail</Link></li>
+                                        <li><a href={route('documentation.download')} className="hover:text-sky-500 transition-colors">Télécharger PDF</a></li>
+                                        <li><Link href={route('login')} className="hover:text-sky-500 transition-colors">Connexion</Link></li>
+                                    </ul>
+                                </nav>
+                                <div className="flex items-center border-l border-slate-200 ml-6 pl-6">
+                                    <a href="#" className="text-slate-400 hover:text-slate-500 transition-colors">
+                                        <span className="sr-only">Support OFPPT</span>
+                                        <svg viewBox="0 0 16 16" className="w-5 h-5" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            {/* Mobile Search Bar Fake */}
+                            <button type="button" className="ml-auto md:hidden text-slate-500 w-8 h-8 flex items-center justify-center hover:text-slate-600">
+                                <span className="sr-only">Search</span>
+                                <Search className="w-5 h-5" />
+                            </button>
+
+                            {/* Desktop Search Bar Fake */}
+                            <div className="hidden md:flex ml-auto lg:ml-8 items-center bg-slate-100 hover:bg-slate-200/80 transition-colors rounded-full px-3 py-1.5 cursor-text text-slate-500 text-sm">
+                                <Search className="w-4 h-4 mr-2" />
+                                <span>Rechercher...</span>
+                                <span className="ml-8 font-sans font-semibold text-xs text-slate-400">⌘K</span>
+                            </div>
+
+                            {/* Mobile Menu Toggle */}
+                            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="ml-2 -my-1 p-1 flex items-center justify-center text-slate-500 lg:hidden">
+                                <span className="sr-only">Open Menu</span>
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                            </button>
                         </div>
-                        <div className="flex flex-col leading-none text-left">
-                            <span className="text-3xl font-black tracking-tighter text-slate-900 uppercase">SGAFO</span>
-                            <span className="text-[11px] font-black text-blue-600 tracking-widest uppercase">Espace Aide & Support</span>
-                        </div>
-                    </Link>
-                    <div className="flex items-center gap-4">
-                        <a 
-                            href={route('documentation.download')} 
-                            className="px-8 py-4 bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-2xl shadow-slate-900/20 hover:bg-blue-600 transition-all flex items-center gap-3"
-                        >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5m0 0l5-5m-5 5V3" /></svg>
-                            Télécharger Guide PDF
-                        </a>
-                        <Link href={route('login')} className="px-8 py-4 bg-white text-slate-900 text-[11px] font-black uppercase tracking-widest rounded-2xl border border-slate-200 shadow-xl hover:bg-slate-50 transition-all">Connexion</Link>
+                    </div>
+                </div>
+            </header>
+
+            <div className="max-w-8xl mx-auto px-4 sm:px-6 md:px-8 lg:flex">
+                
+                {/* Left Sidebar */}
+                <div className={`fixed z-40 inset-0 flex-none h-full bg-black/20 backdrop-blur-sm lg:static lg:h-auto lg:overflow-y-visible lg:pt-0 lg:w-[19rem] lg:block hidden`}>
+                    <div className="h-full overflow-y-auto scrolling-touch lg:h-[calc(100vh-3rem)] lg:block lg:sticky lg:top-[3.8125rem] bg-white lg:bg-transparent shadow-xl lg:shadow-none mr-24 lg:mr-0 border-r border-slate-100">
+                        <nav className="px-1 pt-6 overflow-y-auto font-medium text-base sm:px-3 xl:px-5 lg:text-sm pb-10 lg:pt-10 lg:pb-14 sticky?lg:h-(screen-18)">
+                            
+                            {/* Top Navigation Links with Icons */}
+                            <ul className="space-y-4 mb-10">
+                                {TOP_SIDEBAR_LINKS.map(link => (
+                                    <li key={link.name}>
+                                        <a href="#" className={`flex items-center gap-3 text-sm transition-colors ${link.active ? 'text-slate-900 font-semibold' : 'text-slate-500 hover:text-slate-900'}`}>
+                                            <div className={`p-1 rounded-md ${link.active ? 'bg-white shadow-sm ring-1 ring-slate-900/5' : 'bg-transparent'}`}>
+                                                <link.icon className={`w-[18px] h-[18px] ${link.active ? 'text-slate-900' : 'text-slate-400'}`} />
+                                            </div>
+                                            {link.name}
+                                            {link.badge && (
+                                                <span className="ml-auto rounded bg-sky-100 text-sky-600 px-1.5 py-0.5 text-[10px] font-bold tracking-widest">{link.badge}</span>
+                                            )}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+
+                            {/* Section Links */}
+                            <ul className="space-y-9">
+                                {NAVIGATION.map((section, index) => (
+                                    <li key={index}>
+                                        <h5 className="mb-3 text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{section.title}</h5>
+                                        <ul className="space-y-3 border-l border-slate-100">
+                                            {section.links.map(link => (
+                                                <li key={link.id}>
+                                                    <button 
+                                                        onClick={() => setActiveSection(link.id as keyof typeof CONTENT)}
+                                                        className={`block w-full text-left -ml-px border-l pl-4 py-0.5 transition-colors ${
+                                                            activeSection === link.id
+                                                            ? 'border-slate-900 text-slate-900 font-semibold'
+                                                            : 'border-transparent text-slate-500 hover:border-slate-400 hover:text-slate-900'
+                                                        }`}
+                                                    >
+                                                        {link.title}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </li>
+                                ))}
+                            </ul>
+                        </nav>
                     </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow-2xl shadow-slate-200/50 sm:rounded-[48px] flex flex-col md:flex-row min-h-[75vh] border border-slate-100">
-                    
-                    {/* Sidebar */}
-                    <div className="w-full md:w-80 border-r border-slate-100 bg-slate-50/50 p-10">
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-10 border-b border-slate-200 pb-3">Sommaire du Manuel</h3>
-                        <nav className="space-y-3">
-                            {Object.entries(DOCS).map(([key, section]) => (
-                                <button
-                                    key={key}
-                                    onClick={() => setActiveSection(key as keyof typeof DOCS)}
-                                    className={`w-full text-left px-6 py-5 rounded-[24px] text-sm font-bold transition-all flex items-center justify-between group ${
-                                        activeSection === key 
-                                        ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/20' 
-                                        : 'text-slate-500 hover:bg-white hover:text-slate-900 border border-transparent hover:border-slate-200'
-                                    }`}
-                                >
-                                    <span className="truncate">{section.title}</span>
-                                    <svg className={`w-4 h-4 shrink-0 transition-transform ${activeSection === key ? 'translate-x-1' : 'opacity-0 group-hover:opacity-100'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
-                                </button>
-                            ))}
-                        </nav>
+                {/* Main Content Area */}
+                <div className="flex-auto min-w-0 flex w-full">
+                    <main className="max-w-3xl flex-auto px-4 pt-10 pb-24 sm:px-6 xl:px-8 lg:pb-16">
                         
-                        <div className="mt-16 p-8 bg-blue-600 rounded-[32px] text-white shadow-2xl shadow-blue-600/30">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-100 mb-4">Assistance OFPPT</p>
-                            <p className="text-xs font-medium leading-relaxed mb-6 italic opacity-90">Une équipe dédiée pour vous accompagner sur SGAFO.</p>
-                            <a href="mailto:support.sgafo@ofppt.ma" className="text-[10px] font-black uppercase tracking-widest underline decoration-2 underline-offset-4">support.sgafo@ofppt.ma</a>
+                        <div className="mb-8">
+                            <p className="text-[13px] font-semibold text-slate-500 uppercase tracking-widest mb-3">{NAVIGATION.find(n => n.links.some(l => l.id === activeSection))?.title || 'Documentation'}</p>
+                            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">{currentDoc.title}</h1>
+                            <p className="mt-4 text-lg text-slate-500">{currentDoc.description}</p>
                         </div>
-                    </div>
 
-                    {/* Content Area */}
-                    <div className="flex-1 p-8 md:p-20 bg-white">
-                        <div className="max-w-3xl text-left">
-                            <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-slate-50 text-slate-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-12 border border-slate-100">
-                                <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                                Guide de Référence Certifié • v1.0.5
+                        {/* Content Body Styled like Tailwind Prose */}
+                        <div className="prose prose-slate max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-a:font-semibold prose-a:text-slate-900 hover:prose-a:text-sky-500 prose-pre:bg-slate-800 prose-pre:shadow-lg prose-pre:rounded-xl">
+                            {currentDoc.body}
+                        </div>
+
+                        {/* Pagination / Next Steps Fake */}
+                        <div className="mt-16 pt-8 border-t border-slate-200 flex justify-between">
+                            <div className="flex flex-col">
+                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">Précédent</span>
+                                <button className="text-slate-900 font-semibold hover:text-sky-500 transition-colors">
+                                    Installation
+                                </button>
                             </div>
-                            
-                            <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter mb-10 leading-[0.95]">
-                                {DOCS[activeSection].title}
-                            </h1>
-                            
-                            <p className="text-2xl text-slate-400 font-medium leading-relaxed mb-16 border-l-[6px] border-blue-600 pl-8 py-3">
-                                {DOCS[activeSection].content}
-                            </p>
+                            <div className="flex flex-col text-right">
+                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">Suivant</span>
+                                <button className="text-slate-900 font-semibold hover:text-sky-500 transition-colors">
+                                    Configurations Avancées
+                                </button>
+                            </div>
+                        </div>
 
-                            {'steps' in DOCS[activeSection] && (
-                                <div className="grid gap-8">
-                                    {(DOCS[activeSection] as any).steps.map((step: string, i: number) => (
-                                        <div key={i} className="flex items-start gap-8 p-10 bg-slate-50 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
-                                            <div className="shrink-0 w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-xl shadow-lg group-hover:bg-blue-600 transition-colors">
-                                                0{i + 1}
-                                            </div>
-                                            <span className="font-bold text-slate-700 text-xl leading-tight pt-3">{step}</span>
-                                        </div>
-                                    ))}
+                    </main>
+
+                    {/* Right Sidebar (Table of Contents) */}
+                    <div className="hidden xl:text-sm xl:block flex-none w-64 pl-8 mr-8">
+                        <div className="flex flex-col justify-between overflow-y-auto sticky top-[3.8125rem] -ml-0.5 h-[calc(100vh-3.8125rem)] pb-6 pt-10">
+                            {tableOfContents.length > 0 && (
+                                <div>
+                                    <h5 className="text-slate-900 font-semibold mb-4 text-sm leading-6">Sur cette page</h5>
+                                    <ul className="text-slate-700 text-sm leading-6 space-y-2">
+                                        {tableOfContents.map(heading => (
+                                            <li key={heading.id}>
+                                                <a 
+                                                    href={`#${heading.id}`} 
+                                                    className="block py-1 hover:text-slate-900 transition-colors"
+                                                >
+                                                    {heading.title}
+                                                </a>
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </div>
                             )}
-
-                            {'sections' in DOCS[activeSection] && (
-                                <div className="space-y-20">
-                                    {(DOCS[activeSection] as any).sections.map((sec: any, i: number) => (
-                                        <div key={i} className="relative pl-16 border-l-2 border-slate-100 group">
-                                            <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-white border-4 border-slate-200 group-hover:border-blue-600 group-hover:scale-125 transition-all shadow-md" />
-                                            <h4 className="text-3xl font-black text-slate-900 mb-6 tracking-tight group-hover:text-blue-600 transition-colors leading-none">{sec.subtitle}</h4>
-                                            <p className="text-xl text-slate-500 leading-relaxed font-medium">{sec.text}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                            
+                            <div className="mt-8 pt-8 border-t border-slate-100">
+                                <a href="mailto:support.sgafo@ofppt.ma" className="flex items-center text-sm text-slate-500 hover:text-slate-900 transition-colors group">
+                                    <svg className="w-4 h-4 mr-2 text-slate-400 group-hover:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                    Signaler un problème
+                                </a>
+                            </div>
                         </div>
                     </div>
+
                 </div>
             </div>
             
-            <footer className="py-20 px-6 border-t border-slate-200 mt-20">
-                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-10">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center p-2">
-                             <svg viewBox="0 0 100 100" className="w-full h-full text-white" fill="currentColor"><circle cx="50" cy="50" r="40" /></svg>
-                        </div>
-                        <span className="text-xl font-black text-slate-900">SGAFO</span>
-                    </div>
-                    <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.4em]">© 2026 Portail Institutionnel de la Formation Continue • OFPPT Maroc</p>
-                 </div>
-            </footer>
+            {/* Added basic styles for the prose class locally since @tailwindcss/typography might not be installed */}
+            <style dangerouslySetInnerHTML={{__html: `
+                .prose h2 { margin-top: 2.5em; margin-bottom: 1em; font-size: 1.5em; font-weight: 700; color: #0f172a; border-top: 1px solid #e2e8f0; padding-top: 2em; }
+                .prose h2:first-of-type { margin-top: 0; border-top: none; padding-top: 0; }
+                .prose p { margin-top: 1.25em; margin-bottom: 1.25em; line-height: 1.75; color: #334155; }
+                .prose ul, .prose ol { margin-top: 1.25em; margin-bottom: 1.25em; padding-left: 1.625em; color: #334155; }
+                .prose li { margin-top: 0.5em; margin-bottom: 0.5em; }
+                .prose ul { list-style-type: disc; }
+                .prose ol { list-style-type: decimal; }
+                .prose pre { background-color: #1e293b; color: #f8fafc; border-radius: 0.75rem; padding: 1.25rem; overflow-x: auto; font-size: 0.875em; line-height: 1.7142857; margin-top: 1.7142857em; margin-bottom: 1.7142857em; }
+                .prose strong { font-weight: 600; color: #0f172a; }
+                .prose em { font-style: italic; }
+            `}} />
         </div>
     );
 }

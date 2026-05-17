@@ -1,4 +1,5 @@
 import { PropsWithChildren } from 'react';
+import Logo from '@/Components/Logo';
 
 export default function Guest({ children }: PropsWithChildren) {
     return (
@@ -8,12 +9,9 @@ export default function Guest({ children }: PropsWithChildren) {
                 
                 <div className="relative z-10 text-center max-w-lg">
                     <div className="flex justify-center mb-8">
-                        <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shadow-xl">
-                            <span className="text-ofppt-700 font-extrabold text-5xl">G</span>
-                        </div>
+                        <Logo variant="light" size="xl" />
                     </div>
-                    <h1 className="text-4xl font-bold mb-6 tracking-tight">SGAFO</h1>
-                    <p className="text-ofppt-100 text-lg leading-relaxed">
+                    <p className="text-ofppt-100 text-lg leading-relaxed mt-6">
                         Système de Gestion des Formations des Formateurs de l'OFPPT.
                         Plateforme centralisée pour la planification, l'exécution et l'évaluation continue.
                     </p>

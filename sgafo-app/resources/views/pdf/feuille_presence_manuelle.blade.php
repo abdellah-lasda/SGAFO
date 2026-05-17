@@ -4,14 +4,15 @@
     <meta charset="utf-8">
     <title>Feuille de Présence Manuelle</title>
     <style>
-        body { font-family: 'Helvetica', sans-serif; font-size: 11px; color: #333; margin: 0; padding: 0; }
-        .header { width: 100%; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        .logo { font-size: 20px; font-weight: bold; color: #1a56db; }
-        .title { text-align: center; font-size: 16px; font-weight: bold; margin: 15px 0; text-transform: uppercase; }
+        body { font-family: 'Helvetica', sans-serif; font-size: 11px; color: #111; margin: 0; padding: 0; }
+        .header { width: 100%; border-bottom: 1.5px solid #000; padding-bottom: 8px; margin-bottom: 15px; }
+        .title { text-align: center; font-size: 14px; font-weight: bold; margin: 15px 0; text-transform: uppercase; text-decoration: underline; letter-spacing: 1px; }
         
-        .info-grid { width: 100%; margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; }
-        .info-grid td { padding: 4px; }
-        .label { font-weight: bold; width: 120px; }
+        .info-grid { width: 100%; margin-bottom: 20px; }
+        .info-grid table { width: 100%; border-collapse: collapse; }
+        .info-grid td { border: 1px solid #000; padding: 6px 8px; font-size: 10px; vertical-align: middle; }
+        .info-grid .label { font-weight: bold; background-color: #f5f5f5; width: 12%; }
+        .info-grid .value { width: 38%; }
 
         table.presence { width: 100%; border-collapse: collapse; margin-top: 10px; }
         table.presence th { background: #f2f2f2; border: 1px solid #000; padding: 8px; text-transform: uppercase; font-size: 9px; }
@@ -32,39 +33,38 @@
 <body>
 
     <div class="header">
-        <table width="100%">
+        <table width="100%" style="border-collapse: collapse;">
             <tr>
-                <td class="logo">OFPPT</td>
-                <td align="right" style="color: #666;">SGAFO - Système de Gestion de Formation</td>
+                <td width="20%" style="vertical-align: middle; padding: 0;">
+                    <img src="{{ public_path('logoofppt.jfif') }}" style="height: 55px; max-width: 150px; display: block;">
+                </td>
+                <td width="80%" align="right" style="vertical-align: middle; text-align: right; padding: 0; line-height: 1.4;">
+                    <div style="font-family: 'DejaVu Sans', sans-serif; font-size: 13px; font-weight: bold; color: #000;">مكتب التكوين المهني وإنعاش الشغل</div>
+                    <div style="font-size: 10px; font-weight: bold; color: #222; margin-top: 2px;">Office de la Formation Professionnelle et de la Promotion du Travail</div>
+                </td>
             </tr>
         </table>
     </div>
 
-    <div class="title">Feuille d'Émargement Manuelle</div>
+    <div class="title">FEUILLE DE PRESENCE</div>
 
     <div class="info-grid">
-        <table width="100%">
+        <table>
             <tr>
-                <td class="label">Formation :</td>
-                <td>{{ $seance->plan->titre }}</td>
-                <td class="label">Date :</td>
-                <td>{{ \Carbon\Carbon::parse($seance->date)->format('d/m/Y') }}</td>
-            </tr>
-            <tr>
-                <td class="label">Module/Thème :</td>
-                <td>
+                <td class="label">Thème</td>
+                <td class="value">
                     @foreach($seance->themes as $theme)
                         {{ $theme->nom }}{{ !$loop->last ? ', ' : '' }}
                     @endforeach
                 </td>
-                <td class="label">Horaires :</td>
-                <td>{{ substr($seance->debut, 0, 5) }} - {{ substr($seance->fin, 0, 5) }}</td>
+                <td class="label">Animateur</td>
+                <td class="value">{{ $animateur->prenom }} {{ $animateur->nom }}</td>
             </tr>
             <tr>
-                <td class="label">Formateur :</td>
-                <td>{{ $animateur->prenom }} {{ $animateur->nom }}</td>
-                <td class="label">Lieu :</td>
-                <td>{{ $seance->site->nom ?? 'Non défini' }}</td>
+                <td class="label">Date</td>
+                <td class="value">{{ \Carbon\Carbon::parse($seance->date)->format('d/m/Y') }} @if($seance->debut && $seance->fin) ({{ substr($seance->debut, 0, 5) }} - {{ substr($seance->fin, 0, 5) }}) @endif</td>
+                <td class="label">Lieu</td>
+                <td class="value">{{ $seance->site->nom ?? 'Non défini' }}</td>
             </tr>
         </table>
     </div>

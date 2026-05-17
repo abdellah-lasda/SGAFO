@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'admin/attestations/*/test-template',
+        ]);
+
         $middleware->alias([
             'role.admin' => \App\Http\Middleware\IsAdmin::class,
             'role' => \App\Http\Middleware\CheckRole::class,

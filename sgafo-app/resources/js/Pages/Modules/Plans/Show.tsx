@@ -123,6 +123,16 @@ export default function Show({ plan, isValidationContext }: Props) {
                             📄 Générer PDF
                         </a>
 
+                        {plan.statut === 'validé' && (isRF || roleCodes.includes('ADMIN')) && (
+                            <Link
+                                href={route('admin.attestations.index', plan.id)}
+                                className="inline-flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/20 active:scale-95"
+                            >
+                                🎓 Attestations
+                            </Link>
+                        )}
+
+
                         {(plan.statut === 'brouillon' || plan.statut === 'rejeté') && (
                             <Link
                                 href={route('modules.plans.edit', plan.id)}

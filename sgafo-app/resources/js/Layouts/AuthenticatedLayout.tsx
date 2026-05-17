@@ -52,12 +52,12 @@ export default function Authenticated({
                         </button>
                         
                         {/* Breadcrumbs / Page Context */}
-                        <nav className="flex items-center text-xs md:text-sm font-bold tracking-tight truncate">
-                            <span className="text-slate-400 mr-2 hidden sm:inline">SGAFO</span>
-                            <svg className="w-4 h-4 text-slate-300 mr-2 hidden sm:inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <nav className="hidden md:flex items-center text-xs md:text-sm font-bold tracking-tight truncate">
+                            <span className="text-slate-400 mr-2">SGAFO</span>
+                            <svg className="w-4 h-4 text-slate-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
                             </svg>
-                            <div className="text-slate-900 truncate max-w-[150px] sm:max-w-none">
+                            <div className="text-slate-900 truncate max-w-none">
                                 {header || "Tableau de bord"}
                             </div>
                         </nav>
@@ -74,9 +74,16 @@ export default function Authenticated({
                 </header>
 
                 {/* Page Content */}
-                <main className="flex-1 overflow-y-auto bg-[#f8fafc] space-y-8 pb-12 w-full">
+                <main className="flex-1 overflow-y-auto bg-[#f8fafc] pb-12 w-full flex flex-col">
+                    {/* Mobile Header / Breadcrumb */}
+                    <div className="md:hidden px-4 py-4 bg-white border-b border-slate-200">
+                        <div className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
+                            {header || "Tableau de bord"}
+                        </div>
+                    </div>
+
                      {/* Padding wrapper for page content */}
-                    <div className="p-4 md:p-8">
+                    <div className="p-4 md:p-8 space-y-8 flex-1">
                         {children}
                     </div>
                 </main>
