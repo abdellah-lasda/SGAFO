@@ -14,6 +14,14 @@ interface Props {
 }
 
 export default function Index({ plan, seances, themesStats, sites, formateurs }: Props) {
+    const formatDuration = (hoursDecimal: number) => {
+        if (!hoursDecimal) return '0h';
+        const h = Math.floor(hoursDecimal);
+        const m = Math.round((hoursDecimal - h) * 60);
+        if (m === 0) return `${h}h`;
+        return `${h}h${m.toString().padStart(2, '0')}`;
+    };
+
     // Liste des dates entre début et fin du plan
     const formationDates = useMemo(() => {
         if (!plan.date_debut || !plan.date_fin) return [];
@@ -92,13 +100,13 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
         const [h1, m1] = data.debut.split(':').map(Number);
         const [h2, m2] = data.fin.split(':').map(Number);
         const diff = (h2 * 60 + m2) - (h1 * 60 + m1);
-        return Math.max(0, diff / 60);
+        return Number(Math.max(0, diff / 60).toFixed(2));
     }, [data.debut, data.fin]);
 
     // CALCUL DES HEURES ALLOUÉES
     const allocatedHours = data.heures_planifiees;
 
-    const remainingTime = sessionDuration - allocatedHours;
+    const remainingTime = Number((sessionDuration - allocatedHours).toFixed(2));
     const isDurationValid = sessionDuration > 0 && allocatedHours > 0 && allocatedHours <= sessionDuration;
 
     const submit = (e: React.FormEvent) => {
@@ -296,7 +304,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                             <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 mb-4">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             </div>
-                            <h4 className="text-2xl font-black text-slate-900 tabular-nums">{stats.total}h</h4>
+                            <h4 className="text-2xl font-black text-slate-900 tabular-nums">{formatDuration(stats.total)}</h4>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Heures Prévues</p>
                         </div>
                     </div>
@@ -308,7 +316,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                             <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                             </div>
-                            <h4 className="text-2xl font-black text-emerald-600 tabular-nums">{stats.planified}h</h4>
+                            <h4 className="text-2xl font-black text-emerald-600 tabular-nums">{formatDuration(stats.planified)}</h4>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Heures Planifiées</p>
                         </div>
                     </div>
@@ -320,7 +328,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                             <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 mb-4">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             </div>
-                            <h4 className="text-2xl font-black text-amber-600 tabular-nums">{stats.remaining}h</h4>
+                            <h4 className="text-2xl font-black text-amber-600 tabular-nums">{formatDuration(stats.remaining)}</h4>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Heures Restantes</p>
                         </div>
                     </div>
@@ -558,7 +566,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                         <div key={t.id} className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-2 group/theme hover:border-blue-200 transition-all">
                                                             <div className="flex items-center justify-between">
                                                                 <p className="text-xs font-black text-slate-700 truncate flex-1 pr-4">{t.nom}</p>
-                                                                <span className="text-[10px] font-black text-blue-600 bg-white px-3 py-1 rounded-lg border border-slate-100 shadow-sm">{t.pivot.heures_planifiees}h</span>
+                                                                <span className="text-[10px] font-black text-blue-600 bg-white px-3 py-1 rounded-lg border border-slate-100 shadow-sm">{formatDuration(t.pivot.heures_planifiees)}</span>
                                                             </div>
                                                             {formateur && (
                                                                 <div className="flex items-center gap-2">
@@ -603,7 +611,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                 <div className="flex items-start justify-between gap-4 mb-4">
                                                     <div className="flex-1 min-w-0">
                                                         <h4 className={`text-xs font-black truncate ${isDone ? 'text-emerald-700' : 'text-slate-900'}`}>{theme.nom}</h4>
-                                                        <p className="text-[10px] font-bold text-slate-400 mt-0.5">{theme.heures_planifiees}h / {theme.duree_totale}h</p>
+                                                        <p className="text-[10px] font-bold text-slate-400 mt-0.5">{formatDuration(theme.heures_planifiees)} / {formatDuration(theme.duree_totale)}</p>
                                                     </div>
                                                     {!isDone && !isLocked && (
                                                         <button 
@@ -681,7 +689,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                             <div key={t.id} className="flex flex-col gap-1">
                                                                 <div className="flex items-center gap-2 bg-blue-50/50 text-blue-700 px-4 py-1.5 rounded-full border border-blue-100/50 w-fit">
                                                                     <span className="text-[10px] font-black uppercase truncate max-w-[150px]">{t.nom}</span>
-                                                                    <span className="text-[10px] font-bold opacity-60">({t.pivot.heures_planifiees}h)</span>
+                                                                    <span className="text-[10px] font-bold opacity-60">({formatDuration(t.pivot.heures_planifiees)})</span>
                                                                 </div>
                                                                 {formateur && (
                                                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-4">By: {formateur.nom} {formateur.prenom}</span>
@@ -834,7 +842,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                     <p className="text-[10px] font-black text-red-600">{timeError}</p>
                                                 </div>
                                             )}
-                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 text-white px-3 py-1 rounded-full text-[10px] font-black border-4 border-white shadow-lg">{sessionDuration}h</div>
+                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 text-white px-3 py-1 rounded-full text-[10px] font-black border-4 border-white shadow-lg">{formatDuration(sessionDuration)}</div>
                                         </div>
 
                                         <div className="space-y-2 px-2">
@@ -862,7 +870,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                             <div className="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden">
                                                 <div className={`h-full transition-all duration-500 ${allocatedHours > sessionDuration ? 'bg-red-500' : remainingTime === 0 ? 'bg-emerald-500' : 'bg-blue-600'}`} style={{ width: `${Math.min(100, (allocatedHours / sessionDuration) * 100)}%` }}/>
                                             </div>
-                                            <div className="text-sm font-black tabular-nums">{allocatedHours}h / {sessionDuration}h</div>
+                                            <div className="text-sm font-black tabular-nums">{formatDuration(allocatedHours)} / {formatDuration(sessionDuration)}</div>
                                         </div>
                                     </div>
 
@@ -908,7 +916,7 @@ export default function Index({ plan, seances, themesStats, sites, formateurs }:
                                                             <div className="flex-1 min-w-0">
                                                                 <p className={`text-xs font-black truncate ${isSelected ? 'text-blue-900' : 'text-slate-600'}`}>{theme.nom}</p>
                                                                 <div className="flex items-center gap-2 mt-0.5">
-                                                                    <span className="text-[9px] font-bold text-slate-400">Reste à planifier: {adjustedReste}h</span>
+                                                                    <span className="text-[9px] font-bold text-slate-400">Reste à planifier: {formatDuration(adjustedReste)}</span>
                                                                 </div>
                                                             </div>
                                                             
