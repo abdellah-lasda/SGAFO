@@ -16,7 +16,7 @@ Le projet repose sur une architecture moderne et robuste, garantissant performan
 | **Styling** | [Tailwind CSS](https://tailwindcss.com/) & [Headless UI](https://headlessui.com/) |
 | **Bundler** | [Vite 7](https://vitejs.dev/) |
 | **Reporting** | Recharts (Analytics) & DomPDF (Génération de documents) |
-| **Database** | MySQL / MariaDB |
+| **Database** | PostgreSQL |
 
 ---
 
@@ -49,7 +49,7 @@ Le projet repose sur une architecture moderne et robuste, garantissant performan
 - PHP >= 8.2
 - Composer
 - Node.js & NPM
-- MySQL
+- PostgreSQL
 
 ### Étapes d'installation
 
