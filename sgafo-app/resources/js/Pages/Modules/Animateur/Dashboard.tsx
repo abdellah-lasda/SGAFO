@@ -35,8 +35,12 @@ interface Props extends PageProps {
 
 export default function Dashboard({ auth, seances, stats, nextSession }: Props) {
     const user = auth.user;
-    const isToday = nextSession && nextSession.date === format(new Date(), 'yyyy-MM-dd');
-    const isFuture = nextSession && nextSession.date > format(new Date(), 'yyyy-MM-dd');
+    
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const sessionDateStr = nextSession ? format(new Date(nextSession.date), 'yyyy-MM-dd') : null;
+    
+    const isToday = sessionDateStr === todayStr;
+    const isFuture = sessionDateStr !== null && sessionDateStr > todayStr;
 
     return (
         <AuthenticatedLayout header={<span>Espace Animateur</span>}>
