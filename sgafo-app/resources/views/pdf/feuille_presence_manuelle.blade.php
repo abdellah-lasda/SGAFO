@@ -39,7 +39,7 @@
                     <img src="{{ public_path('logoofppt.jfif') }}" style="height: 55px; max-width: 150px; display: block;">
                 </td>
                 <td width="80%" align="right" style="vertical-align: middle; text-align: right; padding: 0; line-height: 1.4;">
-                    <div style="font-family: 'DejaVu Sans', sans-serif; font-size: 13px; font-weight: bold; color: #000;">مكتب التكوين المهني وإنعاش الشغل</div>
+                    <div style="font-family: 'DejaVu Sans', sans-serif; font-size: 13px; font-weight: bold; color: #000;">ﻞﻐﺸﻟﺍ ﺵﺎﻌﻧﺇﻭ ﻲﻨﻬﻤﻟﺍ ﻦﻳﻮﻜﺘﻟﺍ ﺐﺘﻜﻣ</div>
                     <div style="font-size: 10px; font-weight: bold; color: #222; margin-top: 2px;">Office de la Formation Professionnelle et de la Promotion du Travail</div>
                 </td>
             </tr>
