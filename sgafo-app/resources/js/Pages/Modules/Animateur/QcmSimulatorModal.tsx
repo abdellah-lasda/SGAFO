@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface QcmSimulatorModalProps {
     isOpen: boolean;
@@ -69,7 +70,7 @@ export default function QcmSimulatorModal({ isOpen, onClose, titre, questions }:
         setScoreInfo({ totalPoints: 0, pointsEarned: 0, percentage: 0 });
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-[100] flex flex-col bg-slate-100 animate-in slide-in-from-bottom-10 duration-300">
             {/* Header */}
             <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 shadow-sm z-10">
@@ -215,6 +216,7 @@ export default function QcmSimulatorModal({ isOpen, onClose, titre, questions }:
                     </button>
                 </div>
             )}
-        </div>
+        </div>,
+        document.body
     );
 }

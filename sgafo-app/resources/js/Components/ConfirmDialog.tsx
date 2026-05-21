@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ConfirmDialogProps {
     isOpen: boolean;
@@ -33,7 +34,7 @@ export default function ConfirmDialog({
 
     if (!isOpen) return null;
 
-    return (
+    return createPortal(
         <div
             className="fixed inset-0 z-[200] flex items-center justify-center p-4"
             onClick={onCancel}
@@ -90,6 +91,7 @@ export default function ConfirmDialog({
                     Appuyez sur <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-400 font-mono">Enter</kbd> pour confirmer ou <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-400 font-mono">Esc</kbd> pour annuler
                 </p>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

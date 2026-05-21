@@ -4,6 +4,7 @@ import { Editor } from '@tinymce/tinymce-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { BarChart2 } from 'lucide-react';
 import { validateFile, validateUrl, validateRequiredString } from '@/utils/validators';
 import ConfirmDialog from '@/Components/ConfirmDialog';
@@ -69,7 +70,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
         const currentContent = editorRef.current ? editorRef.current.getContent() : data.description;
 
         // On envoie le contenu forcé via le router d'Inertia
-        router.post(route('modules.animateur.seances.update-description', seance.id), {
+        router.patch(route('modules.animateur.seances.update-description', seance.id), {
             description: currentContent
         }, {
             preserveScroll: true
@@ -429,7 +430,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
             </div>
 
             {/* Create QCM Modal */}
-            {showQcmModal && (
+            {showQcmModal && createPortal(
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
                         <h2 className="text-xl font-black text-slate-900 mb-6">Nouveau QCM</h2>
@@ -464,10 +465,10 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                         </form>
                     </div>
                 </div>
-            )}
+            , document.body)}
 
             {/* Add Resource Modal */}
-            {showAddModal && (
+            {showAddModal && createPortal(
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
                         <h2 className="text-xl font-black text-slate-900 mb-6">Ajouter une ressource</h2>
@@ -538,9 +539,9 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                         </form>
                     </div>
                 </div>
-            )}
+            , document.body)}
             {/* === MODAL : ÉDITION RESSOURCE === */}
-            {editResTarget && (
+            {editResTarget && createPortal(
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
                         <div className="flex items-center gap-3 mb-6">
@@ -598,7 +599,7 @@ export default function SeancePreparation({ seance }: { seance: Seance }) {
                         </form>
                     </div>
                 </div>
-            )}
+            , document.body)}
 
             {/* ConfirmDialog : suppression QCM */}
             <ConfirmDialog
